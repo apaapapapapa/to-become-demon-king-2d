@@ -16,10 +16,14 @@ namespace DemonKing.Field.Prototype
             this.ambientEffects = ambientEffects;
         }
 
-        public void Build(Transform parent)
+        public void BuildStructures(Transform parent)
         {
             CreateFence(parent);
             CreateCottage(parent);
+        }
+
+        public void BuildLandmarksAndLighting(Transform parent)
+        {
             CreateLandmarks(parent);
             CreateLampposts(parent);
         }
