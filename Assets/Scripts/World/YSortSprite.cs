@@ -3,8 +3,8 @@ using UnityEngine;
 namespace DemonKing.World
 {
     /// <summary>
-    /// Applies deterministic Y-based sorting to a SpriteRenderer so lower objects render in front.
-    /// Use this for future dynamic world objects outside the current runtime slime prototype.
+    /// 画面下側のオブジェクトが手前に描画されるよう、SpriteRenderer に一貫した Y座標ベースの並び替えを適用します。
+    /// 現在の実行時生成スライム試作以外で、今後追加する動的なワールドオブジェクトに使用します。
     /// </summary>
     [RequireComponent(typeof(SpriteRenderer))]
     public sealed class YSortSprite : MonoBehaviour
