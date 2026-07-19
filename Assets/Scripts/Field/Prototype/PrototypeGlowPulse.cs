@@ -37,5 +37,10 @@ namespace DemonKing.Field.Prototype
                 targetRenderer.color = color;
             }
         }
+
+        public void SetPhase(float value)
+        {
+            phase = value;
+        }
     }
 }
