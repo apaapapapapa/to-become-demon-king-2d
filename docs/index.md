@@ -44,10 +44,12 @@ features:
 | ゲームの目的・体験・世界観 | `docs/` |
 | 設計意図・アーキテクチャ判断 | `docs/design/` / `docs/decisions/` |
 | 実装済み機能の仕様 | コード・Unityアセットと `docs/specifications/` を同期 |
-| Runtimeのゲームバランス値 | UnityのScriptableObject |
+| 静的なコンテンツ定義・バランス値 | UnityのScriptableObject Definition |
+| プレイ中に変化する成長状態 | `DemonKing.Domain` のRuntime State |
+| 保存形式 | DomainのSave DTO |
 | モンスターや進化などの一覧・索引 | 当面は `docs/database/`、規模拡大時に構造化データ化を検討 |
 
-同じ数値をMarkdownとScriptableObjectへ二重に持つことは避けます。ドキュメントには数値そのものより、意味、ルール、制約、参照先を記載します。
+同じ数値をMarkdownとScriptableObjectへ二重に持つことは避けます。ドキュメントには数値そのものより、意味、ルール、制約、安定ID、参照先を記載します。
 
 ## AI開発
 
