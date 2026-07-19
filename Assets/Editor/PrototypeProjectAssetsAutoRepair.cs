@@ -3,6 +3,8 @@ using DemonKing.Field.Prototype;
 using DemonKing.Field.Prototype.Configuration;
 using DemonKing.Gameplay.Characters.Configuration;
 using DemonKing.Gameplay.Combat.Configuration;
+using DemonKing.Gameplay.Progression.Configuration;
+using DemonKing.Gameplay.Rewards.Configuration;
 using UnityEditor;
 using UnityEngine;
 
@@ -23,6 +25,8 @@ namespace DemonKing.EditorTools
         private const string PlayerCharacterStatsPath = "Assets/Resources/Settings/Gameplay/PlayerCharacterStats.asset";
         private const string PlayerMeleeAttackPath = "Assets/Resources/Settings/Gameplay/PlayerMeleeAttack.asset";
         private const string PlayerDodgePath = "Assets/Resources/Settings/Gameplay/PlayerDodge.asset";
+        private const string PlayerExperienceTablePath = "Assets/Resources/Settings/Gameplay/PlayerExperienceTable.asset";
+        private const string TrainingDummyRewardPath = "Assets/Resources/Settings/Gameplay/TrainingDummyReward.asset";
         private const string CottagePrefabPath = "Assets/Resources/Prefabs/World/PrototypeCottage.prefab";
         private const string TreePrefabPath = "Assets/Resources/Prefabs/World/PrototypeTree.prefab";
         private const string LamppostPrefabPath = "Assets/Resources/Prefabs/World/PrototypeLamppost.prefab";
@@ -81,6 +85,7 @@ namespace DemonKing.EditorTools
 
             changed |= AssignIfDifferent(serializedObject, "applicationSettings", Load<PrototypeApplicationSettings>(ApplicationSettingsPath));
             changed |= AssignIfDifferent(serializedObject, "playerCharacter", playerCharacter);
+            changed |= AssignIfDifferent(serializedObject, "trainingDummyReward", Load<RewardDefinition>(TrainingDummyRewardPath));
             changed |= AssignIfDifferent(serializedObject, "uiFont", Load<Font>(JapaneseUiFontInstaller.FontAssetPath, logIfMissing: forceLog));
             changed |= AssignIfDifferent(serializedObject, "cottagePrefab", Load<GameObject>(CottagePrefabPath));
             changed |= AssignIfDifferent(serializedObject, "treePrefab", Load<GameObject>(TreePrefabPath));
@@ -121,6 +126,7 @@ namespace DemonKing.EditorTools
             changed |= AssignIfDifferent(serializedObject, "statsDefinition", Load<CharacterStatsDefinition>(PlayerCharacterStatsPath));
             changed |= AssignIfDifferent(serializedObject, "basicMeleeAttackDefinition", Load<MeleeAttackDefinition>(PlayerMeleeAttackPath));
             changed |= AssignIfDifferent(serializedObject, "dodgeDefinition", Load<DodgeDefinition>(PlayerDodgePath));
+            changed |= AssignIfDifferent(serializedObject, "experienceTableDefinition", Load<ExperienceTableDefinition>(PlayerExperienceTablePath));
 
             if (changed)
             {

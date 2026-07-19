@@ -1,5 +1,6 @@
 using DemonKing.Domain;
 using DemonKing.Gameplay.Combat.Configuration;
+using DemonKing.Gameplay.Progression.Configuration;
 using UnityEngine;
 
 namespace DemonKing.Gameplay.Characters.Configuration
@@ -16,12 +17,14 @@ namespace DemonKing.Gameplay.Characters.Configuration
         [SerializeField] private CharacterStatsDefinition statsDefinition;
         [SerializeField] private MeleeAttackDefinition basicMeleeAttackDefinition;
         [SerializeField] private DodgeDefinition dodgeDefinition;
+        [SerializeField] private ExperienceTableDefinition experienceTableDefinition;
 
         public string CharacterId => characterId;
         public GameObject Prefab => prefab;
         public CharacterStatsDefinition StatsDefinition => statsDefinition;
         public MeleeAttackDefinition BasicMeleeAttackDefinition => basicMeleeAttackDefinition;
         public DodgeDefinition DodgeDefinition => dodgeDefinition;
+        public ExperienceTableDefinition ExperienceTableDefinition => experienceTableDefinition;
 
         public bool IsConfigured =>
             StableContentId.IsValid(characterId) &&
@@ -29,7 +32,9 @@ namespace DemonKing.Gameplay.Characters.Configuration
             statsDefinition != null &&
             basicMeleeAttackDefinition != null &&
             basicMeleeAttackDefinition.IsConfigured &&
-            dodgeDefinition != null;
+            dodgeDefinition != null &&
+            experienceTableDefinition != null &&
+            experienceTableDefinition.IsConfigured;
 
         private void OnValidate()
         {

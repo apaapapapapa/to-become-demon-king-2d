@@ -1,4 +1,6 @@
+using System;
 using DemonKing.Gameplay.Combat;
+using DemonKing.Gameplay.Rewards.Configuration;
 using DemonKing.Presentation.Rendering;
 using UnityEngine;
 
@@ -18,6 +20,10 @@ namespace DemonKing.Field.Prototype
         [SerializeField] private string rewardDefinitionId = "reward.training_dummy";
 
         private Health health;
+
+        public event Action<DefeatContext> Defeated;
+
+        public string RewardDefinitionId => rewardDefinitionId;
 
         private void Awake()
         {
@@ -62,6 +68,24 @@ namespace DemonKing.Field.Prototype
             GetComponent<GroupYSorter>()?.RefreshRenderers();
         }
 
+        public void ConfigureReward(RewardDefinition rewardDefinition)
+        {
+            if (rewardDefinition == null || !rewardDefinition.IsConfigured)
+            {
+                throw new ArgumentException(
+                    "訓練用ダミーの報酬定義が正しく設定されていません。",
+                    nameof(rewardDefinition));
+            }
+
+            rewardDefinitionId = rewardDefinition.RewardId;
+            if (health == null)
+            {
+                health = GetComponent<Health>();
+            }
+
+            health.ConfigureCombatIdentity(actorId, rewardDefinitionId);
+        }
+
         private void HandleDamaged(DamageResult result)
         {
             Debug.Log($"訓練用スライムに{result.AppliedAmount}ダメージ。残りHP: {health.CurrentHealth}/{health.MaxHealth}", this);
@@ -70,6 +94,7 @@ namespace DemonKing.Field.Prototype
         private void HandleDied(DefeatContext context)
         {
             Debug.Log($"訓練用スライムを倒した。報酬ID: {context.RewardDefinitionId}", this);
+            Defeated?.Invoke(context);
             Destroy(gameObject);
         }
 

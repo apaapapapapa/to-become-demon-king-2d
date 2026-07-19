@@ -102,16 +102,20 @@ Assets/Resources/Settings/
     PlayerCharacterStats.asset
     PlayerMeleeAttack.asset
     PlayerDodge.asset
+    PlayerExperienceTable.asset
+    TrainingDummyReward.asset
 ```
 
 主な責務は次のとおりです。
 
 - `PrototypeProjectAssets`: Prefab、Sprite、Font、各設定アセットへの参照
 - `PrototypeApplicationSettings`: Spawn位置、フィールド範囲、Pause時TimeScale
-- `CharacterDefinition`: 安定Character ID、Prefab、基礎能力値、通常攻撃、回避の集約
+- `CharacterDefinition`: 安定Character ID、Prefab、基礎能力値、通常攻撃、回避、経験値テーブルの集約
 - `CharacterStatsDefinition`: 移動速度、最大HP
 - `MeleeAttackDefinition`: Ability ID、ダメージ属性、ダメージ、攻撃半径、攻撃距離
 - `DodgeDefinition`: 回避速度、継続時間、クールダウン
+- `ExperienceTableDefinition`: レベルごとの累積必要経験値と最大レベル時の余剰経験値方針
+- `RewardDefinition`: 安定Reward IDと付与経験値
 
 プレイ中に変化する成長状態はUnity非依存の `CharacterProgressionState`、保存形式はバージョン付き `GameSaveData` / `PlayerSaveData` へ分離しています。保存先の具体実装は `ISaveService` を通して後から追加します。
 
@@ -138,6 +142,8 @@ Demon King > Project > Install Japanese UI Font
 - DamageRequest / DamageResult / DefeatContextのCombat結果
 - 成長状態と保存DTOの相互変換
 - CharacterDefinitionの必須アセット参照
+- 経験値テーブルの境界、複数レベルアップ、最大レベル処理
+- 訓練用ダミー撃破からRewardServiceを経由した経験値付与と重複防止
 - CameraFollow2Dの追従とZ座標維持
 - Gameplay / UI / Disabled入力コンテキスト切り替え
 - Dodge開始時のRigidbody2D移動
@@ -145,9 +151,9 @@ Demon King > Project > Install Japanese UI Font
 
 ## 開発フェーズ
 
-P0〜P2に加え、成長システム実装前のDefinition、Runtime State、Save DTO、Combat境界整備が完了しています。
+P0〜P2に加え、成長システム実装前のDefinition、Runtime State、Save DTO、Combat境界整備と、経験値／撃破報酬の最小経路が完了しています。
 
-次は経験値テーブルとRewardServiceを実装し、撃破結果から経験値加算までを接続します。その後にAbility、スキル、進化、NPC・会話・敵AI・クエストを段階的に追加します。Addressablesや大規模なシーン分割は、コンテンツ量とロード時間が必要性を示した段階で導入します。
+次は既存の通常攻撃をAbility実行基盤へ移し、スキル、進化、NPC・会話・敵AI・クエストを段階的に追加します。Addressablesや大規模なシーン分割は、コンテンツ量とロード時間が必要性を示した段階で導入します。
 
 ## ドキュメント
 

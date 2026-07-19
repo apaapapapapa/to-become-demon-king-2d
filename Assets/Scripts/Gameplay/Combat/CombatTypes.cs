@@ -67,12 +67,14 @@ namespace DemonKing.Gameplay.Combat
             string defeatedActorId,
             string rewardDefinitionId)
         {
+            DefeatId = Guid.NewGuid();
             Request = request;
             DefeatedTarget = defeatedTarget;
             DefeatedActorId = defeatedActorId ?? string.Empty;
             RewardDefinitionId = rewardDefinitionId ?? string.Empty;
         }
 
+        public Guid DefeatId { get; }
         public DamageRequest Request { get; }
         public GameObject Attacker => Request.Source;
         public GameObject DefeatedTarget { get; }

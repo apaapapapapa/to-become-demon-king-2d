@@ -2,6 +2,7 @@
   "name": "DemonKing.PlayMode.Tests",
   "rootNamespace": "DemonKing.Tests.PlayMode",
   "references": [
+    "DemonKing.Domain",
     "DemonKing.Runtime"
   ],
   "includePlatforms": [],
