@@ -8,6 +8,15 @@ namespace DemonKing.Field.Prototype
     /// </summary>
     internal sealed class PrototypeWorldBuilder
     {
+        private readonly Vector3 playerSpawnPosition;
+        private readonly Vector2 playableHalfExtents;
+
+        public PrototypeWorldBuilder(Vector3 playerSpawnPosition, Vector2 playableHalfExtents)
+        {
+            this.playerSpawnPosition = playerSpawnPosition;
+            this.playableHalfExtents = playableHalfExtents;
+        }
+
         public Transform Build()
         {
             Transform world = new GameObject("夕映えの学園草原").transform;
@@ -23,7 +32,7 @@ namespace DemonKing.Field.Prototype
             architecture.BuildLandmarksAndLighting(world);
             new AtmosphereBuilder(shapes, ambientEffects).Build(world);
             terrain.BuildForeground(world);
-            new PrototypePlayerSpawner().Spawn(world);
+            new PrototypePlayerSpawner(playerSpawnPosition, playableHalfExtents).Spawn(world);
 
             return world;
         }
