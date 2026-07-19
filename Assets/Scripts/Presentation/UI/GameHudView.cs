@@ -6,7 +6,7 @@ namespace DemonKing.Presentation.UI
     /// <summary>
     /// プレイ中の常設HUDをCanvas（uGUI）で表示します。
     /// ゲームルールは持たず、画面上の表示階層と見た目だけを担当します。
-    /// UIフォントはProjectAssetsから注入し、OSにインストールされたフォントへ依存しません。
+    /// UIフォントはProjectAssetsから初期化時に注入し、OSにインストールされたフォントへ依存しません。
     /// </summary>
     [DisallowMultipleComponent]
     [RequireComponent(typeof(Canvas))]
@@ -19,15 +19,22 @@ namespace DemonKing.Presentation.UI
         private static readonly Color HintColor = new(0.91f, 0.94f, 0.84f, 1f);
 
         private Font uiFont;
+        private bool initialized;
 
-        private void Awake()
+        private void Start()
         {
-            BuildHierarchy();
+            if (!initialized)
+            {
+                Initialize(null);
+            }
         }
 
-        public void SetFont(Font font)
+        public void Initialize(Font font)
         {
             uiFont = font != null ? font : ResolveFallbackFont();
+            initialized = true;
+
+            BuildHierarchy();
 
             foreach (Text text in GetComponentsInChildren<Text>(includeInactive: true))
             {
@@ -41,8 +48,6 @@ namespace DemonKing.Presentation.UI
             {
                 return;
             }
-
-            uiFont ??= ResolveFallbackFont();
 
             RectTransform hudRoot = CreateRect("HUD", transform);
             StretchToParent(hudRoot);
