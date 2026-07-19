@@ -1,253 +1,580 @@
 # 技術設計
 
+## この文書の役割
+
+この文書は、現在の実装を基準にした技術設計と開発規約を定義します。
+
+- ゲームとして何を目指すか: `GAME_DIRECTION.md`
+- 依存方向、構成責務、P0〜P2の整備履歴: `ARCHITECTURE.md`
+- 現在の技術仕様と実装上の判断基準: 本書
+
+過去の初期案ではなく、現在の `main` の実装を基準に記述します。
+
 ## 基準環境
 
-リポジトリで確認できる現在のプロジェクト基準は次のとおりです。
+現在のプロジェクト基準は次のとおりです。
 
-- Unity Editor: 6000.5.4f1
-- Universal Render Pipeline 導入済み
-- Unity Input System 導入済み
-- 2D Tilemap パッケージ導入済み
-- 2D Animation ツール導入済み
+- Unity Editor: `6000.5.4f1`
+- C#
+- Universal Render Pipeline（URP）
+- Unity Input System
+- 2D Tilemap
+- 2D Animation関連パッケージ
+- Canvas（uGUI）
+- Unity Test Framework
 
-この構成で、最初のアイソメトリック 2D／2.5D 試作を作成できます。
+Runtimeコードは `DemonKing.Runtime.asmdef` にまとめています。
 
 ## アーキテクチャ原則
 
-最初の実装は単純に保ちます。
+1. ゲームプレイコードをSteamやコンソール固有APIへ直接依存させない。
+2. 入力はデバイス固有キーではなくInput Actionとして扱う。
+3. Gameplay / UI / Disabledの入力コンテキストを明示的に切り替える。
+4. 通常移動、Dodge、Combat、Interaction、Pause、UI表示の責務を分離する。
+5. ゲームバランス値はPrefabやMonoBehaviourへ重複保持せずScriptableObjectを正とする。
+6. UI表示ロジックとゲーム状態管理を分離する。
+7. 描画順計算を各オブジェクトへ重複実装しない。
+8. Bootstrapは設定値やゲームロジックを持たず、Composition Rootとして起動処理を委譲する。
+9. 必要になる前に大規模DIコンテナや独自フレームワークを導入しない。
+10. 大規模化の必要性が確認できるまでは、Runtime assemblyを過剰に分割しない。
 
-1. 中核となるゲームプレイコードを Steam やコンソールの API に直接依存させない。
-2. 入力はハードコードしたキーではなく、論理アクションとして表現する。
-3. 描画に関する処理を戦闘やドメインのロジックへ混在させない。
-4. 必要になる前にフレームワークや依存性注入コンテナを導入しない。
-5. シーンに関わる振る舞いには小さな MonoBehaviour を優先し、複雑さが増した時点で再利用可能なルールを通常の C# クラスへ分離する。
-
-## 初期フォルダー構成
+## 現在の主要フォルダー構成
 
 ```text
 Assets/
   Art/
-    Characters/
-    Environment/
-    Tiles/
-    UI/
-  Audio/
-  Prefabs/
-    Characters/
-    Environment/
-    UI/
+    External/
+    World/
+  Fonts/
+  Resources/
+    Input/
+      PlayerControls.inputactions
+    Prefabs/
+      Characters/
+      World/
+    Settings/
+      PrototypeProjectAssets.asset
+      PrototypeApplicationSettings.asset
+      Gameplay/
+        PlayerCharacterStats.asset
+        PlayerMeleeAttack.asset
+        PlayerDodge.asset
   Scenes/
     Prototype/
+      Prototype.unity
   Scripts/
     Core/
-    Player/
-    Combat/
-    Interaction/
+      Application/
+      Input/
+      Math/
+    Gameplay/
+      Characters/
+        Configuration/
+      Combat/
+        Configuration/
+      Interaction/
+    Presentation/
+      Camera/
+      Characters/
+      Rendering/
+      UI/
+    Field/
+      Prototype/
+        Configuration/
     World/
-    UI/
-  Settings/
+    DemonKing.Runtime.asmdef
+    FieldBootstrap.cs
+    SlimeController.cs
+  Tests/
+    EditMode/
+    PlayMode/
+  Editor/
 ```
 
-アーキテクチャの形だけを整えるために空フォルダーを作らないでください。コンテンツが必要になった時点で追加します。
+`Field/Prototype` は現在の試作シーンを組み立てる外側のComposition層です。恒久的なGameplayルールは `Gameplay`、入力やアプリケーション状態など汎用的な基盤は `Core`、表示は `Presentation` に置きます。
 
-## シーン方針
+## 起動フロー
 
-最初は次の1シーンから始めます。
+現在の起動フローは次のとおりです。
+
+```text
+Prototype.unity
+  ↓
+FieldBootstrap
+  ↓ Resources.Load
+PrototypeProjectAssets
+  ↓
+PrototypeApplicationInstaller
+  ├ PrototypeApplicationSettings
+  ├ PrototypeSceneConfigurator
+  ├ PrototypeSortingConfigurator
+  ├ PrototypeWorldBuilder
+  │   ├ TerrainBuilder
+  │   ├ CollisionMapBuilder
+  │   ├ PrototypeWorldPrefabFactory
+  │   ├ ArchitectureBuilder
+  │   ├ NatureBuilder
+  │   ├ AtmosphereBuilder
+  │   ├ PrototypeGameplayFeatureInstaller
+  │   ├ PrototypePlayerSpawner
+  │   └ PrototypeCameraInstaller
+  ├ GamePauseController
+  └ PrototypeUiInstaller
+```
+
+`FieldBootstrap` は `PrototypeProjectAssets` を解決して `PrototypeApplicationInstaller` へ委譲するだけの最小エントリーポイントです。
+
+Spawn位置、フィールド範囲、Pause時TimeScaleなどの値は `PrototypeApplicationSettings` に保持します。
+
+## シーンとTilemap
+
+正規の試作シーンは次です。
 
 ```text
 Assets/Scenes/Prototype/Prototype.unity
 ```
 
-試作シーンには次の要素を配置します。
-
-- Grid
-- Isometric Tilemap
-- プレイヤーの仮オブジェクト
-- Main Camera
-- NPC の仮オブジェクト1体
-- 敵の仮オブジェクト1体
-- インタラクション対象1つ
-
-## アイソメトリック世界
-
-試作では、アイソメトリックレイアウトの Unity Tilemap を使用します。
-
-推奨する分割は次のとおりです。
+GridはIsometricレイアウトを使用し、基本レイヤーを次のように分離します。
 
 ```text
 Grid
-  Ground Tilemap
-  Collision Tilemap
-  Props Tilemap
-  Foreground Tilemap
+  ├ Ground
+  ├ Collision
+  ├ Props
+  └ Foreground
 ```
 
-可能な範囲で、コリジョンデータと表示データを分離できるようにします。
+- `Ground`: 地面表示
+- `Collision`: 物理衝突用。通常は非表示
+- `Props`: ワールド中の小物や必要な表示要素
+- `Foreground`: プレイヤーより手前へ被せる前景
 
-## スプライトの並び替え
+表示データと衝突データは分離します。
 
-キャラクターが風景の手前や奥を歩けるよう、ゲームには一貫した奥行き順が必要です。
+Editorメニュー `Demon King > Prototype > Create Isometric Scene` は試作シーンの基礎構造を再生成するためのツールです。既存の `Prototype.unity` を作り直す用途があるため、シーンを手作業で編集した後に実行する場合は差分を確認してください。
 
-初期ルール:
+## Tileアセット
+
+Ground表示はインポート済みSpriteを正とします。
 
 ```text
-sortingOrder = -round(worldY * precision)
+Imported Sprite
+  ↓
+PrototypeProjectAssets
+  ↓
+PrototypeRuntimeTileFactory
+  ↓
+Unity Tile
+  ↓
+Tilemap
 ```
 
-動的スプライトには `YSortSprite` のような小さなコンポーネントを使用します。静的 Tilemap の並び順は、選択したアイソメトリックレイアウトと一貫するように設定します。
+`PrototypeRuntimeTileFactory` はTexture2DやSpriteそのものを生成しません。実行時に必要な `Tile` オブジェクトだけを生成します。
 
-オブジェクトごとに手作業で並び順を設定しないでください。
+Collision用Tileは表示Spriteを持たず、Grid colliderとして使用します。
+
+## RuntimeShapeFactoryの扱い
+
+`RuntimeShapeFactory` は現在も一部で使用しますが、主要アートの代替ではありません。
+
+用途は次に限定します。
+
+- プロトタイプ専用の軽量な装飾
+- 柵、ランドマークなど未アセット化の補助表示
+- 雰囲気確認用の簡易演出
+
+地形、プレイヤー、校舎、木、街灯など、継続的に利用する主要要素はプロジェクト管理アセットやPrefabを正とします。
+
+コンテンツ制作が進んだ要素から、RuntimeShapeFactory利用箇所を静的アセットまたはPrefabへ置き換えます。
+
+## 描画順
+
+アイソメトリック空間の動的オブジェクトは、Y座標を基準に描画順を決定します。
+
+基本計算は `WorldSortOrder` に集約します。
+
+```text
+sortingOrder = -round(worldY * precision) + offset
+```
+
+複数SpriteRendererを持つキャラクターなどは `GroupYSorter` を使用し、子Sprite間の相対的な順序を保ったままグループ全体をYソートします。
+
+原則としてYソート対象は `World` Sorting Layerを使用します。
+
+オブジェクトごとに独自のYソート式を実装しません。
 
 ## 入力
 
-Unity Input System を使用します。
+Input Actionsは `Assets/Resources/Input/PlayerControls.inputactions` で管理します。
 
-初期アクションマップ:
+### Gameplay Action Map
 
 ```text
-Player
-  Move        Vector2
-  Attack      Button
-  Interact    Button
-  Dodge       Button
-  Pause       Button
+Gameplay
+  Move       Vector2
+  Attack     Button
+  Interact   Button
+  Dodge      Button
+  Pause      Button
 ```
 
-推奨バインド:
+現在の主なバインド:
 
 ```text
 Move
-  WASD
-  矢印キー
-  ゲームパッド左スティック
+  Keyboard: WASD / Arrow Keys
+  Gamepad: Left Stick
 
 Attack
-  キーボード: J または Space（試作のみ）
-  ゲームパッド: 南ボタン
+  Keyboard: J
+  Gamepad: Button West
 
 Interact
-  キーボード: E
-  ゲームパッド: 西ボタン
+  Keyboard: E
+  Gamepad: Button South
 
 Dodge
-  キーボード: Left Shift
-  ゲームパッド: 東ボタン
+  Keyboard: Left Shift
+  Gamepad: Button East
 
 Pause
-  キーボード: Escape
-  ゲームパッド: Start
+  Keyboard: Escape
+  Gamepad: Start
 ```
 
-ゲームプレイスクリプトでは特定のキーボードキーを直接調べず、アクションを使用します。
+### UI Action Map
 
-## プレイヤー移動
+```text
+UI
+  Navigate   Vector2
+  Submit     Button
+  Cancel     Button
+  Pause      Button
+```
 
-最初の試作では次の方針を採用します。
+現在の主なバインド:
 
-- Rigidbody2D による移動
-- FixedUpdate で移動を適用
-- 斜め移動が速くならないよう入力を正規化
-- 移動速度を Inspector に公開
-- 仮表示での移動感が整うまでアニメーション連携を延期
+```text
+Navigate
+  Keyboard: WASD / Arrow Keys
+  Gamepad: Left Stick / D-Pad
 
-表示はアイソメトリックですが、移動入力は当初、2D ワールド空間のベクトルとして扱います。採用するアートやグリッドの向きに応じて、後の反復で軸を変換できます。
+Submit
+  Keyboard: Enter / Space
+  Gamepad: Button South
+
+Cancel
+  Keyboard: Escape
+  Gamepad: Button East
+
+Pause
+  Gamepad: Start
+```
+
+`PlayerInputReader` がAction Assetの実行時インスタンスを所有し、次のコンテキストを排他的に切り替えます。
+
+```text
+Gameplay
+UI
+Disabled
+```
+
+ゲームプレイスクリプトで `Keyboard.current` や特定キーを直接参照しません。
+
+## プレイヤー通常移動
+
+通常移動は `CharacterMotor2D` が担当します。
+
+```text
+PlayerInputReader
+  ↓
+MoveInputReader
+  ↓
+CharacterMotor2D
+  ↓
+Rigidbody2D.MovePosition
+```
+
+- 入力取得はUpdate
+- 物理移動はFixedUpdate
+- 入力Vector2はInput側で最大長1へ制限
+- 重力は使用しない
+- 回転は固定
+- 移動速度は `CharacterStatsDefinition` から取得
+
+通常移動を一時停止する必要があるDodgeなどは、`CharacterMotor2D.SetMovementLocked` を利用します。
+
+## Dodge
+
+Dodgeは `CharacterDodge2D` が担当します。
+
+```text
+PlayerInputReader.DodgePressed
+  ↓
+CharacterDodge2D
+  ├ DodgeDefinition
+  ├ CharacterMotor2D.SetMovementLocked(true)
+  └ Rigidbody2D.MovePosition
+```
+
+- 入力中は入力方向へ回避
+- 無入力時は最後に移動した方向へ回避
+- Dodge中は通常移動を一時ロック
+- 回避終了後に通常移動を復帰
+- クールダウン中は再Dodge不可
+
+速度、継続時間、クールダウンは `PlayerDodge.asset` を正とします。
+
+## Interaction
+
+Interactionの恒久的な契約は `Gameplay/Interaction` に置きます。
+
+```text
+PlayerInputReader.InteractPressed
+  ↓
+PlayerInteractor
+  ↓
+IInteractable
+  ↓
+NPC / Door / Chest / Inspectable
+```
+
+`PlayerInteractor` は具体的なNPCやオブジェクト種別へ依存しません。
+
+現在のPrototype NPCは、この契約を確認するための試作実装です。
+
+## Combat
+
+Combatの基本経路は次です。
+
+```text
+PlayerInputReader.AttackPressed
+  ↓
+PlayerMeleeAttack
+  ↓
+MeleeAttackDefinition
+  ↓
+Overlap判定
+  ↓
+IDamageable
+  ↓
+Health
+```
+
+- `Health`: 現在HP、生存状態、ダメージ、死亡イベント
+- `MeleeAttackDefinition`: ダメージ、攻撃半径、攻撃距離
+- `PlayerMeleeAttack`: 入力と近接攻撃判定の接続
+
+敵AI、報酬、死亡演出は `Health` に入れず、別Featureとして追加します。
+
+## Pause
+
+Pause状態は `GamePauseController` が管理します。
+
+Pause時:
+
+```text
+Time.timeScale = pausedTimeScale
+PlayerInputContext = UI
+PauseStateChanged(true)
+```
+
+Resume時:
+
+```text
+Time.timeScale = Pause前の値
+PlayerInputContext = Gameplay
+PauseStateChanged(false)
+```
+
+`PauseMenuView` はPause状態の表示だけを担当し、TimeScaleやInput Contextを直接変更しません。
+
+## UI
+
+本番UI基盤はCanvas（uGUI）です。
+
+現在のルート:
+
+```text
+UI Root
+  ├ Canvas
+  ├ CanvasScaler
+  ├ GraphicRaycaster
+  ├ GameHudView
+  └ PauseMenuView
+```
+
+UIはプレイヤーPrefabのライフサイクルから分離します。
+
+日本語フォントは `PrototypeProjectAssets.UiFont` から注入します。OSフォントへの依存は避けます。
+
+標準フォントの導入ツール:
+
+```text
+Demon King > Project > Install Japanese UI Font
+```
+
+## ScriptableObjectによる設定管理
+
+現在の設定アセットは次です。
+
+```text
+PrototypeProjectAssets.asset
+  -> アセット参照の集約
+
+PrototypeApplicationSettings.asset
+  -> playerSpawnPosition
+  -> playableTileRadius
+  -> pausedTimeScale
+
+PlayerCharacterStats.asset
+  -> moveSpeed
+  -> maxHealth
+
+PlayerMeleeAttack.asset
+  -> damage
+  -> attackRadius
+  -> attackDistance
+
+PlayerDodge.asset
+  -> dodgeSpeed
+  -> duration
+  -> cooldown
+```
+
+MonoBehaviourやPrefabへ同じバランス値を重複保持しない方針です。
+
+新しい設定値をScriptableObjectへ移すかどうかは、次を目安にします。
+
+- 複数Prefabやシーンから共有する
+- デザイナーがコード変更なしで調整する
+- キャラクターや装備ごとに差し替える
+- セーブデータとは別の静的定義データである
+
+## アセット参照とResources
+
+`Resources.Load` は無制限に使用しません。
+
+現在の主な利用は次です。
+
+- `FieldBootstrap` が `PrototypeProjectAssets` を解決する入口
+- `PlayerInputReader` のInput Action Asset互換フォールバック
+- uGUI組み込みフォントの最終フォールバック
+
+Prefab、Sprite、Gameplay設定などは `PrototypeProjectAssets` のUnityシリアライズ参照を経由します。
+
+将来Addressablesへ移行する場合も、Gameplay側から直接Addressables APIを呼ばず、アセット供給側の境界を置き換える方針です。
 
 ## カメラ
 
-最初は単純な正投影の追従カメラを使用します。
+`CameraFollow2D` は任意の `Transform` を追従対象として受け取ります。
 
-要件:
+プレイヤー固有クラスへ依存しません。
 
-- 滑らかな追従
-- 試作中は回転させない
-- 最終的なキャラクタースプライトを制作する前に画角を調整
+現在は正投影カメラを使用し、試作中はカメラ回転を前提にしません。
 
-Cinemachine は価値がある場合に後から導入できますが、マイルストーン1には必須ではありません。
+Cinemachineは、カメラ演出や複数ターゲットなど明確な必要性が出た段階で検討します。
 
-## インタラクション
+## ライティング
 
-プレイヤーに NPC のロジックを直接記述せず、小さなインタラクション用の契約を使用します。
+URPを導入済みで、2D Lightingを利用できる構成です。
 
-概念例:
+ただし現在のPrototype Scene Builderには簡易なDirectional Light placeholderも残っており、最終的な2D Lighting構成は確定していません。
 
-```csharp
-public interface IInteractable
-{
-    void Interact();
-}
-```
+本番ライティングを整備する際は、次を基準にします。
 
-プレイヤーは短い半径またはトリガー範囲内のインタラクション対象を探し、処理を呼び出します。
+- 視認性を損なわない
+- 多数の高負荷ライトを前提にしない
+- Steam向けPCだけでなく将来のコンソール性能も考慮する
+- 実機計測前に過剰な最適化を行わない
 
-## 戦闘
+## テスト
 
-試作の戦闘は意図的に小さく保ちます。
+現在のテストassembly:
 
 ```text
-攻撃入力
-  -> 短い攻撃受付時間
-  -> オーバーラップ判定／ヒットボックス
-  -> IDamageable.TakeDamage
-  -> 敵の HP が減少
-  -> HP が 0 以下になると死亡
+DemonKing.EditMode.Tests
+DemonKing.PlayMode.Tests
 ```
 
-初期の抽象化には次の要素を含められます。
+主なテスト:
 
 ```text
-IDamageable
-Health
-PlayerAttack
-EnemyHealth
+EditMode
+  WorldSortOrderTests
+
+PlayMode
+  GameplayAndCameraPlayModeTests
+  PlayerInputContextPlayModeTests
+  DodgeAndPausePlayModeTests
 ```
 
-基本攻撃の有用性が確認できる前に、完全なアビリティシステムを構築しないでください。
+テストで優先する対象は、表示の細部よりも変更時に壊れやすいルールと境界です。
 
-## プラットフォーム移植性
+今後の拡張候補:
 
-次の機能を追加する場合は、インターフェースの背後に置きます。
+- Interaction対象選択
+- CombatのOverlap判定
+- Pause中のGameplay入力抑止
+- NPC会話状態とInput Context切り替え
+- セーブ／ロード境界
 
-- セーブデータの保存
+## Platform移植性
+
+次の機能を追加するときは、ゲームプレイコードから直接プラットフォームSDKを呼びません。
+
+- セーブデータ保存
 - 実績
 - クラウドセーブ
-- プラットフォーム上のユーザー識別
-- DLC／権利の確認
+- プラットフォームユーザー識別
+- DLC／権利確認
 
 将来の境界例:
 
 ```text
-コアゲーム
-  -> ISaveService
-  -> IAchievementService
-  -> IPlatformUserService
-
-プラットフォーム実装
-  -> Steam
-  -> Console
+Gameplay / Application
+  ↓
+ISaveService
+IAchievementService
+IPlatformUserService
+  ↓
+Platform Implementation
+  ├ Steam
+  └ Console
 ```
 
-実際にプラットフォーム依存機能を初めて導入するまでは、プラットフォーム抽象化は不要です。
+実際に機能が必要になるまでは空のPlatform抽象化を増やしません。
 
 ## パフォーマンス方針
 
-将来コンソールへ移植する可能性があるため、次の点を守ります。
+将来のコンソール移植を考慮し、次を守ります。
 
-- 透明描画の重なりによる負荷を抑える
-- 画面全体に及ぶ 2D ライトを過剰に使用しない
-- アセット数が増えたらスプライトアトラスを使用する
-- 高性能な開発用 PC だけでなく、控えめな性能のハードウェアでも計測する
-- マップが大きくなった場合、ゲーム世界全体を一度に読み込まない
+- 透明Spriteの過剰な重なりを避ける
+- 2D Lightを無制限に増やさない
+- アセット数が増えた段階でSprite Atlasを検討する
+- 大規模マップを一括ロードする前提にしない
+- 高性能な開発PCだけで評価しない
+- 最適化はProfilerと実機計測に基づいて行う
 
-最適化は推測ではなく、計測結果に基づいて行います。
+Addressables、シーンストリーミング、細分化したasmdefは、規模と計測結果が必要性を示した段階で導入します。
 
-## マイルストーン1の完了条件
+## 現在の技術マイルストーン
 
-最初の技術マイルストーンは、次の条件を満たした時点で完了です。
+P0〜P2で予定していた基礎アーキテクチャ整備は完了しています。
 
-1. プロジェクトをエラーなく開ける。
-2. アイソメトリックの試作マップが表示される。
-3. キーボードとゲームパッドでプレイヤーを移動できる。
-4. カメラがプレイヤーを追従する。
-5. 少なくとも1つの前景オブジェクトに対して、Y座標に基づく並び替えが機能する。
-6. 1つのオブジェクトまたは NPC とインタラクションできる。
-7. 1体の敵へダメージを与えて倒せる。
+現在確認できる技術基盤:
+
+1. 正規Prototypeシーン
+2. Isometric TilemapとCollision Tilemap
+3. Rigidbody2Dによる移動
+4. 共通Yソート
+5. Gameplay / UI / Disabled入力コンテキスト
+6. Interaction契約
+7. Combat / Health契約
+8. Dodge
+9. Pause状態管理
+10. uGUI HUD / Pause Menu
+11. ScriptableObject設定管理
+12. EditMode / PlayModeテスト基盤
+
+次の段階では、基盤を増やすこと自体を目的にせず、NPC会話、敵AI、クエスト、成長などのゲームコンテンツを実装し、その過程で必要になった技術境界を追加します。
