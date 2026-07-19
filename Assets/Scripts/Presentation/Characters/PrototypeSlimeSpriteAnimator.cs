@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using DemonKing.Core.Input;
 using DemonKing.Presentation.Rendering;
 using UnityEngine;
@@ -5,8 +7,8 @@ using UnityEngine;
 namespace DemonKing.Presentation.Characters
 {
     /// <summary>
-    /// Resources配下のピクセルスプライトを使って試作スライムの待機・移動アニメーションを再生します。
-    /// 実行時の図形生成には依存せず、見た目をアートアセットとして差し替えられる構造にします。
+    /// Resources配下のピクセルフレームアセットをSpriteへ変換し、試作スライムの待機・移動アニメーションを再生します。
+    /// 従来のRuntimeShapeFactoryによる多層図形生成を廃止し、アートデータ単位で差し替えられる構造にします。
     /// </summary>
     [DisallowMultipleComponent]
     [RequireComponent(typeof(MoveInputReader))]
@@ -14,10 +16,12 @@ namespace DemonKing.Presentation.Characters
     public sealed class PrototypeSlimeSpriteAnimator : MonoBehaviour
     {
         private const string SpriteRoot = "Art/Characters/PrototypeSlime/";
+        private const float PixelsPerUnit = 16f;
 
         [SerializeField, Min(0.05f)] private float idleFrameDuration = 0.34f;
         [SerializeField, Min(0.05f)] private float moveFrameDuration = 0.14f;
 
+        private readonly List<Sprite> generatedSprites = new();
         private MoveInputReader inputReader;
         private SpriteRenderer spriteRenderer;
         private Sprite[] idleFrames;
@@ -32,7 +36,6 @@ namespace DemonKing.Presentation.Characters
             spriteRenderer = ResolveRenderer();
             idleFrames = LoadFrames("IdleA", "IdleB");
             moveFrames = LoadFrames("MoveA", "MoveB");
-
             ApplyFrame(false, 0);
         }
 
@@ -71,6 +74,24 @@ namespace DemonKing.Presentation.Characters
             ApplyFrame(moving, frameIndex);
         }
 
+        private void OnDestroy()
+        {
+            foreach (Sprite sprite in generatedSprites)
+            {
+                if (sprite == null)
+                {
+                    continue;
+                }
+
+                Texture2D texture = sprite.texture;
+                Destroy(sprite);
+                if (texture != null)
+                {
+                    Destroy(texture);
+                }
+            }
+        }
+
         private SpriteRenderer ResolveRenderer()
         {
             SpriteRenderer existing = GetComponentInChildren<SpriteRenderer>(includeInactive: true);
@@ -87,24 +108,88 @@ namespace DemonKing.Presentation.Characters
             return renderer;
         }
 
-        private static Sprite[] LoadFrames(string first, string second)
+        private Sprite[] LoadFrames(string first, string second)
         {
-            Sprite firstSprite = Resources.Load<Sprite>(SpriteRoot + first);
-            Sprite secondSprite = Resources.Load<Sprite>(SpriteRoot + second);
+            return new[]
+            {
+                LoadFrame(first),
+                LoadFrame(second)
+            };
+        }
 
-            if (firstSprite == null || secondSprite == null)
+        private Sprite LoadFrame(string frameName)
+        {
+            TextAsset frameAsset = Resources.Load<TextAsset>(SpriteRoot + frameName);
+            if (frameAsset == null)
             {
                 Debug.LogError(
-                    $"スライムのスプライトが見つかりません。Resources/{SpriteRoot} 配下のPNGとImport Settingsを確認してください。");
+                    $"スライムのピクセルフレームが見つかりません。Resources/{SpriteRoot}{frameName}.txt を確認してください。",
+                    this);
+                return null;
             }
 
-            return new[] { firstSprite, secondSprite };
+            Sprite sprite = CreateSprite(frameName, frameAsset.text);
+            generatedSprites.Add(sprite);
+            return sprite;
+        }
+
+        private static Sprite CreateSprite(string name, string frameText)
+        {
+            string[] rows = frameText
+                .Replace("\r", string.Empty)
+                .Split('\n', StringSplitOptions.RemoveEmptyEntries);
+
+            int height = rows.Length;
+            int width = 0;
+            foreach (string row in rows)
+            {
+                width = Mathf.Max(width, row.Length);
+            }
+
+            Texture2D texture = new(width, height, TextureFormat.RGBA32, false)
+            {
+                name = name,
+                filterMode = FilterMode.Point,
+                wrapMode = TextureWrapMode.Clamp
+            };
+
+            for (int rowIndex = 0; rowIndex < height; rowIndex++)
+            {
+                string row = rows[rowIndex];
+                int pixelY = height - 1 - rowIndex;
+                for (int x = 0; x < width; x++)
+                {
+                    char token = x < row.Length ? row[x] : '.';
+                    texture.SetPixel(x, pixelY, ResolveColor(token));
+                }
+            }
+
+            texture.Apply();
+            return Sprite.Create(
+                texture,
+                new Rect(0f, 0f, width, height),
+                new Vector2(0.5f, 0.5f),
+                PixelsPerUnit);
+        }
+
+        private static Color ResolveColor(char token)
+        {
+            return token switch
+            {
+                's' => new Color32(14, 45, 40, 120),
+                'o' => new Color32(20, 78, 64, 255),
+                'g' => new Color32(76, 219, 135, 255),
+                'd' => new Color32(45, 166, 112, 255),
+                'h' => new Color32(194, 255, 205, 255),
+                'e' => new Color32(10, 29, 26, 255),
+                _ => Color.clear
+            };
         }
 
         private void ApplyFrame(bool moving, int index)
         {
             Sprite[] frames = moving ? moveFrames : idleFrames;
-            if (frames == null || frames.Length == 0 || frames[index] == null)
+            if (frames == null || frames.Length == 0 || index < 0 || index >= frames.Length || frames[index] == null)
             {
                 return;
             }
