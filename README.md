@@ -157,7 +157,7 @@ P0〜P2に加え、成長システム実装前のDefinition、Runtime State、Sa
 
 ## リリース
 
-`main` へのマージ時にsemantic-releaseを実行し、Conventional Commitsから `vX.Y.Z` タグとGitHub Releaseを自動生成します。npm公開やUnity Playerの自動ビルドは行いません。
+`main` へのマージ時にsemantic-releaseを実行し、Conventional Commitsから `vX.Y.Z` タグ、`CHANGELOG.md`、Unity Playerのバージョン、GitHub Releaseを自動更新します。npm公開やUnity Playerの自動ビルドは行いません。
 
 - `fix:` / `perf:`: Patch Release
 - `feat:`: Minor Release
