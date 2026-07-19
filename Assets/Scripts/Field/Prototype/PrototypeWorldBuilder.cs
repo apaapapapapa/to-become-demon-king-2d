@@ -10,11 +10,16 @@ namespace DemonKing.Field.Prototype
     {
         private readonly Vector3 playerSpawnPosition;
         private readonly int playableTileRadius;
+        private readonly PrototypeProjectAssets projectAssets;
 
-        public PrototypeWorldBuilder(Vector3 playerSpawnPosition, int playableTileRadius)
+        public PrototypeWorldBuilder(
+            Vector3 playerSpawnPosition,
+            int playableTileRadius,
+            PrototypeProjectAssets projectAssets)
         {
             this.playerSpawnPosition = playerSpawnPosition;
             this.playableTileRadius = Mathf.Max(4, playableTileRadius);
+            this.projectAssets = projectAssets;
         }
 
         public Transform Build()
@@ -24,8 +29,8 @@ namespace DemonKing.Field.Prototype
 
             var shapes = new RuntimeShapeFactory();
             PrototypeTilemapContext tilemaps = PrototypeTilemapContext.Resolve();
-            var tiles = new PrototypeRuntimeTileFactory();
-            var prefabs = new PrototypeWorldPrefabFactory();
+            var tiles = new PrototypeRuntimeTileFactory(projectAssets.GrassTileSprite, projectAssets.PathTileSprite);
+            var prefabs = new PrototypeWorldPrefabFactory(projectAssets);
             var terrain = new TerrainBuilder(shapes, tilemaps, tiles, playableTileRadius);
             var architecture = new ArchitectureBuilder(shapes, prefabs);
 
@@ -38,7 +43,7 @@ namespace DemonKing.Field.Prototype
             new PrototypeGameplayFeatureInstaller().Install(world);
             terrain.BuildForeground(world);
 
-            GameObject player = new PrototypePlayerSpawner(playerSpawnPosition).Spawn(world);
+            GameObject player = new PrototypePlayerSpawner(playerSpawnPosition, projectAssets.PlayerPrefab).Spawn(world);
             PrototypeCameraInstaller.Configure(Camera.main, player == null ? null : player.transform);
 
             return world;
