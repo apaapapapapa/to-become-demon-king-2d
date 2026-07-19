@@ -4,35 +4,39 @@ namespace DemonKing.Field.Prototype
 {
     /// <summary>
     /// 試作フィールド全体の構築順序を管理する構成ルートです。
-    /// 各Builderの具体的な描画処理は持たず、依存関係の組み立てだけを担当します。
+    /// Tilemap、衝突、Prefab、演出、プレイヤーを組み合わせます。
     /// </summary>
     internal sealed class PrototypeWorldBuilder
     {
         private readonly Vector3 playerSpawnPosition;
-        private readonly Vector2 playableHalfExtents;
+        private readonly int playableTileRadius;
 
-        public PrototypeWorldBuilder(Vector3 playerSpawnPosition, Vector2 playableHalfExtents)
+        public PrototypeWorldBuilder(Vector3 playerSpawnPosition, int playableTileRadius)
         {
             this.playerSpawnPosition = playerSpawnPosition;
-            this.playableHalfExtents = playableHalfExtents;
+            this.playableTileRadius = Mathf.Max(4, playableTileRadius);
         }
 
         public Transform Build()
         {
             Transform world = new GameObject("夕映えの学園草原").transform;
             AmbientEffectController ambientEffects = world.gameObject.AddComponent<AmbientEffectController>();
-            var shapes = new RuntimeShapeFactory();
-            var terrain = new TerrainBuilder(shapes);
-            var architecture = new ArchitectureBuilder(shapes, ambientEffects);
 
-            // 既存プロトタイプと同じ生成順を維持し、同一SortingOrder時の見え方の変化を避けます。
+            var shapes = new RuntimeShapeFactory();
+            PrototypeTilemapContext tilemaps = PrototypeTilemapContext.Resolve();
+            var tiles = new PrototypeRuntimeTileFactory();
+            var prefabs = new PrototypeWorldPrefabFactory();
+            var terrain = new TerrainBuilder(shapes, tilemaps, tiles, playableTileRadius);
+            var architecture = new ArchitectureBuilder(shapes, prefabs);
+
             terrain.BuildBase(world);
+            new CollisionMapBuilder(tilemaps, tiles, playableTileRadius).Build();
             architecture.BuildStructures(world);
-            new NatureBuilder(shapes, ambientEffects).Build(world);
+            new NatureBuilder(shapes, ambientEffects, prefabs).Build(world);
             architecture.BuildLandmarksAndLighting(world);
             new AtmosphereBuilder(shapes, ambientEffects).Build(world);
             terrain.BuildForeground(world);
-            new PrototypePlayerSpawner(playerSpawnPosition, playableHalfExtents).Spawn(world);
+            new PrototypePlayerSpawner(playerSpawnPosition).Spawn(world);
 
             return world;
         }
