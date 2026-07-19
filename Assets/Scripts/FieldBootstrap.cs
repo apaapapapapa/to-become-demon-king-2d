@@ -9,6 +9,8 @@ namespace DemonKing.Field
     /// </summary>
     public sealed class FieldBootstrap : MonoBehaviour
     {
+        private const string ProjectAssetsResourcePath = "Settings/PrototypeProjectAssets";
+
         [Header("プレイヤー配置")]
         [SerializeField] private Vector3 playerSpawnPosition = new(0f, -1.35f, -1f);
 
@@ -17,10 +19,19 @@ namespace DemonKing.Field
 
         private void Awake()
         {
+            PrototypeProjectAssets projectAssets = Resources.Load<PrototypeProjectAssets>(ProjectAssetsResourcePath);
+            if (projectAssets == null || !projectAssets.IsConfigured)
+            {
+                Debug.LogError(
+                    $"プロトタイプ用アセット設定が不足しています。Resources/{ProjectAssetsResourcePath}.asset を確認してください。",
+                    this);
+                return;
+            }
+
             PrototypeSceneConfigurator.Configure(Camera.main);
             PrototypeSortingConfigurator.Configure();
             PrototypeUiInstaller.Create();
-            new PrototypeWorldBuilder(playerSpawnPosition, playableTileRadius).Build();
+            new PrototypeWorldBuilder(playerSpawnPosition, playableTileRadius, projectAssets).Build();
         }
     }
 }
