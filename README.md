@@ -1,32 +1,32 @@
 # To Become Demon King 2D
 
-A Unity 2D/2.5D isometric RPG prototype inspired by the visual direction of games such as Witchbrook.
+『To Become Demon King 2D』は、Witchbrook などの作品が持つビジュアルの方向性に着想を得た、Unity 製のアイソメトリック 2D／2.5D RPG 試作です。
 
-## Technical direction
+## 技術方針
 
 - Unity 6
 - C#
-- Universal Render Pipeline (URP)
-- 2D Renderer / 2D Lighting
+- Universal Render Pipeline（URP）
+- 2D Renderer／2D Lighting
 - Isometric Tilemap
 - Unity Input System
-- Pixel-art oriented presentation
-- Keyboard and gamepad support from the start
-- Steam first, with future console portability in mind
+- ピクセルアートを重視した表現
+- 開発初期からキーボードとゲームパッドに対応
+- まず Steam 向けに開発し、将来のコンソール移植も考慮
 
-## First playable milestone
+## 最初のプレイ可能マイルストーン
 
-The first vertical slice should allow the player to:
+最初の縦切り試作では、プレイヤーが次の操作を行えるようにします。
 
-1. Move in an isometric map with keyboard or gamepad.
-2. Walk behind/in front of scenery with correct sprite sorting.
-3. Interact with one NPC.
-4. Attack one enemy.
-5. Defeat the enemy and receive a simple result/reward.
+1. キーボードまたはゲームパッドでアイソメトリックマップ内を移動する。
+2. スプライトが正しく並び替えられ、風景の手前や奥を歩く。
+3. 1人の NPC と会話する。
+4. 1体の敵を攻撃する。
+5. 敵を倒し、簡単な結果または報酬を受け取る。
 
-The first goal is not a polished game. It is a small playable loop that validates movement, camera, rendering order, interaction, and combat.
+最初の目標は、完成度の高いゲームを作ることではありません。移動、カメラ、描画順、インタラクション、戦闘を検証できる、小さなプレイ可能ループを作ることです。
 
-## Recommended project structure
+## 推奨プロジェクト構成
 
 ```text
 Assets/
@@ -52,15 +52,15 @@ Assets/
   Settings/
 ```
 
-## Development order
+## 開発順序
 
-1. Create an isometric prototype scene.
-2. Configure the Input System.
-3. Implement player movement.
-4. Add camera follow.
-5. Add sprite sorting based on Y position.
-6. Add interaction with one NPC.
-7. Add one simple enemy and attack action.
-8. Add basic HP/damage/death handling.
+1. アイソメトリックの試作シーンを作成する。
+2. Input System を設定する。
+3. プレイヤーの移動を実装する。
+4. カメラ追従を追加する。
+5. Y座標に基づくスプライトの並び替えを追加する。
+6. 1人の NPC とのインタラクションを追加する。
+7. 単純な敵を1体と攻撃アクションを追加する。
+8. 基本的な HP、ダメージ、死亡処理を追加する。
 
-See `docs/GAME_DIRECTION.md` and `docs/TECHNICAL_DESIGN.md` for details.
+詳細は `docs/GAME_DIRECTION.md` と `docs/TECHNICAL_DESIGN.md` を参照してください。
