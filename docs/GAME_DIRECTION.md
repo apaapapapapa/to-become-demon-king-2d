@@ -1,98 +1,98 @@
-# Game Direction
+# ゲーム方針
 
-## Core concept
+## 中核コンセプト
 
-`To Become Demon King` is planned as an isometric 2D/2.5D RPG with a handcrafted pixel-art presentation.
+『To Become Demon King』は、手作りのピクセルアートで表現するアイソメトリック 2D／2.5D RPG として計画しています。
 
-The visual target is not a direct copy of Witchbrook. The reference point is its broad presentation style:
+目指すビジュアルは Witchbrook の直接的な模倣ではありません。参考にするのは、次のような大まかな表現方針です。
 
-- isometric world view
-- richly layered pixel-art environments
-- a sense of depth despite 2D assets
-- readable character silhouettes
-- atmospheric lighting
-- exploration and interaction as important parts of the experience
+- アイソメトリック視点の世界
+- 豊かなレイヤーで構成されたピクセルアート環境
+- 2D アセットでありながら奥行きを感じられる表現
+- 見分けやすいキャラクターのシルエット
+- 雰囲気を演出するライティング
+- 探索とインタラクションを体験の重要な要素とすること
 
-## Initial design assumptions
+## 初期設計の前提
 
-These assumptions are intentionally lightweight and can change after prototyping.
+以下の前提は意図的に簡潔にしてあり、試作後に変更できます。
 
-### Player fantasy
+### プレイヤーが体験する役割
 
-The player begins as a relatively weak character and works toward becoming a Demon King.
+プレイヤーは比較的弱いキャラクターとして始まり、魔王になることを目指します。
 
-### Early gameplay pillars
+### 初期ゲームプレイの柱
 
-1. Exploration
-2. Character interaction
-3. Combat
-4. Growth/progression
+1. 探索
+2. キャラクターとのインタラクション
+3. 戦闘
+4. 成長／進行
 
-The prototype should validate these pillars before building a large story or content set.
+大規模な物語やコンテンツを作る前に、試作でこれらの柱を検証します。
 
-## Vertical slice
+## 縦切り試作
 
-The first playable slice should contain a single compact area.
+最初のプレイ可能な試作には、コンパクトなエリアを1つ用意します。
 
-Suggested flow:
+想定する流れは次のとおりです。
 
 ```text
-Start in a small settlement or field
-  -> walk around
-  -> talk to one NPC
-  -> receive a simple objective
-  -> encounter one enemy
-  -> defeat the enemy
-  -> return or receive a result
+小さな集落または野原から開始
+  -> 周囲を歩く
+  -> 1人の NPC と話す
+  -> 簡単な目的を受け取る
+  -> 1体の敵に遭遇する
+  -> 敵を倒す
+  -> 戻る、または結果を受け取る
 ```
 
-The goal is to prove the basic game feel, not to finalize the story.
+目標は基本的な手触りを証明することであり、物語を完成させることではありません。
 
-## Story development policy
+## 物語の開発方針
 
-Do not write the full scenario first.
+最初からシナリオ全体を書かないでください。
 
-Before implementation, define only:
+実装前に定義するのは、次の項目だけです。
 
-- who the protagonist is
-- why the protagonist wants or needs to become the Demon King
-- the tone of the world
-- the central conflict
+- 主人公が誰か
+- 主人公がなぜ魔王になりたい、または魔王になる必要があるのか
+- 世界の雰囲気
+- 中心となる対立
 
-Build the first playable slice, then refine the story based on what the game systems express well.
+最初のプレイ可能な試作を作り、ゲームシステムが効果的に表現できる内容を踏まえて物語を洗練します。
 
-## Visual direction
+## ビジュアル方針
 
-### Perspective
+### 視点
 
-Use an isometric or near-isometric presentation.
+アイソメトリック、またはそれに近い表現を使用します。
 
-### Environment
+### 環境
 
-Prefer tile-based construction for the prototype. Use separate visual layers for:
+試作ではタイルベースの構築を優先します。表示レイヤーは次の用途ごとに分けます。
 
-- ground
-- walls/structures
-- props
-- foreground occluders
-- effects
+- 地面
+- 壁／構造物
+- 小物
+- 前景の遮蔽物
+- エフェクト
 
-### Characters
+### キャラクター
 
-Start with placeholder sprites. Final character art should come after movement scale, camera distance, collision size, and animation requirements are known.
+最初は仮スプライトを使用します。最終的なキャラクターアートは、移動スケール、カメラ距離、コリジョンの大きさ、アニメーション要件が明確になってから制作します。
 
-### Lighting
+### ライティング
 
-Use URP 2D lighting selectively. Avoid building gameplay that depends on expensive effects before performance targets are established.
+URP 2D ライティングは選択的に使用します。性能目標が定まる前に、高負荷なエフェクトへ依存するゲームプレイを作らないでください。
 
-## Platform assumptions
+## 対象プラットフォームの前提
 
-Primary initial target:
+最初の主要対象:
 
-- Windows / Steam
+- Windows／Steam
 
-Future portability target:
+将来の移植対象:
 
-- Nintendo console platform(s), subject to platform approval and SDK access
+- Nintendo のコンソールプラットフォーム（プラットフォーム承認と SDK へのアクセスが前提）
 
-Therefore the game should not depend on mouse-only interaction or Steam-specific APIs in core gameplay code.
+そのため、中核となるゲームプレイコードをマウス専用の操作や Steam 固有の API に依存させないでください。
