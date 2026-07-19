@@ -70,7 +70,7 @@
 Assets/Plugins/**           linguist-generated
 Packages/packages-lock.json linguist-generated
 
-# Unity LFS
+# Unity で LFS 管理するファイル
 *.cubemap               lfs
 *.unitypackage          lfs
 
