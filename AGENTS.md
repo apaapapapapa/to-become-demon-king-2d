@@ -33,19 +33,15 @@
 
 ### コード・Unityアセットが正
 
-次は実装側を正とします。
-
 - 実際にコンパイルされるC#コード
 - Scene / Prefab / Input Actions
-- ScriptableObjectに保存するRuntime値
+- ScriptableObjectに保存する静的Definition・Runtime設定値
 - Package / Project Settings
 - 自動テスト
 
 Markdownへ同じ数値を複製して二重管理しないでください。
 
 ### docsが正
-
-次はKnowledge Baseを正とします。
 
 - ゲームビジョン
 - 世界観と物語の意図
@@ -57,16 +53,64 @@ Markdownへ同じ数値を複製して二重管理しないでください。
 
 ### 実装とdocsを同期する情報
 
-次の変更では、コードと関連ドキュメントの両方を確認してください。
-
-- 入力Action / Binding
+- Input Action / Binding
 - Combatルール
 - Interactionルール
 - Save仕様
+- 成長・Skill・Evolutionのデータ構造
 - Scene遷移
 - UI状態遷移
 - Platform依存境界
-- モンスターやスキルのRuntimeデータ構造
+- Stable Content IDの命名規則
+
+## Domain / Definition / Runtime State / Save DTO
+
+今後の成長・Skill・Evolution実装では、次を混同しないでください。
+
+### Domain
+
+`DemonKing.Domain` はUnity非依存の純C#領域です。
+
+例:
+
+- `CharacterProgressionState`
+- `GameSaveData` / `PlayerSaveData`
+- `DamageRequest` / `DamageResult` / `DefeatContext`
+- Stable Content ID関連
+
+Unity Scene、MonoBehaviour、ScriptableObject参照をDomainへ持ち込みません。
+
+### Definition
+
+ScriptableObjectは静的なコンテンツ定義・バランス値・アセット参照を保持します。
+
+例:
+
+- `CharacterDefinition`
+- `CharacterStatsDefinition`
+- `MeleeAttackDefinition`
+- `DodgeDefinition`
+
+### Runtime State
+
+プレイ中に変化するレベル、経験値、Skill解放、Evolution解放などはRuntime Stateで保持します。DefinitionのScriptableObjectを書き換えて保存状態として使用しないでください。
+
+### Save DTO
+
+保存用データはRuntime Stateから分離し、Mapperを経由して変換します。保存先の具体実装は `ISaveService` の外側に置きます。
+
+## Stable Content ID
+
+Character、Ability、将来のSkill・Evolution Nodeなど、保存データやコンテンツ間参照に使うIDは表示名やAsset名から独立させます。
+
+例:
+
+```text
+character.player.slime
+ability.basic_melee
+```
+
+一度Save Dataへ使用したIDは、単純な表示名変更やAsset移動で変更しないでください。
 
 ## 変更時の基本手順
 
@@ -75,7 +119,7 @@ Markdownへ同じ数値を複製して二重管理しないでください。
 3. 既存の責務境界を壊さず実装する。
 4. 仕様や設計意図が変わった場合は同じPRでdocsを更新する。
 5. 長期的な設計判断ならADRを追加する。
-6. Runtimeコード変更では関連するEditMode / PlayModeテストを確認・追加する。
+6. Runtimeコード変更では関連するDomain / EditMode / PlayModeテストを確認・追加する。
 7. 実装していない機能をドキュメント上で「実装済み」と書かない。
 
 ## ドキュメント配置ルール
@@ -93,7 +137,7 @@ docs/
   templates/        新規ドキュメントのテンプレート
 ```
 
-新しいMarkdownをルート直下へ無秩序に追加しないでください。
+新しいMarkdownを `docs/` 直下へ無秩序に追加しないでください。
 
 ## 命名
 
@@ -106,7 +150,7 @@ docs/
 
 コンテンツ数が少ない間は `docs/database/` を人間向けKnowledge Baseとして使用します。
 
-Runtime値はScriptableObjectを正とし、MarkdownへHPや攻撃力などの全数値をコピーしないでください。必要な場合は「役割」「特徴」「進化条件の意味」「参照するScriptableObject」などを記載します。
+Runtime値はScriptableObjectを正とし、MarkdownへHPや攻撃力などの全数値をコピーしないでください。必要な場合は「役割」「特徴」「進化条件の意味」「安定ID」「参照するDefinition」などを記載します。
 
 データ数が増え、一覧生成や整合性検証が必要になった段階で `game-data/` のYAML / JSONなどをSingle Source of Truthとし、UnityとVitePress双方へ生成する方式をADRで検討します。先行して独自データ生成基盤を作らないでください。
 
@@ -128,20 +172,26 @@ C#コメントは日本語で記述します。
 
 `Field/Prototype`、`SlimeController`、`RuntimeShapeFactory` などには移行境界が残っています。
 
-新しい恒久GameplayロジックをPrototype固有クラスへ追加し続けないでください。恒久ロジックは `Core` / `Gameplay` / `Presentation` へ置き、`Field/Prototype` はCompositionと試作用コンテンツに限定します。
+新しい恒久ロジックをPrototype固有クラスへ追加し続けないでください。純粋な状態・保存DTOは `Domain`、アプリケーション基盤は `Core`、Unity上のゲームルールは `Gameplay`、表示は `Presentation` へ置き、`Field/Prototype` はCompositionと試作用コンテンツに限定します。
+
+## CombatとReward
+
+Combatコンポーネントへ経験値・ドロップ・進化処理を直接埋め込まないでください。
+
+`DamageResult` / `DefeatContext` を境界として、RewardやExperienceの処理へ接続します。
 
 ## Platform対応
 
 Steamや将来のコンソールSDKをGameplayコードから直接呼び出さないでください。
 
-セーブ、実績、クラウド、ユーザー識別などのPlatform依存機能を追加するときは、まず `docs/design/architecture.md` と関連ADRを更新し、境界を定義します。
+保存先、実績、クラウド、ユーザー識別などのPlatform依存機能は専用境界の外側へ置きます。保存処理は `ISaveService` を経由します。
 
 ## PRの単位
 
 可能な限り、1つの機能変更を次の単位で同じPRへ含めます。
 
 ```text
-Runtime実装
+Domain / Runtime実装
 + Unityアセット／設定
 + テスト
 + 関連仕様
