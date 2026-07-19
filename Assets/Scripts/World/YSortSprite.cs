@@ -1,4 +1,5 @@
 using DemonKing.Core.Math;
+using DemonKing.Presentation.Rendering;
 using UnityEngine;
 
 namespace DemonKing.World
@@ -10,6 +11,7 @@ namespace DemonKing.World
     [RequireComponent(typeof(SpriteRenderer))]
     public sealed class YSortSprite : MonoBehaviour
     {
+        [SerializeField] private string sortingLayerName = SortingLayerNames.World;
         [SerializeField, Min(1)] private int precision = 100;
         [SerializeField] private int orderOffset;
 
@@ -18,6 +20,7 @@ namespace DemonKing.World
         private void Awake()
         {
             spriteRenderer = GetComponent<SpriteRenderer>();
+            spriteRenderer.sortingLayerName = sortingLayerName;
         }
 
         private void LateUpdate()
