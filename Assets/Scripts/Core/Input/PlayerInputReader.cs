@@ -11,6 +11,8 @@ namespace DemonKing.Core.Input
     [DisallowMultipleComponent]
     public sealed class PlayerInputReader : MonoBehaviour
     {
+        private const string DefaultInputActionsResourcePath = "Input/PlayerControls";
+
         [SerializeField] private InputActionAsset inputActions;
         [SerializeField] private string actionMapName = "Player";
 
@@ -58,14 +60,20 @@ namespace DemonKing.Core.Input
 
         private void InitializeActions()
         {
-            if (inputActions == null)
+            InputActionAsset source = inputActions != null
+                ? inputActions
+                : Resources.Load<InputActionAsset>(DefaultInputActionsResourcePath);
+
+            if (source == null)
             {
-                Debug.LogError("Input Action Asset参照が設定されていません。プレイヤーPrefabを確認してください。", this);
+                Debug.LogError(
+                    $"Input Action Assetが見つかりません。Prefab参照またはResources/{DefaultInputActionsResourcePath}.inputactionsを確認してください。",
+                    this);
                 return;
             }
 
             // アセット本体のEnable状態を他の利用者と共有しないよう、プレイヤー個体専用の複製を使用します。
-            runtimeInputActions = Instantiate(inputActions);
+            runtimeInputActions = Instantiate(source);
             playerActionMap = runtimeInputActions.FindActionMap(actionMapName, throwIfNotFound: false);
 
             if (playerActionMap == null)
@@ -96,68 +104,23 @@ namespace DemonKing.Core.Input
 
         private void SubscribeCallbacks()
         {
-            if (attackAction != null)
-            {
-                attackAction.performed += OnAttackPerformed;
-            }
-
-            if (interactAction != null)
-            {
-                interactAction.performed += OnInteractPerformed;
-            }
-
-            if (dodgeAction != null)
-            {
-                dodgeAction.performed += OnDodgePerformed;
-            }
-
-            if (pauseAction != null)
-            {
-                pauseAction.performed += OnPausePerformed;
-            }
+            if (attackAction != null) attackAction.performed += OnAttackPerformed;
+            if (interactAction != null) interactAction.performed += OnInteractPerformed;
+            if (dodgeAction != null) dodgeAction.performed += OnDodgePerformed;
+            if (pauseAction != null) pauseAction.performed += OnPausePerformed;
         }
 
         private void UnsubscribeCallbacks()
         {
-            if (attackAction != null)
-            {
-                attackAction.performed -= OnAttackPerformed;
-            }
-
-            if (interactAction != null)
-            {
-                interactAction.performed -= OnInteractPerformed;
-            }
-
-            if (dodgeAction != null)
-            {
-                dodgeAction.performed -= OnDodgePerformed;
-            }
-
-            if (pauseAction != null)
-            {
-                pauseAction.performed -= OnPausePerformed;
-            }
+            if (attackAction != null) attackAction.performed -= OnAttackPerformed;
+            if (interactAction != null) interactAction.performed -= OnInteractPerformed;
+            if (dodgeAction != null) dodgeAction.performed -= OnDodgePerformed;
+            if (pauseAction != null) pauseAction.performed -= OnPausePerformed;
         }
 
-        private void OnAttackPerformed(InputAction.CallbackContext context)
-        {
-            AttackPressed?.Invoke();
-        }
-
-        private void OnInteractPerformed(InputAction.CallbackContext context)
-        {
-            InteractPressed?.Invoke();
-        }
-
-        private void OnDodgePerformed(InputAction.CallbackContext context)
-        {
-            DodgePressed?.Invoke();
-        }
-
-        private void OnPausePerformed(InputAction.CallbackContext context)
-        {
-            PausePressed?.Invoke();
-        }
+        private void OnAttackPerformed(InputAction.CallbackContext context) => AttackPressed?.Invoke();
+        private void OnInteractPerformed(InputAction.CallbackContext context) => InteractPressed?.Invoke();
+        private void OnDodgePerformed(InputAction.CallbackContext context) => DodgePressed?.Invoke();
+        private void OnPausePerformed(InputAction.CallbackContext context) => PausePressed?.Invoke();
     }
 }
