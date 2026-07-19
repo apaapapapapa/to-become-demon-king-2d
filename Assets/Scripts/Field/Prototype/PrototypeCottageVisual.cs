@@ -12,9 +12,12 @@ namespace DemonKing.Field.Prototype
     {
         [SerializeField] private Sprite sprite;
 
+        private SpriteRenderer spriteRenderer;
+
         private void Awake()
         {
-            CreateSpriteRendererIfNeeded();
+            spriteRenderer = ResolveRenderer();
+            ApplySprite();
         }
 
         private void Start()
@@ -22,18 +25,34 @@ namespace DemonKing.Field.Prototype
             GetComponent<GroupYSorter>()?.RefreshRenderers();
         }
 
-        private void CreateSpriteRendererIfNeeded()
+        public void SetSprite(Sprite newSprite)
         {
-            if (GetComponentInChildren<SpriteRenderer>(includeInactive: true) != null)
+            sprite = newSprite;
+            spriteRenderer ??= ResolveRenderer();
+            ApplySprite();
+        }
+
+        private SpriteRenderer ResolveRenderer()
+        {
+            SpriteRenderer existing = GetComponentInChildren<SpriteRenderer>(includeInactive: true);
+            if (existing != null)
             {
-                return;
+                return existing;
             }
 
             GameObject art = new("Art");
             art.transform.SetParent(transform, false);
             SpriteRenderer renderer = art.AddComponent<SpriteRenderer>();
-            renderer.sprite = sprite;
             renderer.sortingLayerName = SortingLayerNames.World;
+            return renderer;
+        }
+
+        private void ApplySprite()
+        {
+            if (spriteRenderer != null)
+            {
+                spriteRenderer.sprite = sprite;
+            }
         }
     }
 }
