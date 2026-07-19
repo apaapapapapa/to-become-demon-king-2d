@@ -1,3 +1,4 @@
+using DemonKing.Core.Application;
 using DemonKing.Presentation.UI;
 using UnityEngine;
 using UnityEngine.UI;
@@ -6,11 +7,11 @@ namespace DemonKing.Field.Prototype
 {
     /// <summary>
     /// プロトタイプシーンへCanvas（uGUI）ベースのUIルートを構築します。
-    /// UIはプレイヤーPrefabから独立したシーンライフサイクルで管理し、フォントはProjectAssetsから注入します。
+    /// UIはプレイヤーPrefabから独立したシーンライフサイクルで管理し、フォントとPause状態を外側から注入します。
     /// </summary>
     internal static class PrototypeUiInstaller
     {
-        public static GameObject Create(Font uiFont)
+        public static GameObject Create(Font uiFont, GamePauseController pauseController)
         {
             GameObject uiRoot = new("UI Root", typeof(RectTransform));
 
@@ -26,8 +27,12 @@ namespace DemonKing.Field.Prototype
             scaler.referencePixelsPerUnit = 100f;
 
             uiRoot.AddComponent<GraphicRaycaster>();
+
             GameHudView hudView = uiRoot.AddComponent<GameHudView>();
             hudView.Initialize(uiFont);
+
+            PauseMenuView pauseMenuView = uiRoot.AddComponent<PauseMenuView>();
+            pauseMenuView.Initialize(uiFont, pauseController);
             return uiRoot;
         }
     }
