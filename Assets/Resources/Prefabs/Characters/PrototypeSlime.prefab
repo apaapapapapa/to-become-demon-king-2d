@@ -12,8 +12,11 @@ GameObject:
   - component: {fileID: 500000}
   - component: {fileID: 600000}
   - component: {fileID: 11400006}
+  - component: {fileID: 11400007}
   - component: {fileID: 11400000}
   - component: {fileID: 11400001}
+  - component: {fileID: 11400008}
+  - component: {fileID: 11400009}
   - component: {fileID: 11400002}
   - component: {fileID: 11400003}
   - component: {fileID: 11400005}
@@ -116,6 +119,21 @@ MonoBehaviour:
   m_EditorClassIdentifier:
   idleFrameDuration: 0.34
   moveFrameDuration: 0.14
+--- !u!114 &11400007
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 100000}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7b6c1f2a9d3e4f5a8b7c6d5e4f3a2b1c, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:
+  inputActions: {fileID: 0}
+  actionMapName: Player
+  resourcesPath: Input/PlayerControls
 --- !u!114 &11400000
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -128,10 +146,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: da5d678021a974f31c5e678901234567, type: 3}
   m_Name:
   m_EditorClassIdentifier:
-  inputActions: {fileID: 0}
-  actionMapName: Player
-  moveActionName: Move
-  resourcesPath: Input/PlayerControls
 --- !u!114 &11400001
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -145,6 +159,41 @@ MonoBehaviour:
   m_Name:
   m_EditorClassIdentifier:
   moveSpeed: 3.4
+--- !u!114 &11400008
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 100000}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b2c3d4e5f60718293a4b5c6d7e8f901a, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:
+  interactionRadius: 1.1
+  interactionOffset: {x: 0, y: 0.15}
+  interactionLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+--- !u!114 &11400009
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 100000}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e5f60718293a4b5c6d7e8f901a2b3c4d, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:
+  damage: 1
+  attackRadius: 0.65
+  attackDistance: 0.65
+  attackLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
 --- !u!114 &11400002
 MonoBehaviour:
   m_ObjectHideFlags: 0

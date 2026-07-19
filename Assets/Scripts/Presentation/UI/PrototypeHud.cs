@@ -71,14 +71,17 @@ namespace DemonKing.Presentation.UI
                 "魔法学園・西の庭",
                 subtitle);
 
-            float controlsWidth = 510f * scale;
+            float controlsWidth = 680f * scale;
             Rect controlsPanel = new(
                 (Screen.width - controlsWidth) * 0.5f,
                 Screen.height - 54f * scale,
                 controlsWidth,
                 34f * scale);
             GUI.DrawTexture(controlsPanel, panelTexture, ScaleMode.StretchToFill);
-            GUI.Label(controlsPanel, "移動　WASD／矢印キー／ゲームパッド左スティック", hint);
+            GUI.Label(
+                controlsPanel,
+                "移動　WASD／矢印キー／左スティック　　攻撃　J　　話す・調べる　E",
+                hint);
         }
 
         private static Texture2D CreateSolidTexture(Color color)
