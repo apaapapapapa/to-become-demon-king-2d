@@ -13,11 +13,16 @@ namespace DemonKing.Field.Prototype
             Transform world = new GameObject("夕映えの学園草原").transform;
             AmbientEffectController ambientEffects = world.gameObject.AddComponent<AmbientEffectController>();
             var shapes = new RuntimeShapeFactory();
+            var terrain = new TerrainBuilder(shapes);
+            var architecture = new ArchitectureBuilder(shapes, ambientEffects);
 
-            new TerrainBuilder(shapes).Build(world);
-            new ArchitectureBuilder(shapes, ambientEffects).Build(world);
+            // 既存プロトタイプと同じ生成順を維持し、同一SortingOrder時の見え方の変化を避けます。
+            terrain.BuildBase(world);
+            architecture.BuildStructures(world);
             new NatureBuilder(shapes, ambientEffects).Build(world);
+            architecture.BuildLandmarksAndLighting(world);
             new AtmosphereBuilder(shapes, ambientEffects).Build(world);
+            terrain.BuildForeground(world);
             new PrototypePlayerSpawner(shapes).Spawn(world);
 
             return world;
