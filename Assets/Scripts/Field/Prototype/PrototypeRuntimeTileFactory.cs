@@ -29,11 +29,11 @@ namespace DemonKing.Field.Prototype
             return tile;
         }
 
-        private static Tile CreateCollisionTile()
+        private Tile CreateCollisionTile()
         {
             Tile tile = ScriptableObject.CreateInstance<Tile>();
             tile.name = "衝突タイル";
-            tile.sprite = null;
+            tile.sprite = DiamondSprite;
             tile.color = Color.clear;
             tile.flags = TileFlags.None;
             tile.colliderType = Tile.ColliderType.Grid;
