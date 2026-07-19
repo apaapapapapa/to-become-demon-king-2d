@@ -37,6 +37,7 @@ namespace DemonKing.Field.Prototype
         public CharacterStatsDefinition PlayerCharacterStats => playerCharacterStats;
         public MeleeAttackDefinition PlayerMeleeAttack => playerMeleeAttack;
         public Font UiFont => uiFont;
+        public bool HasUiFont => uiFont != null;
         public GameObject CottagePrefab => cottagePrefab;
         public GameObject TreePrefab => treePrefab;
         public GameObject LamppostPrefab => lamppostPrefab;
@@ -46,11 +47,14 @@ namespace DemonKing.Field.Prototype
         public Sprite GrassTileSprite => grassTileSprite;
         public Sprite PathTileSprite => pathTileSprite;
 
+        /// <summary>
+        /// ゲーム進行に必須の参照が揃っているかを返します。
+        /// UIフォントはEditorで自動導入を試みますが、取得失敗時も組み込みフォントで起動できるため必須判定から除外します。
+        /// </summary>
         public bool IsConfigured =>
             playerPrefab != null &&
             playerCharacterStats != null &&
             playerMeleeAttack != null &&
-            uiFont != null &&
             cottagePrefab != null &&
             treePrefab != null &&
             lamppostPrefab != null &&
