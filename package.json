@@ -1,0 +1,23 @@
+{
+  "name": "to-become-demon-king-2d-release-tools",
+  "private": true,
+  "description": "To Become Demon King 2Dのリリース自動化ツール",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/apaapapapapa/to-become-demon-king-2d.git"
+  },
+  "scripts": {
+    "release": "semantic-release",
+    "release:dry-run": "semantic-release --dry-run --no-ci"
+  },
+  "engines": {
+    "node": "^22.14.0 || >=24.10.0"
+  },
+  "devDependencies": {
+    "@semantic-release/commit-analyzer": "^13.0.1",
+    "@semantic-release/github": "^12.0.9",
+    "@semantic-release/release-notes-generator": "^14.1.1",
+    "conventional-changelog-conventionalcommits": "^9.3.1",
+    "semantic-release": "^25.0.8"
+  }
+}
