@@ -1,25 +1,32 @@
 using System.Collections.Generic;
 using DemonKing.Core.Input;
+using DemonKing.Gameplay.Combat.Configuration;
 using UnityEngine;
 
 namespace DemonKing.Gameplay.Combat
 {
     /// <summary>
     /// プレイヤーのAttack入力を受け取り、向いている方向の近距離対象へダメージを与えます。
-    /// 敵種別や死亡演出には依存せず、IDamageableだけを対象にします。
+    /// ダメージ量と攻撃範囲はMeleeAttackDefinitionから取得し、敵種別や死亡演出には依存しません。
     /// </summary>
     [DisallowMultipleComponent]
     [RequireComponent(typeof(PlayerInputReader))]
     public sealed class PlayerMeleeAttack : MonoBehaviour
     {
-        [SerializeField, Min(1)] private int damage = 1;
-        [SerializeField, Min(0.1f)] private float attackRadius = 0.65f;
-        [SerializeField, Min(0f)] private float attackDistance = 0.65f;
+        private const int DefaultDamage = 1;
+        private const float DefaultAttackRadius = 0.65f;
+        private const float DefaultAttackDistance = 0.65f;
+
+        [SerializeField] private MeleeAttackDefinition attackDefinition;
         [SerializeField] private LayerMask attackLayers = ~0;
 
         private readonly HashSet<IDamageable> damagedTargets = new();
         private PlayerInputReader inputReader;
         private Vector2 facingDirection = Vector2.down;
+
+        private int Damage => attackDefinition == null ? DefaultDamage : attackDefinition.Damage;
+        private float AttackRadius => attackDefinition == null ? DefaultAttackRadius : attackDefinition.AttackRadius;
+        private float AttackDistance => attackDefinition == null ? DefaultAttackDistance : attackDefinition.AttackDistance;
 
         private void Awake()
         {
@@ -61,10 +68,15 @@ namespace DemonKing.Gameplay.Combat
             }
         }
 
+        public void Configure(MeleeAttackDefinition definition)
+        {
+            attackDefinition = definition;
+        }
+
         private void HandleAttackPressed()
         {
-            Vector2 center = (Vector2)transform.position + facingDirection * attackDistance;
-            Collider2D[] colliders = Physics2D.OverlapCircleAll(center, attackRadius, attackLayers);
+            Vector2 center = (Vector2)transform.position + facingDirection * AttackDistance;
+            Collider2D[] colliders = Physics2D.OverlapCircleAll(center, AttackRadius, attackLayers);
 
             damagedTargets.Clear();
 
@@ -84,7 +96,7 @@ namespace DemonKing.Gameplay.Combat
                         continue;
                     }
 
-                    damageable.TakeDamage(damage, gameObject);
+                    damageable.TakeDamage(Damage, gameObject);
                 }
             }
         }
@@ -92,8 +104,8 @@ namespace DemonKing.Gameplay.Combat
 #if UNITY_EDITOR
         private void OnDrawGizmosSelected()
         {
-            Vector2 center = (Vector2)transform.position + facingDirection * attackDistance;
-            Gizmos.DrawWireSphere(center, attackRadius);
+            Vector2 center = (Vector2)transform.position + facingDirection * AttackDistance;
+            Gizmos.DrawWireSphere(center, AttackRadius);
         }
 #endif
     }
