@@ -3,6 +3,7 @@
 開発の進め方とKnowledge Base運用を管理します。
 
 - [ロードマップ](./roadmap.md)
+- [リリース運用](./release.md)
 - [ドキュメント規約](./documentation-rules.md)
 - [AI開発ガイド](./ai-development.md)
 
