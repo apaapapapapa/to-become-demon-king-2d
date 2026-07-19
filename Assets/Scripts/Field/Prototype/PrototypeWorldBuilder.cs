@@ -22,7 +22,7 @@ namespace DemonKing.Field.Prototype
             this.projectAssets = projectAssets;
         }
 
-        public Transform Build()
+        public PrototypeWorldBuildResult Build()
         {
             Transform world = new GameObject("夕映えの学園草原").transform;
             AmbientEffectController ambientEffects = world.gameObject.AddComponent<AmbientEffectController>();
@@ -47,12 +47,12 @@ namespace DemonKing.Field.Prototype
                     playerSpawnPosition,
                     projectAssets.PlayerPrefab,
                     projectAssets.PlayerCharacterStats,
-                    projectAssets.PlayerMeleeAttack)
+                    projectAssets.PlayerMeleeAttack,
+                    projectAssets.PlayerDodge)
                 .Spawn(world);
 
             PrototypeCameraInstaller.Configure(Camera.main, player == null ? null : player.transform);
-
-            return world;
+            return new PrototypeWorldBuildResult(world, player);
         }
     }
 }
