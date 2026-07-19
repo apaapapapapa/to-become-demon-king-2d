@@ -4,9 +4,9 @@ using UnityEngine.InputSystem;
 namespace DemonKing.Field
 {
     /// <summary>
-    /// Responsive prototype movement driven by a logical Input Action rather than direct key polling.
-    /// Supports keyboard and gamepad while preserving the current runtime meadow prototype.
-    /// Also applies Y-based sorting to the slime's child renderers for future 2.5D depth behavior.
+    /// キーを直接監視せず、論理 Input Action で応答性の高い試作用移動を実現します。
+    /// 現在の実行時生成の草原試作を維持しながら、キーボードとゲームパッドに対応します。
+    /// 将来の 2.5D 奥行き表現に備え、スライムの子 Renderer に Y座標ベースの並び替えも適用します。
     /// </summary>
     public sealed class SlimeController : MonoBehaviour
     {
