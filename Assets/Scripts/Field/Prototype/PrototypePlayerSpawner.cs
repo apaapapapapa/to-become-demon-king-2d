@@ -1,31 +1,46 @@
+using DemonKing.Gameplay.Characters;
 using UnityEngine;
 
 namespace DemonKing.Field.Prototype
 {
     /// <summary>
-    /// 試作プレイヤーPrefabを生成し、現在のフィールド設定へ接続します。
-    /// プレイヤーの見た目やコンポーネント構成はPrefab側で管理し、フィールド側は配置だけを担当します。
+    /// 試作プレイヤーPrefabを生成し、フィールド側が所有する配置設定へ接続します。
+    /// プレイヤーの見た目や移動速度などのキャラクター固有設定はPrefab側で管理します。
     /// </summary>
     internal sealed class PrototypePlayerSpawner
     {
         private const string PrefabResourcesPath = "Prefabs/Characters/PrototypeSlime";
 
-        private static readonly Vector3 SpawnPosition = new(0f, -1.35f, -1f);
-        private static readonly Vector2 FieldExtents = new(7.15f, 3.45f);
+        private readonly Vector3 spawnPosition;
+        private readonly Vector2 playableHalfExtents;
+
+        public PrototypePlayerSpawner(Vector3 spawnPosition, Vector2 playableHalfExtents)
+        {
+            this.spawnPosition = spawnPosition;
+            this.playableHalfExtents = new Vector2(
+                Mathf.Abs(playableHalfExtents.x),
+                Mathf.Abs(playableHalfExtents.y));
+        }
 
         public GameObject Spawn(Transform parent)
         {
             GameObject root = InstantiatePrefab(parent);
-            root.transform.localPosition = SpawnPosition;
+            root.transform.localPosition = spawnPosition;
 
             SlimeController controller = root.GetComponent<SlimeController>();
             if (controller == null)
             {
                 Debug.LogWarning("PrototypeSlime PrefabにSlimeControllerがないため、実行時に補完します。", root);
-                controller = root.AddComponent<SlimeController>();
+                root.AddComponent<SlimeController>();
             }
 
-            controller.Configure(FieldExtents);
+            CharacterMotor2D motor = root.GetComponent<CharacterMotor2D>();
+            if (motor != null)
+            {
+                // プレイ可能範囲はフィールド側が所有し、キャラクター側には実行時設定として渡します。
+                motor.SetBounds(playableHalfExtents);
+            }
+
             return root;
         }
 
