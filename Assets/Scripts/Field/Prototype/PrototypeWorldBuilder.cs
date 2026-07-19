@@ -23,7 +23,7 @@ namespace DemonKing.Field.Prototype
             architecture.BuildLandmarksAndLighting(world);
             new AtmosphereBuilder(shapes, ambientEffects).Build(world);
             terrain.BuildForeground(world);
-            new PrototypePlayerSpawner(shapes).Spawn(world);
+            new PrototypePlayerSpawner().Spawn(world);
 
             return world;
         }
