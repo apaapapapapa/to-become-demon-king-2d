@@ -28,6 +28,11 @@ namespace DemonKing.Gameplay.Combat
 
         private void OnEnable()
         {
+            if (inputReader == null)
+            {
+                inputReader = GetComponent<PlayerInputReader>();
+            }
+
             if (inputReader != null)
             {
                 inputReader.AttackPressed += HandleAttackPressed;
@@ -70,10 +75,11 @@ namespace DemonKing.Gameplay.Combat
                     continue;
                 }
 
-                MonoBehaviour[] behaviours = collider.GetComponentsInParent<MonoBehaviour>(includeInactive: false);
+                MonoBehaviour[] behaviours = collider.GetComponentsInParent<MonoBehaviour>(false);
                 foreach (MonoBehaviour behaviour in behaviours)
                 {
-                    if (behaviour is not IDamageable damageable || !damageable.IsAlive || !damagedTargets.Add(damageable))
+                    IDamageable damageable = behaviour as IDamageable;
+                    if (damageable == null || !damageable.IsAlive || !damagedTargets.Add(damageable))
                     {
                         continue;
                     }
