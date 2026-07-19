@@ -1,6 +1,6 @@
 # To Become Demon King 2D
 
-『To Become Demon King 2D』は、Witchbrook などの作品が持つビジュアルの方向性に着想を得た、Unity 製のアイソメトリック 2D／2.5D RPG 試作です。
+『To Become Demon King 2D』は、Witchbrookなどの作品が持つビジュアルの方向性に着想を得た、Unity製のアイソメトリック2D／2.5D RPGです。
 
 ## 技術方針
 
@@ -11,8 +11,9 @@
 - Isometric Tilemap
 - Unity Input System
 - Canvas（uGUI）
-- Rigidbody2D／TilemapCollider2Dによる2D物理衝突
-- ピクセルアートを重視した表現
+- Rigidbody2D／TilemapCollider2D
+- Unity Test Framework
+- Assembly DefinitionによるRuntime / Test分離
 - キーボードとゲームパッドに対応
 - Steamを第一ターゲットとし、将来のコンソール移植も考慮
 
@@ -26,28 +27,37 @@
 | 回避 | Left Shift | Eastボタン |
 | ポーズ | Escape | Startボタン |
 
-AttackとInteractは現在のプロトタイプ機能へ接続済みです。DodgeとPauseはInput Actionとイベント境界まで実装済みで、実際の回避・ポーズ挙動は後続機能で接続します。
+AttackとInteractはゲームプレイ機能へ接続済みです。DodgeとPauseはInput Actionとイベント境界まで実装済みで、実際の挙動は後続実装です。
 
 ## 現在のプレイ可能ループ
 
-1. キーボードまたはゲームパッドでアイソメトリックマップ内を移動する。
-2. Collision Tilemapによる物理境界に衝突する。
-3. カメラがプレイヤーへ滑らかに追従する。
-4. NPCへ近づきInteract入力で相互作用する。
-5. 訓練用スライムへAttack入力で攻撃する。
-6. HPを減らし、HPが0になると対象を倒す。
-7. Canvas（uGUI）のHUDで場所と操作案内を表示する。
+1. アイソメトリックTilemap上を移動する
+2. Collision Tilemapによる物理境界に衝突する
+3. NPCへ近づいてInteractする
+4. 訓練用スライムへAttackする
+5. HPを減らして対象を倒す
+6. カメラがプレイヤーへ追従する
+7. Canvas（uGUI）のHUDを表示する
 
-## 現在の主要構成
+## コンテンツアセット構造
+
+主要なPrefabとSprite参照は `PrototypeProjectAssets` に集約しています。
 
 ```text
 Assets/
+  Art/
+    External/
+      Kenney/
+        grass_a.png
+        grass_b.png
+        README.md
+    World/
+      cottage.png
+      tree.png
+      lamppost.png
   Resources/
-    Art/
-      Characters/
-        PrototypeSlime/
-    Input/
-      PlayerControls.inputactions
+    Settings/
+      PrototypeProjectAssets.asset
     Prefabs/
       Characters/
         PrototypeSlime.prefab
@@ -55,119 +65,104 @@ Assets/
         PrototypeCottage.prefab
         PrototypeTree.prefab
         PrototypeLamppost.prefab
-  Scenes/
-    Prototype/
-      Prototype.unity
-  Scripts/
-    Core/
-      Input/
-      Math/
-    Gameplay/
-      Characters/
-      Interaction/
-      Combat/
-    Presentation/
-      Camera/
-        CameraFollow2D.cs
-      Characters/
-      Rendering/
-      UI/
-        GameHudView.cs
-    Field/
-      Prototype/
-        PrototypeCameraInstaller.cs
-        PrototypeUiInstaller.cs
-    World/
-    FieldBootstrap.cs
-    SlimeController.cs
 ```
 
-## 入力構造
+`PrototypePlayerSpawner` と `PrototypeWorldPrefabFactory` はResourcesパス文字列を持たず、ProjectAssetsから直接参照を受け取ります。
 
-`PlayerInputReader` が `PlayerControls.inputactions` の実行時インスタンスを所有し、Move / Attack / Interact / Dodge / Pauseを論理入力として提供します。
+## 地形アセット
 
-`MoveInputReader` はInput Action Assetを所有せず、`PlayerInputReader` のMove値を転送する互換アダプターです。
+Ground TilemapにはKenney「Isometric Tiles Landscape」由来の外部Spriteを使用します。
 
-## Interaction
+`PrototypeRuntimeTileFactory` はTexture2DやSpriteを実行時生成せず、インポート済みSpriteからUnity Tileだけを構築します。
+
+外部アセットの出典とライセンスは次に記録しています。
 
 ```text
-PlayerInputReader.InteractPressed
-  ↓
-PlayerInteractor
-  ↓
-IInteractable
-  ↓
-NPC / 扉 / 宝箱 / 調査対象
+Assets/Art/External/Kenney/README.md
 ```
 
-現在は `PrototypeNpcInteractable` を1体配置し、Interact入力で相互作用できる最小ループを確認できます。
+## World Prefab
 
-## Combat
+校舎、木、街灯はPrefab境界を維持しつつ、従来のRuntimeShapeFactoryによる仮図形からプロジェクト管理の静的Spriteアートへ移行しています。
 
 ```text
-PlayerInputReader.AttackPressed
+PrototypeProjectAssets
   ↓
-PlayerMeleeAttack
+PrototypeWorldPrefabFactory
   ↓
-IDamageable
+Cottage / Tree / Lamppost Prefab
   ↓
-Health
-  ↓
-Damaged / HealthChanged / Died
+Static Sprite Art
 ```
 
-現在は訓練用スライムを1体配置し、攻撃、HP減少、死亡までの最小ループを確認できます。
+最終アートを差し替える際はProjectAssets側の参照を変更し、Builderの配置ロジックは維持します。
 
-## カメラ
+## テスト
 
-カメラ追従はプレイヤーPrefabから独立しています。
+Runtimeコードは `DemonKing.Runtime.asmdef` にまとめ、EditMode / PlayModeテストを独立assemblyで管理します。
 
 ```text
-PrototypeWorldBuilder
-  ↓ Player生成
-PrototypeCameraInstaller
-  ↓ Target設定
-CameraFollow2D
-  ↓ LateUpdate
-Main Camera
+Assets/Tests/
+  EditMode/
+    WorldSortOrderTests.cs
+  PlayMode/
+    GameplayAndCameraPlayModeTests.cs
 ```
 
-`CameraFollow2D` はプレイヤー固有クラスを参照せず、任意の `Transform` を追従できます。将来のプレイヤー差し替え、イベントカメラ、一時的な注視対象切り替えへ拡張できる境界です。
+現在の自動テスト対象は次です。
 
-## UI
+- Y座標による描画順計算
+- Healthの致死ダメージと死亡イベント
+- CameraFollow2Dの追従とZ座標維持
 
-旧IMGUIの `PrototypeHud` は廃止し、Canvas（uGUI）へ移行しました。
+Unity Test RunnerからEditMode / PlayModeを実行します。
+
+## 現在の主要ランタイム構造
 
 ```text
-UI Root
-  ├ Canvas
-  ├ CanvasScaler
-  ├ GraphicRaycaster
-  └ GameHudView
-      └ HUD
-          ├ Location Panel
-          └ Controls Panel
+FieldBootstrap
+  ├ PrototypeSceneConfigurator
+  ├ PrototypeSortingConfigurator
+  ├ PrototypeUiInstaller
+  └ PrototypeWorldBuilder
+      ├ PrototypeTilemapContext
+      ├ PrototypeRuntimeTileFactory
+      ├ TerrainBuilder
+      ├ CollisionMapBuilder
+      ├ PrototypeWorldPrefabFactory
+      ├ PrototypeGameplayFeatureInstaller
+      ├ PrototypePlayerSpawner
+      └ PrototypeCameraInstaller
 ```
 
-`CanvasScaler` は1920x1080を基準とした `Scale With Screen Size` を使用します。ゲームルールとUI表示は分離し、今後の会話UI、メニュー、通知などは同じUI Root配下へ追加します。
+Gameplay機能は次のように分離しています。
 
-## ワールド構築
+```text
+Gameplay/
+  Characters/
+  Interaction/
+    IInteractable
+    PlayerInteractor
+  Combat/
+    IDamageable
+    Health
+    PlayerMeleeAttack
+```
 
-`FieldBootstrap` から `PrototypeWorldBuilder` を起動し、次の要素を組み合わせます。
+## 開発フェーズ
 
-- `Ground` Tilemap：草地と小道
-- `Collision` Tilemap：フィールド外周と校舎基部の衝突
-- `Props` Tilemap：ワールド配置用
-- `Foreground` Tilemap：前景用
-- World Prefab：校舎、木、街灯
-- Prototype Gameplay：試作NPC、訓練用スライム
-- RuntimeShapeFactory：移行途中の小規模な装飾と試作表示のみ
+P0とP1は完了しています。
 
-## 開発状況
+P2では次を実装済みです。
 
-アーキテクチャ整理のP0とP1-1〜P1-9は実装済みです。
+- EditMode / PlayModeテスト基盤
+- `Resources.Load` 文字列参照の削減
+- 外部地形Tileアセット導入
+- `PrototypeRuntimeTileFactory` のRuntime Texture生成削除
+- World Prefabの静的Spriteアート化
+- 必要最小限のAssembly Definition導入
 
-次はP2として、テスト自動化、Resources依存削減、本番タイル／アート導入、asmdef、入力コンテキスト整理などを進めます。
+次は日本語フォントのプロジェクトアセット化、Input ActionのGameplay / UIコンテキスト分離、Dodge / Pause実挙動を優先します。
 
 詳細は以下を参照してください。
 
