@@ -1,4 +1,5 @@
 using System.IO;
+using DemonKing.Field;
 using DemonKing.Presentation.Rendering;
 using UnityEditor;
 using UnityEditor.SceneManagement;
@@ -95,15 +96,7 @@ namespace DemonKing.EditorTools
         private static void CreateBootstrap()
         {
             GameObject bootstrapObject = new("Runtime Prototype Bootstrap");
-            System.Type bootstrapType = System.Type.GetType("DemonKing.Field.FieldBootstrap, Assembly-CSharp");
-            if (bootstrapType != null)
-            {
-                bootstrapObject.AddComponent(bootstrapType);
-            }
-            else
-            {
-                Debug.LogWarning("FieldBootstrapが見つかりません。スクリプトのコンパイル完了後に手動で追加してください。");
-            }
+            bootstrapObject.AddComponent<FieldBootstrap>();
         }
 
         private static void EnsureDirectory(string assetPath)

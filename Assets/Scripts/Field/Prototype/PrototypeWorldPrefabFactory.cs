@@ -3,53 +3,52 @@ using UnityEngine;
 namespace DemonKing.Field.Prototype
 {
     /// <summary>
-    /// プロトタイプ用ワールドPrefabの読み込みと配置を集約します。
-    /// Builder側はPrefabの具体的なResourcesパスやフォールバック生成を知りません。
+    /// ProjectAssetsで管理されたワールドPrefabの配置と静的アートの接続を集約します。
+    /// Builder側はPrefabやSpriteの保管場所、Resourcesパスを知りません。
     /// </summary>
     internal sealed class PrototypeWorldPrefabFactory
     {
-        private const string CottagePath = "Prefabs/World/PrototypeCottage";
-        private const string TreePath = "Prefabs/World/PrototypeTree";
-        private const string LamppostPath = "Prefabs/World/PrototypeLamppost";
+        private readonly PrototypeProjectAssets projectAssets;
+
+        public PrototypeWorldPrefabFactory(PrototypeProjectAssets projectAssets)
+        {
+            this.projectAssets = projectAssets;
+        }
 
         public GameObject CreateCottage(Vector2 position, Transform parent)
         {
-            return InstantiateOrFallback(CottagePath, "校舎", position, parent, typeof(PrototypeCottageVisual));
+            GameObject instance = Instantiate(projectAssets.CottagePrefab, "校舎", position, parent);
+            instance?.GetComponent<PrototypeCottageVisual>()?.SetSprite(projectAssets.CottageSprite);
+            return instance;
         }
 
         public GameObject CreateTree(Vector2 position, Transform parent)
         {
-            return InstantiateOrFallback(TreePath, "木", position, parent, typeof(PrototypeTreeVisual));
+            GameObject instance = Instantiate(projectAssets.TreePrefab, "木", position, parent);
+            instance?.GetComponent<PrototypeTreeVisual>()?.SetSprite(projectAssets.TreeSprite);
+            return instance;
         }
 
         public GameObject CreateLamppost(Vector2 position, Transform parent)
         {
-            return InstantiateOrFallback(LamppostPath, "街灯", position, parent, typeof(PrototypeLamppostVisual));
+            GameObject instance = Instantiate(projectAssets.LamppostPrefab, "街灯", position, parent);
+            instance?.GetComponent<PrototypeLamppostVisual>()?.SetSprite(projectAssets.LamppostSprite);
+            return instance;
         }
 
-        private static GameObject InstantiateOrFallback(
-            string resourcesPath,
+        private static GameObject Instantiate(
+            GameObject prefab,
             string fallbackName,
             Vector2 position,
-            Transform parent,
-            System.Type visualComponentType)
+            Transform parent)
         {
-            GameObject prefab = Resources.Load<GameObject>(resourcesPath);
-            GameObject instance;
-
-            if (prefab != null)
+            if (prefab == null)
             {
-                instance = Object.Instantiate(prefab, parent, false);
-            }
-            else
-            {
-                Debug.LogWarning($"ワールドPrefabが見つかりません。Resources/{resourcesPath}.prefab を確認してください。");
-                instance = new GameObject(fallbackName);
-                instance.transform.SetParent(parent, false);
-                instance.AddComponent(visualComponentType);
-                instance.AddComponent<DemonKing.Presentation.Rendering.GroupYSorter>();
+                Debug.LogError($"{fallbackName}Prefabの参照が設定されていません。");
+                return null;
             }
 
+            GameObject instance = Object.Instantiate(prefab, parent, false);
             instance.transform.localPosition = new Vector3(position.x, position.y, 0f);
             return instance;
         }
