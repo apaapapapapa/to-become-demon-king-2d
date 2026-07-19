@@ -9,6 +9,10 @@ using UnityEngine.Tilemaps;
 
 namespace DemonKing.EditorTools
 {
+    /// <summary>
+    /// Prototypeシーンの基礎構造をEditor上で再生成する補助ツールです。
+    /// 既存のPrototype.unityを作り直すため、手作業でシーンを編集した後に実行する場合は保存差分を確認してください。
+    /// </summary>
     public static class IsometricPrototypeSceneBuilder
     {
         private const string SceneDirectory = "Assets/Scenes/Prototype";
@@ -50,6 +54,7 @@ namespace DemonKing.EditorTools
 
         private static void CreateDirectionalLight()
         {
+            // 最終的な2D Lighting構成は未確定のため、シーン生成時は簡易確認用のライトだけを配置します。
             GameObject lightObject = new("Global Light Placeholder");
             Light light = lightObject.AddComponent<Light>();
             light.type = LightType.Directional;

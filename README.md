@@ -1,24 +1,23 @@
 # To Become Demon King 2D
 
-『To Become Demon King 2D』は、Witchbrookなどの作品が持つビジュアルの方向性に着想を得た、Unity製のアイソメトリック2D／2.5D RPGです。
+『To Become Demon King 2D』は、アイソメトリック2D／2.5Dのピクセルアート表現を採用するUnity製RPGです。Steamを第一ターゲットとし、将来のコンソール移植を妨げない構造で開発します。
 
-## 技術方針
+現在は、今後コンテンツを増やすための基礎アーキテクチャと最小プレイ可能ループまで実装済みです。
 
-- Unity 6
-- C#
-- Universal Render Pipeline（URP）
-- 2D Renderer／2D Lighting
-- Isometric Tilemap
-- Unity Input System
-- Canvas（uGUI）
-- Rigidbody2D／TilemapCollider2D
-- ScriptableObjectによるゲームバランス・起動設定管理
-- Unity Test Framework
-- Assembly DefinitionによるRuntime / Test分離
-- キーボードとゲームパッドに対応
-- Steamを第一ターゲットとし、将来のコンソール移植も考慮
+## 現在のプレイ可能ループ
 
-## 現在の操作
+1. アイソメトリックTilemap上を移動する
+2. Collision Tilemapによる物理境界に衝突する
+3. NPCへ近づいてInteractする
+4. 訓練用スライムへAttackする
+5. HPを減らして対象を倒す
+6. Dodgeで短時間の回避移動を行う
+7. PauseでGameplay入力を止め、uGUIのPause画面へ切り替える
+8. カメラがプレイヤーを追従する
+
+この段階では、物語・クエスト・敵AI・成長要素などのコンテンツ量よりも、機能追加に耐えられる境界を優先しています。
+
+## 操作
 
 | 操作 | キーボード | ゲームパッド |
 | --- | --- | --- |
@@ -28,9 +27,46 @@
 | 回避 | Left Shift | Eastボタン |
 | ポーズ | Escape | Startボタン |
 
-Attack、Interact、Dodge、Pauseはいずれもゲームプレイへ接続済みです。
+Pause中はUI用Input Action Mapへ切り替わります。キーボードではEscapeのCancel入力、ゲームパッドではStartまたはEastボタンのCancel入力でゲームへ復帰できます。
 
-DodgeはRigidbody2Dによる短時間の回避移動として実装し、Pause中は `Time.timeScale` を停止してInput Contextを `UI` へ切り替えます。Escape、Start、UIのCancel入力でゲームへ復帰できます。
+## 技術基盤
+
+- Unity 6（現在の基準Editorは `6000.5.4f1`）
+- C#
+- Universal Render Pipeline（URP）
+- Isometric Tilemap
+- Unity Input System
+- Canvas（uGUI）
+- Rigidbody2D / TilemapCollider2D
+- ScriptableObjectによるゲームバランス・起動設定管理
+- Unity Test Framework
+- Assembly DefinitionによるRuntime / Test分離
+
+## 現在のランタイム構成
+
+```text
+Prototype.unity
+  ↓
+FieldBootstrap
+  ↓
+PrototypeProjectAssets
+  ↓
+PrototypeApplicationInstaller
+  ├ PrototypeApplicationSettings
+  ├ PrototypeSceneConfigurator
+  ├ PrototypeSortingConfigurator
+  ├ PrototypeWorldBuilder
+  │   ├ Terrain / Collision / World Prefab
+  │   ├ Prototype Gameplay Features
+  │   ├ PrototypePlayerSpawner
+  │   └ PrototypeCameraInstaller
+  ├ GamePauseController
+  └ PrototypeUiInstaller
+      ├ GameHudView
+      └ PauseMenuView
+```
+
+`FieldBootstrap` は設定値や具体的な初期化順序を持たず、起動処理を `PrototypeApplicationInstaller` へ委譲します。
 
 ## Input Actionコンテキスト
 
@@ -51,136 +87,47 @@ UI
   └ Pause
 ```
 
-`PlayerInputReader` は次の3コンテキストを排他的に切り替えます。
+`PlayerInputReader` は `Gameplay` / `UI` / `Disabled` を排他的に切り替えます。Pauseや将来の会話・メニューでは、個別のゲームプレイスクリプトを無効化するのではなくInput Contextを切り替える方針です。
 
-- `Gameplay`: Gameplay Action Mapのみ有効
-- `UI`: UI Action Mapのみ有効
-- `Disabled`: すべてのAction Mapを無効
+## 設定データ
 
-`GamePauseController` はPause開始時に `UI`、復帰時に `Gameplay` へ切り替えます。
-
-## Gameplay設定データ
-
-プレイヤーのゲームバランス値はPrefabからScriptableObjectへ分離しています。
+ゲームバランス値とプロトタイプ起動設定はScriptableObjectへ分離しています。
 
 ```text
-Assets/Resources/Settings/Gameplay/
-  PlayerCharacterStats.asset
-    ├ moveSpeed
-    └ maxHealth
-
-  PlayerMeleeAttack.asset
-    ├ damage
-    ├ attackRadius
-    └ attackDistance
-
-  PlayerDodge.asset
-    ├ dodgeSpeed
-    ├ duration
-    └ cooldown
+Assets/Resources/Settings/
+  PrototypeProjectAssets.asset
+  PrototypeApplicationSettings.asset
+  Gameplay/
+    PlayerCharacterStats.asset
+    PlayerMeleeAttack.asset
+    PlayerDodge.asset
 ```
 
-`PrototypeProjectAssets` がこれらを参照し、`PrototypePlayerSpawner` が `CharacterMotor2D`、`Health`、`PlayerMeleeAttack`、`CharacterDodge2D` へ設定を注入します。
+主な責務は次のとおりです。
 
-## Application Settings
+- `PrototypeProjectAssets`: Prefab、Sprite、Font、各設定アセットへの参照
+- `PrototypeApplicationSettings`: Spawn位置、フィールド範囲、Pause時TimeScale
+- `CharacterStatsDefinition`: 移動速度、最大HP
+- `MeleeAttackDefinition`: ダメージ、攻撃半径、攻撃距離
+- `DodgeDefinition`: 回避速度、継続時間、クールダウン
 
-FieldBootstrapはゲーム設定値を直接保持しません。
+## UIと日本語フォント
 
-```text
-PrototypeApplicationSettings.asset
-  ├ playerSpawnPosition
-  ├ playableTileRadius
-  └ pausedTimeScale
-```
+本番UI基盤はCanvas（uGUI）です。OSにインストールされたフォントへ依存せず、プロジェクト管理のFontアセットを利用します。
 
-起動経路は次です。
-
-```text
-FieldBootstrap
-  ↓
-PrototypeProjectAssets
-  ↓
-PrototypeApplicationInstaller
-  ├ PrototypeSceneConfigurator
-  ├ PrototypeSortingConfigurator
-  ├ PrototypeWorldBuilder
-  ├ GamePauseController
-  └ PrototypeUiInstaller
-```
-
-これにより、`FieldBootstrap` はProjectAssetsを解決してApplicationInstallerへ委譲するだけの最小エントリーポイントになっています。
-
-## uGUI日本語フォント
-
-uGUIはOSフォントへ依存せず、プロジェクト内のFontアセットを利用します。
-
-標準フォントはGoogle FontsのDotGothic16です。Unity Editor起動時にフォントが未導入の場合、Editorツールが次へ配置します。
-
-```text
-Assets/Fonts/
-  DotGothic16-Regular.ttf
-  OFL_DotGothic16.txt
-```
-
-手動導入はUnityメニューから実行できます。
+標準フォントはDotGothic16です。未導入時はEditorツールから導入できます。
 
 ```text
 Demon King > Project > Install Japanese UI Font
 ```
 
-導入後は `PrototypeProjectAssets.uiFont` を経由してuGUIへFontを渡します。生成されたFont・ライセンス・ProjectAssetsの差分はGit管理対象です。
-
-## 現在のプレイ可能ループ
-
-1. アイソメトリックTilemap上を移動する
-2. Collision Tilemapによる物理境界に衝突する
-3. NPCへ近づいてInteractする
-4. 訓練用スライムへAttackする
-5. HPを減らして対象を倒す
-6. Shift／Eastボタンで回避移動する
-7. Escape／StartでPauseし、uGUIのPause画面を表示する
-8. カメラがプレイヤーへ追従する
-
-## コンテンツアセット構造
-
-主要なPrefab、Sprite、Gameplay設定、Application設定、UI Font参照は `PrototypeProjectAssets` に集約しています。
-
-```text
-Assets/
-  Art/
-    External/
-    World/
-  Fonts/
-  Resources/
-    Input/
-      PlayerControls.inputactions
-    Settings/
-      PrototypeProjectAssets.asset
-      PrototypeApplicationSettings.asset
-      Gameplay/
-        PlayerCharacterStats.asset
-        PlayerMeleeAttack.asset
-        PlayerDodge.asset
-    Prefabs/
-      Characters/
-      World/
-```
+フォント参照は `PrototypeProjectAssets` から `PrototypeUiInstaller` を経由して各Viewへ渡します。
 
 ## テスト
 
 Runtimeコードは `DemonKing.Runtime.asmdef` にまとめ、EditMode / PlayModeテストを独立assemblyで管理します。
 
-```text
-Assets/Tests/
-  EditMode/
-    WorldSortOrderTests.cs
-  PlayMode/
-    GameplayAndCameraPlayModeTests.cs
-    PlayerInputContextPlayModeTests.cs
-    DodgeAndPausePlayModeTests.cs
-```
-
-現在の自動テスト対象は次です。
+現在の主な自動テスト対象は次です。
 
 - Y座標による描画順計算
 - Healthの致死ダメージと死亡イベント
@@ -191,26 +138,17 @@ Assets/Tests/
 
 ## 開発フェーズ
 
-P0、P1、P2のアーキテクチャ整備項目は完了しています。
+P0〜P2の基礎リファクタリング／リアーキテクチャ項目は完了しています。
 
-P2では次を実装済みです。
+今後は、実際のゲームコンテンツを増やしながら必要になった境界だけを追加します。主な次段階は、NPC・会話・敵AI・クエスト・成長要素、続いてセーブ機能とPlatform層です。Addressablesや大規模なシーン分割は、コンテンツ量とロード時間が必要性を示した段階で導入します。
 
-- EditMode / PlayModeテスト基盤
-- `Resources.Load` 文字列参照の削減
-- 外部地形Tileアセット導入
-- World Prefabの静的Spriteアート化
-- uGUI日本語フォントのプロジェクト管理基盤
-- 必要最小限のAssembly Definition導入
-- キャラクター能力値・近接攻撃・Dodge設定のScriptableObject化
-- Gameplay / UI / Disabled入力コンテキスト分離
-- Rigidbody2DベースのDodge実挙動
-- Pause状態管理とuGUI Pause画面
-- FieldBootstrapからApplication Settingsと起動構成を分離
+## ドキュメント
 
-今後はP3として、セーブ、Steam／コンソール向けPlatform層、必要に応じたAddressablesやマップ分割へ進みます。
+各ドキュメントの役割を分けています。
 
-詳細は以下を参照してください。
+- `README.md`: 現在のプロジェクト概要、操作、主要な技術基盤
+- `docs/GAME_DIRECTION.md`: ゲーム体験、ビジュアル、物語、コンテンツ開発の方針
+- `docs/TECHNICAL_DESIGN.md`: 現在の技術設計、実装規約、入力・物理・UI・データ管理の基準
+- `docs/ARCHITECTURE.md`: 依存方向、構成責務、完了したP0〜P2の整備履歴と今後の優先順位
 
-- `docs/GAME_DIRECTION.md`
-- `docs/TECHNICAL_DESIGN.md`
-- `docs/ARCHITECTURE.md`
+実装とドキュメントが食い違う場合は、まず現在のコードとUnityアセットを確認し、その後ドキュメントを更新してください。

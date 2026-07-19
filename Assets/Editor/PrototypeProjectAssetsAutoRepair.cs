@@ -9,8 +9,8 @@ using UnityEngine;
 namespace DemonKing.EditorTools
 {
     /// <summary>
-    /// PrototypeProjectAssetsの参照切れをEditor上で自動修復します。
-    /// Git経由で追加した画像、Prefab、設定アセット、UIフォントを実際のインポート結果から再解決します。
+    /// PrototypeProjectAssetsに集約した参照を、Editor上の実アセットから再解決する保守用ツールです。
+    /// 参照切れやImport設定の不整合を復旧する目的で使用し、Runtimeの通常動作が毎回の自動修復へ依存しないことを前提とします。
     /// </summary>
     [InitializeOnLoad]
     internal static class PrototypeProjectAssetsAutoRepair
@@ -116,8 +116,7 @@ namespace DemonKing.EditorTools
         }
 
         /// <summary>
-        /// PNGのMain AssetがTexture2Dとして扱われる環境でも、Spriteサブアセットまで探索して取得します。
-        /// Sprite設定になっていない場合はTextureImporterを修正して再インポートします。
+        /// 指定画像をSpriteとして再解決し、必要な場合だけTextureImporterをSprite / Singleへ補正して再インポートします。
         /// </summary>
         private static Sprite LoadSprite(string path)
         {

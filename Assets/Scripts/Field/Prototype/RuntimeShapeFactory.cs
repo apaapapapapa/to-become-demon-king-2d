@@ -4,8 +4,8 @@ using UnityEngine;
 namespace DemonKing.Field.Prototype
 {
     /// <summary>
-    /// 外部アートアセットがない段階でも試作を維持できるよう、単純な図形Spriteを実行時に生成します。
-    /// 本番アセットへの移行時は、このFactoryの利用箇所をPrefabやTilemapへ置き換えます。
+    /// Prototype専用の軽量な装飾や雰囲気確認に使う単純図形Spriteを実行時生成します。
+    /// 地形や主要なWorld Prefabの代替には使用せず、継続利用する要素は静的アセットやPrefabへ移行します。
     /// </summary>
     internal sealed class RuntimeShapeFactory
     {

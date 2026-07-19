@@ -9,8 +9,8 @@ using UnityEngine;
 namespace DemonKing.Field
 {
     /// <summary>
-    /// 試作プレイヤーに必要なコンポーネント構成だけを保証する互換用コンポーネントです。
-    /// 入力、移動、Interaction、Combat、物理、描画、スプライトアニメーションの実処理は各担当コンポーネントへ委譲します。
+    /// 既存のPrototype Player Prefabとの互換性を保つため、主要コンポーネントをRequireComponentで束ねる薄いマーカーです。
+    /// ゲームプレイロジックは持たず、入力、移動、Interaction、Combat、物理、描画、アニメーションの実処理は各担当コンポーネントへ委譲します。
     /// </summary>
     [RequireComponent(typeof(PlayerInputReader))]
     [RequireComponent(typeof(MoveInputReader))]
