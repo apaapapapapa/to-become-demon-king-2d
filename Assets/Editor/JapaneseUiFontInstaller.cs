@@ -13,7 +13,8 @@ namespace DemonKing.EditorTools
     internal static class JapaneseUiFontInstaller
     {
         internal const string FontAssetPath = "Assets/Fonts/DotGothic16-Regular.ttf";
-        private const string LicenseAssetPath = "Assets/Fonts/OFL_DotGothic16.txt";
+        internal const string LicenseAssetPath = "Assets/Fonts/OFL_DotGothic16.txt";
+
         private const string FontDownloadUrl = "https://raw.githubusercontent.com/google/fonts/main/ofl/dotgothic16/DotGothic16-Regular.ttf";
         private const string LicenseDownloadUrl = "https://raw.githubusercontent.com/google/fonts/main/ofl/dotgothic16/OFL.txt";
 
@@ -29,8 +30,10 @@ namespace DemonKing.EditorTools
 
         internal static bool EnsureInstalled(bool forceLog = false)
         {
-            Font existing = AssetDatabase.LoadAssetAtPath<Font>(FontAssetPath);
-            if (existing != null)
+            Font existingFont = AssetDatabase.LoadAssetAtPath<Font>(FontAssetPath);
+            bool licenseExists = File.Exists(Path.GetFullPath(LicenseAssetPath));
+
+            if (existingFont != null && licenseExists)
             {
                 if (forceLog)
                 {
@@ -43,6 +46,7 @@ namespace DemonKing.EditorTools
             try
             {
                 string absoluteFontPath = Path.GetFullPath(FontAssetPath);
+                string absoluteLicensePath = Path.GetFullPath(LicenseAssetPath);
                 string directory = Path.GetDirectoryName(absoluteFontPath);
                 if (string.IsNullOrEmpty(directory))
                 {
@@ -55,34 +59,37 @@ namespace DemonKing.EditorTools
                 using HttpClient client = new();
                 client.DefaultRequestHeaders.UserAgent.ParseAdd("ToBecomeDemonKing2D-UnityEditor");
 
-                byte[] fontBytes = client.GetByteArrayAsync(FontDownloadUrl).GetAwaiter().GetResult();
-                File.WriteAllBytes(absoluteFontPath, fontBytes);
+                if (existingFont == null)
+                {
+                    byte[] fontBytes = client.GetByteArrayAsync(FontDownloadUrl).GetAwaiter().GetResult();
+                    File.WriteAllBytes(absoluteFontPath, fontBytes);
+                    AssetDatabase.ImportAsset(
+                        FontAssetPath,
+                        ImportAssetOptions.ForceSynchronousImport | ImportAssetOptions.ForceUpdate);
+                }
 
-                string absoluteLicensePath = Path.GetFullPath(LicenseAssetPath);
-                if (!File.Exists(absoluteLicensePath))
+                if (!licenseExists)
                 {
                     byte[] licenseBytes = client.GetByteArrayAsync(LicenseDownloadUrl).GetAwaiter().GetResult();
                     File.WriteAllBytes(absoluteLicensePath, licenseBytes);
+                    AssetDatabase.ImportAsset(LicenseAssetPath, ImportAssetOptions.ForceUpdate);
                 }
-
-                AssetDatabase.ImportAsset(FontAssetPath, ImportAssetOptions.ForceSynchronousImport | ImportAssetOptions.ForceUpdate);
-                AssetDatabase.ImportAsset(LicenseAssetPath, ImportAssetOptions.ForceUpdate);
 
                 Font imported = AssetDatabase.LoadAssetAtPath<Font>(FontAssetPath);
                 if (imported == null)
                 {
-                    Debug.LogError($"日本語UIフォントをダウンロードしましたが、UnityのFontアセットとして読み込めません: {FontAssetPath}");
+                    Debug.LogError($"日本語UIフォントを取得しましたが、UnityのFontアセットとして読み込めません: {FontAssetPath}");
                     return false;
                 }
 
-                Debug.Log($"日本語UIフォントをプロジェクトへ導入しました: {FontAssetPath}");
+                Debug.Log($"日本語UIフォントとライセンスをプロジェクトへ導入しました: {FontAssetPath}");
                 return true;
             }
             catch (Exception exception)
             {
-                Debug.LogError(
-                    "日本語UIフォントの自動導入に失敗しました。" +
-                    "Demon King > Project > Install Japanese UI Font から再実行してください。\n" +
+                Debug.LogWarning(
+                    "日本語UIフォントの自動導入に失敗しました。プロトタイプは組み込みフォントで継続できます。" +
+                    "ネットワーク接続後に Demon King > Project > Install Japanese UI Font から再実行してください。\n" +
                     exception.Message);
                 return false;
             }
