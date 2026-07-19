@@ -11,10 +11,12 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: f1e2f3c4d5b6478899aabbccddeeff06, type: 3}
   m_Name: PrototypeProjectAssets
-  m_EditorClassIdentifier: 
+  m_EditorClassIdentifier:
+  applicationSettings: {fileID: 11400000, guid: 2e6b9d1f4a8c43e7b0d5f2196c3a7e84, type: 2}
   playerPrefab: {fileID: 100000, guid: e5142937c364939cfb3bc4a0129f1d56, type: 3}
   playerCharacterStats: {fileID: 11400000, guid: 40111111111111111111111111111101, type: 2}
   playerMeleeAttack: {fileID: 11400000, guid: 40111111111111111111111111111102, type: 2}
+  playerDodge: {fileID: 11400000, guid: 5f7a1c3e9b2d4680a4e6f8c1d3b50729, type: 2}
   uiFont: {fileID: 12800000, guid: 0447c22bc17a1ab4888b6b3fa6f24fd3, type: 3}
   cottagePrefab: {fileID: 100000, guid: 68dcb65a10db454ba871daae7788796f, type: 3}
   treePrefab: {fileID: 100000, guid: 6177d65eef744c4fa7e36b1f71ad9598, type: 3}
