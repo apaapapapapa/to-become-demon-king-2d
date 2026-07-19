@@ -9,7 +9,7 @@ namespace DemonKing.Field.Prototype
 {
     /// <summary>
     /// ProjectAssetsから受け取ったプレイヤーPrefabを生成して初期位置へ配置します。
-    /// キャラクター能力値と攻撃データもScriptableObjectから各Gameplayコンポーネントへ注入します。
+    /// キャラクター能力値、攻撃、回避データをScriptableObjectから各Gameplayコンポーネントへ注入します。
     /// </summary>
     internal sealed class PrototypePlayerSpawner
     {
@@ -17,17 +17,20 @@ namespace DemonKing.Field.Prototype
         private readonly GameObject playerPrefab;
         private readonly CharacterStatsDefinition characterStats;
         private readonly MeleeAttackDefinition meleeAttackDefinition;
+        private readonly DodgeDefinition dodgeDefinition;
 
         public PrototypePlayerSpawner(
             Vector3 spawnPosition,
             GameObject playerPrefab,
             CharacterStatsDefinition characterStats,
-            MeleeAttackDefinition meleeAttackDefinition)
+            MeleeAttackDefinition meleeAttackDefinition,
+            DodgeDefinition dodgeDefinition)
         {
             this.spawnPosition = spawnPosition;
             this.playerPrefab = playerPrefab;
             this.characterStats = characterStats;
             this.meleeAttackDefinition = meleeAttackDefinition;
+            this.dodgeDefinition = dodgeDefinition;
         }
 
         public GameObject Spawn(Transform parent)
@@ -75,6 +78,13 @@ namespace DemonKing.Field.Prototype
             PlayerMeleeAttack meleeAttack = root.GetComponent<PlayerMeleeAttack>();
             meleeAttack?.Configure(meleeAttackDefinition);
 
+            CharacterDodge2D dodge = root.GetComponent<CharacterDodge2D>();
+            if (dodge == null)
+            {
+                dodge = root.AddComponent<CharacterDodge2D>();
+            }
+
+            dodge.Configure(dodgeDefinition);
             return root;
         }
     }

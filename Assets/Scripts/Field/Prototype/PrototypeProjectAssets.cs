@@ -1,3 +1,4 @@
+using DemonKing.Field.Prototype.Configuration;
 using DemonKing.Gameplay.Characters.Configuration;
 using DemonKing.Gameplay.Combat.Configuration;
 using UnityEngine;
@@ -6,15 +7,19 @@ namespace DemonKing.Field.Prototype
 {
     /// <summary>
     /// プロトタイプ実行時に必要な主要アセット参照を一か所へ集約します。
-    /// コンテンツ、UI、ゲームバランス設定を利用側の文字列パスやPrefab内の重複値から分離します。
+    /// コンテンツ、UI、ゲームバランス、起動設定を利用側の文字列パスやPrefab内の重複値から分離します。
     /// </summary>
     [CreateAssetMenu(fileName = "PrototypeProjectAssets", menuName = "Demon King/Prototype Project Assets")]
     public sealed class PrototypeProjectAssets : ScriptableObject
     {
+        [Header("Application")]
+        [SerializeField] private PrototypeApplicationSettings applicationSettings;
+
         [Header("Characters")]
         [SerializeField] private GameObject playerPrefab;
         [SerializeField] private CharacterStatsDefinition playerCharacterStats;
         [SerializeField] private MeleeAttackDefinition playerMeleeAttack;
+        [SerializeField] private DodgeDefinition playerDodge;
 
         [Header("UI")]
         [SerializeField] private Font uiFont;
@@ -33,9 +38,11 @@ namespace DemonKing.Field.Prototype
         [SerializeField] private Sprite grassTileSprite;
         [SerializeField] private Sprite pathTileSprite;
 
+        public PrototypeApplicationSettings ApplicationSettings => applicationSettings;
         public GameObject PlayerPrefab => playerPrefab;
         public CharacterStatsDefinition PlayerCharacterStats => playerCharacterStats;
         public MeleeAttackDefinition PlayerMeleeAttack => playerMeleeAttack;
+        public DodgeDefinition PlayerDodge => playerDodge;
         public Font UiFont => uiFont;
         public bool HasUiFont => uiFont != null;
         public GameObject CottagePrefab => cottagePrefab;
@@ -52,9 +59,11 @@ namespace DemonKing.Field.Prototype
         /// UIフォントはEditorで自動導入を試みますが、取得失敗時も組み込みフォントで起動できるため必須判定から除外します。
         /// </summary>
         public bool IsConfigured =>
+            applicationSettings != null &&
             playerPrefab != null &&
             playerCharacterStats != null &&
             playerMeleeAttack != null &&
+            playerDodge != null &&
             cottagePrefab != null &&
             treePrefab != null &&
             lamppostPrefab != null &&

@@ -5,8 +5,8 @@ using UnityEngine;
 namespace DemonKing.Gameplay.Characters
 {
     /// <summary>
-    /// キャラクターの2D移動だけを担当します。
-    /// 移動速度はCharacterStatsDefinitionから取得し、Prefabへバランス値を重複保持しません。
+    /// キャラクターの2D通常移動だけを担当します。
+    /// 移動速度はCharacterStatsDefinitionから取得し、回避など別の移動制御中は外側から一時ロックできます。
     /// </summary>
     [RequireComponent(typeof(MoveInputReader))]
     [RequireComponent(typeof(Rigidbody2D))]
@@ -20,10 +20,12 @@ namespace DemonKing.Gameplay.Characters
         private Rigidbody2D body;
         private Vector2 currentInput;
         private bool clampToBounds;
+        private bool movementLocked;
         private Vector2 fieldExtents;
 
         public Vector2 CurrentInput => currentInput;
         public float MoveSpeed => statsDefinition == null ? DefaultMoveSpeed : statsDefinition.MoveSpeed;
+        public bool IsMovementLocked => movementLocked;
 
         private void Awake()
         {
@@ -37,13 +39,13 @@ namespace DemonKing.Gameplay.Characters
 
         private void Update()
         {
-            // Input Systemの値はUpdateで取得し、物理移動はFixedUpdateで適用します。
+            // 入力値は常に保持し、通常移動を止める必要があるかはFixedUpdateで判断します。
             currentInput = inputReader == null ? Vector2.zero : inputReader.Move;
         }
 
         private void FixedUpdate()
         {
-            if (body == null)
+            if (body == null || movementLocked)
             {
                 return;
             }
@@ -62,6 +64,11 @@ namespace DemonKing.Gameplay.Characters
         public void Configure(CharacterStatsDefinition definition)
         {
             statsDefinition = definition;
+        }
+
+        public void SetMovementLocked(bool locked)
+        {
+            movementLocked = locked;
         }
 
         public void SetBounds(Vector2 extents)
