@@ -19,6 +19,8 @@ namespace DemonKing.Field
         private float animationTime;
         private SpriteRenderer[] spriteRenderers;
         private int[] relativeSortingOrders;
+        private Texture2D panelTexture;
+        private Texture2D accentTexture;
 
         public void Configure(Vector2 extents) => fieldExtents = extents;
 
@@ -44,13 +46,21 @@ namespace DemonKing.Field
             {
                 relativeSortingOrders[i] = spriteRenderers[i].sortingOrder;
             }
+
+            panelTexture = CreateSolidTexture(new Color(0.045f, 0.10f, 0.12f, 0.86f));
+            accentTexture = CreateSolidTexture(new Color(0.93f, 0.57f, 0.31f, 0.95f));
         }
 
         private void OnEnable() => moveAction.Enable();
 
         private void OnDisable() => moveAction.Disable();
 
-        private void OnDestroy() => moveAction.Dispose();
+        private void OnDestroy()
+        {
+            moveAction.Dispose();
+            if (panelTexture != null) Destroy(panelTexture);
+            if (accentTexture != null) Destroy(accentTexture);
+        }
 
         private void Update()
         {
@@ -64,6 +74,7 @@ namespace DemonKing.Field
             animationTime += Time.deltaTime * (input.sqrMagnitude > 0 ? 10f : 3f);
             float bounce = input.sqrMagnitude > 0 ? Mathf.Abs(Mathf.Sin(animationTime)) : 0;
             transform.localScale = new Vector3(1f + bounce * 0.08f, 1f - bounce * 0.08f, 1f);
+            transform.localRotation = Quaternion.Euler(0f, 0f, -input.x * 3f);
 
             UpdateSortingOrder();
         }
@@ -79,17 +90,54 @@ namespace DemonKing.Field
 
         private void OnGUI()
         {
+            float scale = Mathf.Clamp(Screen.height / 720f, 0.82f, 1.22f);
+
             GUIStyle title = new(GUI.skin.label)
             {
-                fontSize = 22,
+                fontSize = Mathf.RoundToInt(20f * scale),
                 fontStyle = FontStyle.Bold,
-                alignment = TextAnchor.MiddleCenter,
-                normal = { textColor = new Color(0.94f, 1f, 0.83f) }
+                alignment = TextAnchor.MiddleLeft,
+                normal = { textColor = new Color(1f, 0.89f, 0.66f) }
             };
-            GUIStyle hint = new(title) { fontSize = 14, fontStyle = FontStyle.Normal };
-            GUI.Label(new Rect(Screen.width / 2f - 180, 18, 360, 32), "はじまりの草原", title);
-            GUI.Label(new Rect(Screen.width / 2f - 260, Screen.height - 42, 520, 26),
-                "WASD / 矢印キー / ゲームパッド左スティック でスライムを移動", hint);
+            GUIStyle subtitle = new(title)
+            {
+                fontSize = Mathf.RoundToInt(12f * scale),
+                fontStyle = FontStyle.Normal,
+                normal = { textColor = new Color(0.72f, 0.86f, 0.72f) }
+            };
+            GUIStyle hint = new(subtitle)
+            {
+                fontSize = Mathf.RoundToInt(13f * scale),
+                alignment = TextAnchor.MiddleCenter,
+                normal = { textColor = new Color(0.91f, 0.94f, 0.84f) }
+            };
+
+            Rect locationPanel = new(22f * scale, 22f * scale, 286f * scale, 76f * scale);
+            GUI.DrawTexture(locationPanel, panelTexture, ScaleMode.StretchToFill);
+            GUI.DrawTexture(new Rect(locationPanel.x, locationPanel.y, 5f * scale, locationPanel.height),
+                accentTexture, ScaleMode.StretchToFill);
+            GUI.Label(new Rect(locationPanel.x + 18f * scale, locationPanel.y + 8f * scale,
+                locationPanel.width - 24f * scale, 34f * scale), "夕映えの学園草原", title);
+            GUI.Label(new Rect(locationPanel.x + 18f * scale, locationPanel.y + 40f * scale,
+                locationPanel.width - 24f * scale, 24f * scale), "魔法学園・西の庭", subtitle);
+
+            float controlsWidth = 510f * scale;
+            Rect controlsPanel = new((Screen.width - controlsWidth) * 0.5f, Screen.height - 54f * scale,
+                controlsWidth, 34f * scale);
+            GUI.DrawTexture(controlsPanel, panelTexture, ScaleMode.StretchToFill);
+            GUI.Label(controlsPanel, "移動　WASD／矢印キー／ゲームパッド左スティック", hint);
+        }
+
+        private static Texture2D CreateSolidTexture(Color color)
+        {
+            Texture2D texture = new(1, 1, TextureFormat.RGBA32, false)
+            {
+                filterMode = FilterMode.Point,
+                wrapMode = TextureWrapMode.Clamp
+            };
+            texture.SetPixel(0, 0, color);
+            texture.Apply();
+            return texture;
         }
     }
 }
