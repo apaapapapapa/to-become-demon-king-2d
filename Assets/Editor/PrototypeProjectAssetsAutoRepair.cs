@@ -14,6 +14,7 @@ namespace DemonKing.EditorTools
     [InitializeOnLoad]
     internal static class PrototypeProjectAssetsAutoRepair
     {
+        private const string FontInstallAttemptSessionKey = "DemonKing.FontInstallAttempted";
         private const string ProjectAssetsPath = "Assets/Resources/Settings/PrototypeProjectAssets.asset";
         private const string PlayerPrefabPath = "Assets/Resources/Prefabs/Characters/PrototypeSlime.prefab";
         private const string PlayerCharacterStatsPath = "Assets/Resources/Settings/Gameplay/PlayerCharacterStats.asset";
@@ -50,8 +51,17 @@ namespace DemonKing.EditorTools
 
         private static void Repair(bool forceLog)
         {
-            // UIフォントが未導入なら、ProjectAssetsの修復前にプロジェクト内へ配置します。
-            JapaneseUiFontInstaller.EnsureInstalled(forceLog: false);
+            // 自動実行時のネットワーク試行はEditorセッションにつき1回に限定します。
+            // 手動修復時は再試行できるため、オフライン起動時にも開発を妨げません。
+            bool shouldAttemptFontInstall =
+                forceLog ||
+                !SessionState.GetBool(FontInstallAttemptSessionKey, false);
+
+            if (shouldAttemptFontInstall)
+            {
+                SessionState.SetBool(FontInstallAttemptSessionKey, true);
+                JapaneseUiFontInstaller.EnsureInstalled(forceLog: forceLog);
+            }
 
             PrototypeProjectAssets projectAssets = AssetDatabase.LoadAssetAtPath<PrototypeProjectAssets>(ProjectAssetsPath);
             if (projectAssets == null)
