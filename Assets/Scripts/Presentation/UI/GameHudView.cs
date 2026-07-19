@@ -6,6 +6,7 @@ namespace DemonKing.Presentation.UI
     /// <summary>
     /// プレイ中の常設HUDをCanvas（uGUI）で表示します。
     /// ゲームルールは持たず、画面上の表示階層と見た目だけを担当します。
+    /// UIフォントはProjectAssetsから注入し、OSにインストールされたフォントへ依存しません。
     /// </summary>
     [DisallowMultipleComponent]
     [RequireComponent(typeof(Canvas))]
@@ -24,6 +25,16 @@ namespace DemonKing.Presentation.UI
             BuildHierarchy();
         }
 
+        public void SetFont(Font font)
+        {
+            uiFont = font != null ? font : ResolveFallbackFont();
+
+            foreach (Text text in GetComponentsInChildren<Text>(includeInactive: true))
+            {
+                text.font = uiFont;
+            }
+        }
+
         private void BuildHierarchy()
         {
             if (transform.Find("HUD") != null)
@@ -31,7 +42,7 @@ namespace DemonKing.Presentation.UI
                 return;
             }
 
-            uiFont = LoadUiFont();
+            uiFont ??= ResolveFallbackFont();
 
             RectTransform hudRoot = CreateRect("HUD", transform);
             StretchToParent(hudRoot);
@@ -187,31 +198,18 @@ namespace DemonKing.Presentation.UI
             rect.sizeDelta = Vector2.zero;
         }
 
-        private static Font LoadUiFont()
+        private static Font ResolveFallbackFont()
         {
-#if UNITY_EDITOR || UNITY_STANDALONE
-            Font osFont = Font.CreateDynamicFontFromOSFont(
-                new[]
-                {
-                    "Yu Gothic UI",
-                    "Yu Gothic",
-                    "Meiryo",
-                    "Hiragino Sans",
-                    "Noto Sans CJK JP",
-                    "Arial"
-                },
-                18);
-            if (osFont != null)
-            {
-                return osFont;
-            }
-#endif
-
             Font builtInFont = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
             if (builtInFont == null)
             {
+                Debug.LogError("uGUI用フォントが設定されておらず、組み込みフォントも取得できませんでした。");
+            }
+            else
+            {
                 Debug.LogWarning(
-                    "uGUI用フォントを取得できませんでした。本番配布前に日本語対応フォントをプロジェクトアセットとして設定してください。");
+                    "ProjectAssetsに日本語UIフォントが設定されていないため、一時的に組み込みフォントを使用します。" +
+                    "Demon King > Project > Install Japanese UI Font を実行してください。");
             }
 
             return builtInFont;
