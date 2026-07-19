@@ -42,24 +42,29 @@ Assets/
       Characters/
       Rendering/
       UI/
+    Field/
+      Prototype/      現在の実行時生成プロトタイプ専用
     World/
     FieldBootstrap.cs
     SlimeController.cs
   Editor/
 ```
 
-`FieldBootstrap.cs` は現在の試作ワールドを維持するための移行境界として残しています。新しい恒久機能は原則として `Core`、`Gameplay`、`Presentation` などの責務別ディレクトリへ追加します。
+`FieldBootstrap.cs` は現在、シーン初期設定と `PrototypeWorldBuilder` の起動だけを担当します。実行時生成プロトタイプの具体的な地形・建物・自然物・環境演出・プレイヤー生成は `Field/Prototype` 配下へ分離しています。
+
+新しい恒久機能は原則として `Core`、`Gameplay`、`Presentation` などの責務別ディレクトリへ追加し、`Field/Prototype` には本番機能を増やしません。
 
 ## 開発順序
 
 1. 現在の遊べるプロトタイプを維持しながら責務分割を進める。
 2. Input Actions をアセット管理へ移行する。
 3. プレイヤーを Prefab またはシーン管理へ移行する。
-4. `FieldBootstrap` の環境生成処理を複数の Builder へ分割する。
-5. NPC 会話とインタラクションを独立機能として追加する。
-6. 戦闘、HP、ダメージ、死亡処理を独立機能として追加する。
-7. クエスト、インベントリ、セーブ機能を段階的に追加する。
-8. Steam 固有機能が必要になった時点で Platform 層を追加する。
+4. 実行時生成の地形を本番用 Isometric Tilemap へ段階的に置き換える。
+5. 校舎、木、街灯などを Prefab またはアートアセット管理へ移行する。
+6. NPC 会話とインタラクションを独立機能として追加する。
+7. 戦闘、HP、ダメージ、死亡処理を独立機能として追加する。
+8. クエスト、インベントリ、セーブ機能を段階的に追加する。
+9. Steam 固有機能が必要になった時点で Platform 層を追加する。
 
 詳細は以下を参照してください。
 
