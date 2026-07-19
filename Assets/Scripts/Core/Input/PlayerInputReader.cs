@@ -11,11 +11,8 @@ namespace DemonKing.Core.Input
     [DisallowMultipleComponent]
     public sealed class PlayerInputReader : MonoBehaviour
     {
-        private const string DefaultResourcesPath = "Input/PlayerControls";
-
         [SerializeField] private InputActionAsset inputActions;
         [SerializeField] private string actionMapName = "Player";
-        [SerializeField] private string resourcesPath = DefaultResourcesPath;
 
         private InputActionAsset runtimeInputActions;
         private InputActionMap playerActionMap;
@@ -61,22 +58,14 @@ namespace DemonKing.Core.Input
 
         private void InitializeActions()
         {
-            InputActionAsset source = inputActions;
-            if (source == null)
+            if (inputActions == null)
             {
-                source = Resources.Load<InputActionAsset>(resourcesPath);
-            }
-
-            if (source == null)
-            {
-                Debug.LogError(
-                    $"入力アクションアセットが見つかりません。Resources/{resourcesPath}.inputactions を確認してください。",
-                    this);
+                Debug.LogError("Input Action Asset参照が設定されていません。プレイヤーPrefabを確認してください。", this);
                 return;
             }
 
             // アセット本体のEnable状態を他の利用者と共有しないよう、プレイヤー個体専用の複製を使用します。
-            runtimeInputActions = Instantiate(source);
+            runtimeInputActions = Instantiate(inputActions);
             playerActionMap = runtimeInputActions.FindActionMap(actionMapName, throwIfNotFound: false);
 
             if (playerActionMap == null)
