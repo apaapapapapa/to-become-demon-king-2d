@@ -17,6 +17,11 @@ namespace DemonKing.Field.Prototype
         [SerializeField] private GameObject treePrefab;
         [SerializeField] private GameObject lamppostPrefab;
 
+        [Header("World Art")]
+        [SerializeField] private Sprite cottageSprite;
+        [SerializeField] private Sprite treeSprite;
+        [SerializeField] private Sprite lamppostSprite;
+
         [Header("Terrain Sprites")]
         [SerializeField] private Sprite grassTileSprite;
         [SerializeField] private Sprite pathTileSprite;
@@ -25,6 +30,9 @@ namespace DemonKing.Field.Prototype
         public GameObject CottagePrefab => cottagePrefab;
         public GameObject TreePrefab => treePrefab;
         public GameObject LamppostPrefab => lamppostPrefab;
+        public Sprite CottageSprite => cottageSprite;
+        public Sprite TreeSprite => treeSprite;
+        public Sprite LamppostSprite => lamppostSprite;
         public Sprite GrassTileSprite => grassTileSprite;
         public Sprite PathTileSprite => pathTileSprite;
 
@@ -33,6 +41,9 @@ namespace DemonKing.Field.Prototype
             cottagePrefab != null &&
             treePrefab != null &&
             lamppostPrefab != null &&
+            cottageSprite != null &&
+            treeSprite != null &&
+            lamppostSprite != null &&
             grassTileSprite != null &&
             pathTileSprite != null;
     }
