@@ -16,5 +16,8 @@ MonoBehaviour:
   cottagePrefab: {fileID: 100000, guid: 68dcb65a10db454ba871daae7788796f, type: 3}
   treePrefab: {fileID: 100000, guid: 6177d65eef744c4fa7e36b1f71ad9598, type: 3}
   lamppostPrefab: {fileID: 100000, guid: ca02247008ee4b57b850ecf8b05d2034, type: 3}
+  cottageSprite: {fileID: 21300000, guid: d1e2f3c4d5b6478899aabbccddeeff04, type: 3}
+  treeSprite: {fileID: 21300000, guid: c1e2f3c4d5b6478899aabbccddeeff03, type: 3}
+  lamppostSprite: {fileID: 21300000, guid: e1e2f3c4d5b6478899aabbccddeeff05, type: 3}
   grassTileSprite: {fileID: 21300000, guid: a1e2f3c4d5b6478899aabbccddeeff01, type: 3}
   pathTileSprite: {fileID: 21300000, guid: b1e2f3c4d5b6478899aabbccddeeff02, type: 3}
