@@ -216,12 +216,12 @@ EnemyHealth
 将来の境界例:
 
 ```text
-Core Game
+コアゲーム
   -> ISaveService
   -> IAchievementService
   -> IPlatformUserService
 
-Platform implementations
+プラットフォーム実装
   -> Steam
   -> Console
 ```
