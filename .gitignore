@@ -81,6 +81,9 @@ mono_crash.*
 *.unitypackage.meta
 *.app
 
+# semantic-release用Node.js依存関係
+/node_modules/
+
 # Crashlytics が生成するファイル
 crashlytics-build.properties
 
