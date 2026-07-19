@@ -36,7 +36,9 @@ export default defineConfig({
           { text: '仕様書一覧', link: '/specifications/' },
           { text: '入力', link: '/specifications/input' },
           { text: '戦闘', link: '/specifications/combat' },
-          { text: 'インタラクション', link: '/specifications/interaction' }
+          { text: 'インタラクション', link: '/specifications/interaction' },
+          { text: '成長', link: '/specifications/progression' },
+          { text: 'セーブ', link: '/specifications/save' }
         ] }
       ],
       '/story/': [
