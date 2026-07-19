@@ -155,6 +155,17 @@ P0〜P2に加え、成長システム実装前のDefinition、Runtime State、Sa
 
 次は既存の通常攻撃をAbility実行基盤へ移し、スキル、進化、NPC・会話・敵AI・クエストを段階的に追加します。Addressablesや大規模なシーン分割は、コンテンツ量とロード時間が必要性を示した段階で導入します。
 
+## リリース
+
+`main` へのマージ時にsemantic-releaseを実行し、Conventional Commitsから `vX.Y.Z` タグとGitHub Releaseを自動生成します。npm公開やUnity Playerの自動ビルドは行いません。
+
+- `fix:` / `perf:`: Patch Release
+- `feat:`: Minor Release
+- `BREAKING CHANGE:`: Major Release
+- `docs:` / `test:` / `chore:` / `ci:` / `refactor:`: リリースなし
+
+Squash merge時はPull RequestタイトルをConventional Commits形式にします。詳しい運用と初回リリースの扱いは `docs/RELEASE.md` を参照してください。
+
 ## ドキュメント
 
 各ドキュメントの役割を分けています。
@@ -163,5 +174,6 @@ P0〜P2に加え、成長システム実装前のDefinition、Runtime State、Sa
 - `docs/GAME_DIRECTION.md`: ゲーム体験、ビジュアル、物語、コンテンツ開発の方針
 - `docs/TECHNICAL_DESIGN.md`: 現在の技術設計、実装規約、入力・物理・UI・データ管理の基準
 - `docs/ARCHITECTURE.md`: 依存方向、構成責務、完了したP0〜P2の整備履歴と今後の優先順位
+- `docs/RELEASE.md`: semantic-releaseのバージョン判定、自動公開、初回リリース、障害対応
 
 実装とドキュメントが食い違う場合は、まず現在のコードとUnityアセットを確認し、その後ドキュメントを更新してください。
