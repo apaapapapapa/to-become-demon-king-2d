@@ -1,3 +1,4 @@
+using DemonKing.Gameplay.Rewards;
 using UnityEngine;
 
 namespace DemonKing.Field.Prototype
@@ -7,13 +8,18 @@ namespace DemonKing.Field.Prototype
     /// </summary>
     internal readonly struct PrototypeWorldBuildResult
     {
-        public PrototypeWorldBuildResult(Transform worldRoot, GameObject player)
+        public PrototypeWorldBuildResult(
+            Transform worldRoot,
+            GameObject player,
+            RewardService rewardService)
         {
             WorldRoot = worldRoot;
             Player = player;
+            RewardService = rewardService;
         }
 
         public Transform WorldRoot { get; }
         public GameObject Player { get; }
+        public RewardService RewardService { get; }
     }
 }

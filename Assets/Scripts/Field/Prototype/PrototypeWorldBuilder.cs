@@ -1,3 +1,5 @@
+using DemonKing.Gameplay.Characters;
+using DemonKing.Gameplay.Rewards;
 using UnityEngine;
 
 namespace DemonKing.Field.Prototype
@@ -40,16 +42,38 @@ namespace DemonKing.Field.Prototype
             new NatureBuilder(shapes, ambientEffects, prefabs).Build(world);
             architecture.BuildLandmarksAndLighting(world);
             new AtmosphereBuilder(shapes, ambientEffects).Build(world);
-            new PrototypeGameplayFeatureInstaller().Install(world);
-            terrain.BuildForeground(world);
-
             GameObject player = new PrototypePlayerSpawner(
                     playerSpawnPosition,
                     projectAssets.PlayerCharacter)
                 .Spawn(world);
 
+            RewardService rewardService = CreateRewardService(player);
+            if (rewardService != null)
+            {
+                new PrototypeGameplayFeatureInstaller().Install(
+                    world,
+                    rewardService,
+                    projectAssets.TrainingDummyReward);
+            }
+
+            terrain.BuildForeground(world);
+
             PrototypeCameraInstaller.Configure(Camera.main, player == null ? null : player.transform);
-            return new PrototypeWorldBuildResult(world, player);
+            return new PrototypeWorldBuildResult(world, player, rewardService);
+        }
+
+        private static RewardService CreateRewardService(GameObject player)
+        {
+            CharacterRuntimeContextHost contextHost = player == null
+                ? null
+                : player.GetComponent<CharacterRuntimeContextHost>();
+            if (contextHost == null || !contextHost.IsInitialized)
+            {
+                Debug.LogError("プレイヤーのCharacterRuntimeContextが見つからないため、報酬処理を初期化できません。");
+                return null;
+            }
+
+            return new RewardService(contextHost.Context);
         }
     }
 }

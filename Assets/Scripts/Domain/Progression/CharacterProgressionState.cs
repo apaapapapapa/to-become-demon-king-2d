@@ -44,8 +44,8 @@ namespace DemonKing.Domain.Progression
         }
 
         public string CharacterDefinitionId { get; }
-        public int Level { get; }
-        public long CurrentExperience { get; }
+        public int Level { get; private set; }
+        public long CurrentExperience { get; private set; }
         public IReadOnlyList<string> UnlockedSkillIds => unlockedSkillIds;
         public IReadOnlyList<string> UnlockedEvolutionNodeIds => unlockedEvolutionNodeIds;
 
@@ -72,6 +72,53 @@ namespace DemonKing.Domain.Progression
                 currentExperience,
                 unlockedSkillIds,
                 unlockedEvolutionNodeIds);
+        }
+
+        /// <summary>
+        /// 累積経験値を加算し、同時にレベルを更新します。
+        /// 最大レベル時の余剰経験値はExperienceTableの方針に従います。
+        /// </summary>
+        public LevelUpResult GainExperience(long amount, ExperienceTable experienceTable)
+        {
+            if (amount < 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(amount), "加算経験値は0以上である必要があります。");
+            }
+
+            if (experienceTable == null)
+            {
+                throw new ArgumentNullException(nameof(experienceTable));
+            }
+
+            int previousLevel = Level;
+            long previousExperience = CurrentExperience;
+            long nextExperience = AddWithoutOverflow(previousExperience, amount);
+
+            if (!experienceTable.KeepOverflowAtMaxLevel)
+            {
+                long maximumExperience = experienceTable.GetCumulativeExperienceForLevel(
+                    experienceTable.MaxLevel);
+                nextExperience = Math.Min(nextExperience, maximumExperience);
+            }
+
+            CurrentExperience = nextExperience;
+            Level = experienceTable.GetLevelForTotalExperience(CurrentExperience);
+
+            return new LevelUpResult(
+                amount,
+                Math.Max(0, CurrentExperience - previousExperience),
+                previousLevel,
+                Level,
+                previousExperience,
+                CurrentExperience,
+                Level == experienceTable.MaxLevel);
+        }
+
+        private static long AddWithoutOverflow(long left, long right)
+        {
+            return left > long.MaxValue - right
+                ? long.MaxValue
+                : left + right;
         }
 
         private static List<string> CopyDistinctIds(IEnumerable<string> source, string parameterName)
