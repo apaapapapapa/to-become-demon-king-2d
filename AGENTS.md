@@ -202,13 +202,14 @@ Domain / Runtime実装
 
 ## VitePress
 
-Knowledge Baseは `docs/` をVitePressルートとして構築します。
+Knowledge BaseのNode依存関係は、ルートのsemantic-release用 `package.json` と分離して `docs/package.json` で管理します。
 
 ```bash
+cd docs
 npm install
-npm run docs:dev
-npm run docs:build
-npm run docs:preview
+npm run dev
+npm run build
+npm run preview
 ```
 
 VitePressのナビゲーションや新しい主要カテゴリを追加した場合は `docs/.vitepress/config.mts` も更新してください。
