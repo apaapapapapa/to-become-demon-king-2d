@@ -3,8 +3,8 @@ using UnityEngine;
 namespace DemonKing.Field.Prototype
 {
     /// <summary>
-    /// ProjectAssetsで管理されたワールドPrefabの配置を集約します。
-    /// Builder側はPrefabの保管場所やResourcesパスを知りません。
+    /// ProjectAssetsで管理されたワールドPrefabの配置と静的アートの接続を集約します。
+    /// Builder側はPrefabやSpriteの保管場所、Resourcesパスを知りません。
     /// </summary>
     internal sealed class PrototypeWorldPrefabFactory
     {
@@ -17,17 +17,23 @@ namespace DemonKing.Field.Prototype
 
         public GameObject CreateCottage(Vector2 position, Transform parent)
         {
-            return Instantiate(projectAssets.CottagePrefab, "校舎", position, parent);
+            GameObject instance = Instantiate(projectAssets.CottagePrefab, "校舎", position, parent);
+            instance?.GetComponent<PrototypeCottageVisual>()?.SetSprite(projectAssets.CottageSprite);
+            return instance;
         }
 
         public GameObject CreateTree(Vector2 position, Transform parent)
         {
-            return Instantiate(projectAssets.TreePrefab, "木", position, parent);
+            GameObject instance = Instantiate(projectAssets.TreePrefab, "木", position, parent);
+            instance?.GetComponent<PrototypeTreeVisual>()?.SetSprite(projectAssets.TreeSprite);
+            return instance;
         }
 
         public GameObject CreateLamppost(Vector2 position, Transform parent)
         {
-            return Instantiate(projectAssets.LamppostPrefab, "街灯", position, parent);
+            GameObject instance = Instantiate(projectAssets.LamppostPrefab, "街灯", position, parent);
+            instance?.GetComponent<PrototypeLamppostVisual>()?.SetSprite(projectAssets.LamppostSprite);
+            return instance;
         }
 
         private static GameObject Instantiate(
