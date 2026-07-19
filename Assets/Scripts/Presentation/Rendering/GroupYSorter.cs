@@ -6,6 +6,7 @@ namespace DemonKing.Presentation.Rendering
     /// <summary>
     /// 子階層にある複数のSpriteRendererの相対的な描画順を保ちながら、ルートのY座標に応じて一括で並び替えます。
     /// 複数パーツで構成されるキャラクターや動的オブジェクト向けです。
+    /// 描画順精度はこのコンポーネントが所有します。
     /// </summary>
     [DisallowMultipleComponent]
     public sealed class GroupYSorter : MonoBehaviour
@@ -44,11 +45,6 @@ namespace DemonKing.Presentation.Rendering
                     spriteRenderers[i].sortingOrder = baseOrder + relativeSortingOrders[i];
                 }
             }
-        }
-
-        public void SetPrecision(int value)
-        {
-            precision = Mathf.Max(1, value);
         }
 
         public void RefreshRenderers()
