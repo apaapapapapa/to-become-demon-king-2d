@@ -1,28 +1,28 @@
-# Technical Design
+# 技術設計
 
-## Baseline
+## 基準環境
 
-Current project baseline observed in the repository:
+リポジトリで確認できる現在のプロジェクト基準は次のとおりです。
 
 - Unity Editor: 6000.5.4f1
-- Universal Render Pipeline installed
-- Unity Input System installed
-- 2D Tilemap packages installed
-- 2D Animation tooling installed
+- Universal Render Pipeline 導入済み
+- Unity Input System 導入済み
+- 2D Tilemap パッケージ導入済み
+- 2D Animation ツール導入済み
 
-This is sufficient for the initial isometric 2D/2.5D prototype.
+この構成で、最初のアイソメトリック 2D／2.5D 試作を作成できます。
 
-## Architecture principles
+## アーキテクチャ原則
 
-Keep the first implementation simple.
+最初の実装は単純に保ちます。
 
-1. Core gameplay code must not directly depend on Steam or console APIs.
-2. Input is expressed as logical actions, not hard-coded keys.
-3. Rendering concerns should not be mixed into combat/domain logic.
-4. Avoid premature frameworks and dependency injection containers.
-5. Prefer small MonoBehaviours for scene-facing behavior and plain C# classes for reusable rules when complexity appears.
+1. 中核となるゲームプレイコードを Steam やコンソールの API に直接依存させない。
+2. 入力はハードコードしたキーではなく、論理アクションとして表現する。
+3. 描画に関する処理を戦闘やドメインのロジックへ混在させない。
+4. 必要になる前にフレームワークや依存性注入コンテナを導入しない。
+5. シーンに関わる振る舞いには小さな MonoBehaviour を優先し、複雑さが増した時点で再利用可能なルールを通常の C# クラスへ分離する。
 
-## Initial folder structure
+## 初期フォルダー構成
 
 ```text
 Assets/
@@ -48,31 +48,31 @@ Assets/
   Settings/
 ```
 
-Do not create empty folders purely for architecture. Add them as content appears.
+アーキテクチャの形だけを整えるために空フォルダーを作らないでください。コンテンツが必要になった時点で追加します。
 
-## Scene strategy
+## シーン方針
 
-Start with one scene:
+最初は次の1シーンから始めます。
 
 ```text
 Assets/Scenes/Prototype/Prototype.unity
 ```
 
-The prototype scene should contain:
+試作シーンには次の要素を配置します。
 
 - Grid
-- Isometric Tilemap(s)
-- Player placeholder
+- Isometric Tilemap
+- プレイヤーの仮オブジェクト
 - Main Camera
-- one NPC placeholder
-- one enemy placeholder
-- one interaction target
+- NPC の仮オブジェクト1体
+- 敵の仮オブジェクト1体
+- インタラクション対象1つ
 
-## Isometric world
+## アイソメトリック世界
 
-Use Unity Tilemap with an isometric layout for the prototype.
+試作では、アイソメトリックレイアウトの Unity Tilemap を使用します。
 
-Recommended separation:
+推奨する分割は次のとおりです。
 
 ```text
 Grid
@@ -82,27 +82,27 @@ Grid
   Foreground Tilemap
 ```
 
-Collision data and visual data should be separable where practical.
+可能な範囲で、コリジョンデータと表示データを分離できるようにします。
 
-## Sprite sorting
+## スプライトの並び替え
 
-The game needs deterministic depth ordering so characters can walk behind and in front of scenery.
+キャラクターが風景の手前や奥を歩けるよう、ゲームには一貫した奥行き順が必要です。
 
-Initial rule:
+初期ルール:
 
 ```text
 sortingOrder = -round(worldY * precision)
 ```
 
-Use a small component such as `YSortSprite` on dynamic sprites. Static tilemap sorting should be configured consistently with the chosen isometric layout.
+動的スプライトには `YSortSprite` のような小さなコンポーネントを使用します。静的 Tilemap の並び順は、選択したアイソメトリックレイアウトと一貫するように設定します。
 
-Do not rely on manual sorting orders for every object.
+オブジェクトごとに手作業で並び順を設定しないでください。
 
-## Input
+## 入力
 
-Use Unity Input System.
+Unity Input System を使用します。
 
-Initial action map:
+初期アクションマップ:
 
 ```text
 Player
@@ -113,62 +113,62 @@ Player
   Pause       Button
 ```
 
-Suggested bindings:
+推奨バインド:
 
 ```text
 Move
   WASD
-  Arrow keys
-  Gamepad left stick
+  矢印キー
+  ゲームパッド左スティック
 
 Attack
-  Keyboard: J or Space (prototype only)
-  Gamepad: South button
+  キーボード: J または Space（試作のみ）
+  ゲームパッド: 南ボタン
 
 Interact
-  Keyboard: E
-  Gamepad: West button
+  キーボード: E
+  ゲームパッド: 西ボタン
 
 Dodge
-  Keyboard: Left Shift
-  Gamepad: East button
+  キーボード: Left Shift
+  ゲームパッド: 東ボタン
 
 Pause
-  Keyboard: Escape
-  Gamepad: Start
+  キーボード: Escape
+  ゲームパッド: Start
 ```
 
-Gameplay scripts should consume actions, not inspect specific keyboard keys.
+ゲームプレイスクリプトでは特定のキーボードキーを直接調べず、アクションを使用します。
 
-## Player movement
+## プレイヤー移動
 
-For the first prototype:
+最初の試作では次の方針を採用します。
 
-- Rigidbody2D-based movement
-- movement applied in FixedUpdate
-- normalized input to prevent diagonal speed increase
-- movement speed exposed in Inspector
-- animation integration deferred until the placeholder movement feels correct
+- Rigidbody2D による移動
+- FixedUpdate で移動を適用
+- 斜め移動が速くならないよう入力を正規化
+- 移動速度を Inspector に公開
+- 仮表示での移動感が整うまでアニメーション連携を延期
 
-The visual is isometric, but movement input remains a 2D world-space vector initially. A later iteration can remap axes if the chosen art/grid orientation requires it.
+表示はアイソメトリックですが、移動入力は当初、2D ワールド空間のベクトルとして扱います。採用するアートやグリッドの向きに応じて、後の反復で軸を変換できます。
 
-## Camera
+## カメラ
 
-Start with a simple orthographic follow camera.
+最初は単純な正投影の追従カメラを使用します。
 
-Requirements:
+要件:
 
-- smooth follow
-- no rotation during prototype
-- camera framing tuned before final character sprite production
+- 滑らかな追従
+- 試作中は回転させない
+- 最終的なキャラクタースプライトを制作する前に画角を調整
 
-Cinemachine may be introduced later if it adds value, but it is not required for milestone 1.
+Cinemachine は価値がある場合に後から導入できますが、マイルストーン1には必須ではありません。
 
-## Interaction
+## インタラクション
 
-Use a small interaction contract rather than coding NPC logic into the player.
+プレイヤーに NPC のロジックを直接記述せず、小さなインタラクション用の契約を使用します。
 
-Conceptually:
+概念例:
 
 ```csharp
 public interface IInteractable
@@ -177,22 +177,22 @@ public interface IInteractable
 }
 ```
 
-The player checks for an interactable in a short radius or trigger zone and invokes it.
+プレイヤーは短い半径またはトリガー範囲内のインタラクション対象を探し、処理を呼び出します。
 
-## Combat
+## 戦闘
 
-Prototype combat should be deliberately small:
+試作の戦闘は意図的に小さく保ちます。
 
 ```text
-Attack input
-  -> short attack window
-  -> overlap check / hitbox
+攻撃入力
+  -> 短い攻撃受付時間
+  -> オーバーラップ判定／ヒットボックス
   -> IDamageable.TakeDamage
-  -> enemy HP decreases
-  -> death when HP <= 0
+  -> 敵の HP が減少
+  -> HP が 0 以下になると死亡
 ```
 
-Initial abstractions may include:
+初期の抽象化には次の要素を含められます。
 
 ```text
 IDamageable
@@ -201,19 +201,19 @@ PlayerAttack
 EnemyHealth
 ```
 
-Do not build a complete ability system before the basic attack feels useful.
+基本攻撃の有用性が確認できる前に、完全なアビリティシステムを構築しないでください。
 
-## Platform portability
+## プラットフォーム移植性
 
-Keep these behind interfaces if/when they are added:
+次の機能を追加する場合は、インターフェースの背後に置きます。
 
-- save storage
-- achievements
-- cloud saves
-- platform user identity
-- DLC / entitlement checks
+- セーブデータの保存
+- 実績
+- クラウドセーブ
+- プラットフォーム上のユーザー識別
+- DLC／権利の確認
 
-Example future boundary:
+将来の境界例:
 
 ```text
 Core Game
@@ -226,28 +226,28 @@ Platform implementations
   -> Console
 ```
 
-No platform abstraction is needed until the first real platform-dependent feature is introduced.
+実際にプラットフォーム依存機能を初めて導入するまでは、プラットフォーム抽象化は不要です。
 
-## Performance direction
+## パフォーマンス方針
 
-Because a future console port is a possibility:
+将来コンソールへ移植する可能性があるため、次の点を守ります。
 
-- keep transparent overdraw under control
-- avoid excessive full-screen 2D lights
-- use sprite atlases when asset volume grows
-- profile on modest hardware, not only a high-end development PC
-- avoid loading the entire game world at once if maps become large
+- 透明描画の重なりによる負荷を抑える
+- 画面全体に及ぶ 2D ライトを過剰に使用しない
+- アセット数が増えたらスプライトアトラスを使用する
+- 高性能な開発用 PC だけでなく、控えめな性能のハードウェアでも計測する
+- マップが大きくなった場合、ゲーム世界全体を一度に読み込まない
 
-Optimization should be measured, not speculative.
+最適化は推測ではなく、計測結果に基づいて行います。
 
-## Milestone 1 definition of done
+## マイルストーン1の完了条件
 
-The first technical milestone is complete when:
+最初の技術マイルストーンは、次の条件を満たした時点で完了です。
 
-1. The project opens without errors.
-2. A prototype isometric map is visible.
-3. The player can move using keyboard and gamepad.
-4. The camera follows the player.
-5. Y-based sorting works with at least one foreground object.
-6. The player can interact with one object/NPC.
-7. The player can damage and defeat one enemy.
+1. プロジェクトをエラーなく開ける。
+2. アイソメトリックの試作マップが表示される。
+3. キーボードとゲームパッドでプレイヤーを移動できる。
+4. カメラがプレイヤーを追従する。
+5. 少なくとも1つの前景オブジェクトに対して、Y座標に基づく並び替えが機能する。
+6. 1つのオブジェクトまたは NPC とインタラクションできる。
+7. 1体の敵へダメージを与えて倒せる。
