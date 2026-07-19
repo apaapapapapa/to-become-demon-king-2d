@@ -14,11 +14,15 @@ namespace DemonKing.Field.Prototype
             this.shapes = shapes;
         }
 
-        public void Build(Transform parent)
+        public void BuildBase(Transform parent)
         {
             CreateBackdrop(parent);
             CreateGround(parent);
             CreatePath(parent);
+        }
+
+        public void BuildForeground(Transform parent)
+        {
             CreateForegroundFrame(parent);
         }
 
