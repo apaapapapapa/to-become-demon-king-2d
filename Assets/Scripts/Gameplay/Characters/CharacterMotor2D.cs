@@ -1,18 +1,20 @@
 using DemonKing.Core.Input;
+using DemonKing.Gameplay.Characters.Configuration;
 using UnityEngine;
 
 namespace DemonKing.Gameplay.Characters
 {
     /// <summary>
     /// キャラクターの2D移動だけを担当します。
-    /// 入力取得や見た目のアニメーションを分離し、Rigidbody2D経由で移動と衝突を成立させます。
-    /// 移動速度はこのコンポーネントが所有し、フィールド境界は外側のワールド設定から注入します。
+    /// 移動速度はCharacterStatsDefinitionから取得し、Prefabへバランス値を重複保持しません。
     /// </summary>
     [RequireComponent(typeof(MoveInputReader))]
     [RequireComponent(typeof(Rigidbody2D))]
     public sealed class CharacterMotor2D : MonoBehaviour
     {
-        [SerializeField, Min(0.1f)] private float moveSpeed = 3.4f;
+        private const float DefaultMoveSpeed = 3.4f;
+
+        [SerializeField] private CharacterStatsDefinition statsDefinition;
 
         private MoveInputReader inputReader;
         private Rigidbody2D body;
@@ -21,6 +23,7 @@ namespace DemonKing.Gameplay.Characters
         private Vector2 fieldExtents;
 
         public Vector2 CurrentInput => currentInput;
+        public float MoveSpeed => statsDefinition == null ? DefaultMoveSpeed : statsDefinition.MoveSpeed;
 
         private void Awake()
         {
@@ -45,7 +48,7 @@ namespace DemonKing.Gameplay.Characters
                 return;
             }
 
-            Vector2 next = body.position + currentInput * (moveSpeed * Time.fixedDeltaTime);
+            Vector2 next = body.position + currentInput * (MoveSpeed * Time.fixedDeltaTime);
 
             if (clampToBounds)
             {
@@ -56,9 +59,9 @@ namespace DemonKing.Gameplay.Characters
             body.MovePosition(next);
         }
 
-        public void SetMoveSpeed(float speed)
+        public void Configure(CharacterStatsDefinition definition)
         {
-            moveSpeed = Mathf.Max(0.1f, speed);
+            statsDefinition = definition;
         }
 
         public void SetBounds(Vector2 extents)

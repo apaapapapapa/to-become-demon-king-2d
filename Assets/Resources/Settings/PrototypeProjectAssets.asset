@@ -13,6 +13,9 @@ MonoBehaviour:
   m_Name: PrototypeProjectAssets
   m_EditorClassIdentifier:
   playerPrefab: {fileID: 100000, guid: e5142937c364939cfb3bc4a0129f1d56, type: 3}
+  playerCharacterStats: {fileID: 11400000, guid: 40111111111111111111111111111101, type: 2}
+  playerMeleeAttack: {fileID: 11400000, guid: 40111111111111111111111111111102, type: 2}
+  uiFont: {fileID: 0}
   cottagePrefab: {fileID: 100000, guid: 68dcb65a10db454ba871daae7788796f, type: 3}
   treePrefab: {fileID: 100000, guid: 6177d65eef744c4fa7e36b1f71ad9598, type: 3}
   lamppostPrefab: {fileID: 100000, guid: ca02247008ee4b57b850ecf8b05d2034, type: 3}

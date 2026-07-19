@@ -1,16 +1,23 @@
+using DemonKing.Gameplay.Characters.Configuration;
+using DemonKing.Gameplay.Combat.Configuration;
 using UnityEngine;
 
 namespace DemonKing.Field.Prototype
 {
     /// <summary>
     /// プロトタイプ実行時に必要な主要アセット参照を一か所へ集約します。
-    /// 個別のResources.Load文字列パスではなく、Unityのシリアライズ参照を正としてアセットのリネームや移動へ追従できるようにします。
+    /// コンテンツ、UI、ゲームバランス設定を利用側の文字列パスやPrefab内の重複値から分離します。
     /// </summary>
     [CreateAssetMenu(fileName = "PrototypeProjectAssets", menuName = "Demon King/Prototype Project Assets")]
     public sealed class PrototypeProjectAssets : ScriptableObject
     {
         [Header("Characters")]
         [SerializeField] private GameObject playerPrefab;
+        [SerializeField] private CharacterStatsDefinition playerCharacterStats;
+        [SerializeField] private MeleeAttackDefinition playerMeleeAttack;
+
+        [Header("UI")]
+        [SerializeField] private Font uiFont;
 
         [Header("World Prefabs")]
         [SerializeField] private GameObject cottagePrefab;
@@ -27,6 +34,10 @@ namespace DemonKing.Field.Prototype
         [SerializeField] private Sprite pathTileSprite;
 
         public GameObject PlayerPrefab => playerPrefab;
+        public CharacterStatsDefinition PlayerCharacterStats => playerCharacterStats;
+        public MeleeAttackDefinition PlayerMeleeAttack => playerMeleeAttack;
+        public Font UiFont => uiFont;
+        public bool HasUiFont => uiFont != null;
         public GameObject CottagePrefab => cottagePrefab;
         public GameObject TreePrefab => treePrefab;
         public GameObject LamppostPrefab => lamppostPrefab;
@@ -36,8 +47,14 @@ namespace DemonKing.Field.Prototype
         public Sprite GrassTileSprite => grassTileSprite;
         public Sprite PathTileSprite => pathTileSprite;
 
+        /// <summary>
+        /// ゲーム進行に必須の参照が揃っているかを返します。
+        /// UIフォントはEditorで自動導入を試みますが、取得失敗時も組み込みフォントで起動できるため必須判定から除外します。
+        /// </summary>
         public bool IsConfigured =>
             playerPrefab != null &&
+            playerCharacterStats != null &&
+            playerMeleeAttack != null &&
             cottagePrefab != null &&
             treePrefab != null &&
             lamppostPrefab != null &&

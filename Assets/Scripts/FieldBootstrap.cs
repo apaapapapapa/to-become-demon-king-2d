@@ -30,7 +30,7 @@ namespace DemonKing.Field
 
             PrototypeSceneConfigurator.Configure(Camera.main);
             PrototypeSortingConfigurator.Configure();
-            PrototypeUiInstaller.Create();
+            PrototypeUiInstaller.Create(projectAssets.UiFont);
             new PrototypeWorldBuilder(playerSpawnPosition, playableTileRadius, projectAssets).Build();
         }
     }

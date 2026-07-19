@@ -11,8 +11,11 @@
 - 1クラスに複数の独立した変更理由を持たせない
 - 入力デバイスの具体的なキー判定をゲームプレイコードへ書かない
 - 入力バインディングは `.inputactions` アセットで管理する
-- 1プレイヤー内のInput Action Asset所有者は1つにする
+- Input Action MapはGameplayとUIを分離し、同時に有効化しない
+- 操作を完全停止する状態はDisabledコンテキストとして明示する
 - 物理衝突が必要な移動はRigidbody2D経由で行う
+- ゲームバランス値はPrefabやMonoBehaviourへ重複保持せずScriptableObjectへ寄せる
+- UIフォントはOSフォントへ依存せずプロジェクト管理のFontアセットを使用する
 - 地形データはTilemapを正とする
 - 描画順の計算規則は共通化する
 - Yソート対象は原則 `World` Sorting Layerを使用する
@@ -22,7 +25,6 @@
 - Combatは敵種別や演出に依存しない
 - アセット参照は可能な限りUnityのシリアライズ参照へ寄せる
 - 外部アセットは出典とライセンスをプロジェクト内へ記録する
-- 仮図形を恒久的なワールドアートとして残さない
 - Steamやコンソール固有処理はゲームプレイコードから直接参照しない
 
 ## 現在の主要構成
@@ -31,38 +33,34 @@
 Assets/
   Art/
     External/
-      Kenney/
-        grass_a.png
-        grass_b.png
-        README.md
     World/
-      cottage.png
-      tree.png
-      lamppost.png
+  Fonts/
+    README.md
+    DotGothic16-Regular.ttf        # Editor導入後に生成
+    OFL_DotGothic16.txt            # Editor導入後に生成
   Resources/
-    Art/
-      Characters/
-        PrototypeSlime/
     Input/
       PlayerControls.inputactions
     Prefabs/
       Characters/
-        PrototypeSlime.prefab
       World/
-        PrototypeCottage.prefab
-        PrototypeTree.prefab
-        PrototypeLamppost.prefab
     Settings/
       PrototypeProjectAssets.asset
+      Gameplay/
+        PlayerCharacterStats.asset
+        PlayerMeleeAttack.asset
   Scenes/
     Prototype/
       Prototype.unity
   Scripts/
     Core/
+      Input/
     Gameplay/
       Characters/
+        Configuration/
       Interaction/
       Combat/
+        Configuration/
     Presentation/
       Camera/
       Characters/
@@ -119,57 +117,127 @@ FieldBootstrap
       └ PrototypeCameraInstaller
 ```
 
-`FieldBootstrap` は起動時に `PrototypeProjectAssets` を1回だけ解決し、その後のPrefab、World Art、Terrain SpriteはScriptableObjectの直接参照を利用します。
+`FieldBootstrap` は起動時に `PrototypeProjectAssets` を1回解決し、その後のPrefab、Sprite、UI Font、Gameplay設定はScriptableObjectの直接参照を利用します。
 
-## アセット参照
+## PrototypeProjectAssets
 
-### PrototypeProjectAssets
-
-主要なコンテンツ参照を次のScriptableObjectへ集約します。
+主要なアセット参照を次のScriptableObjectへ集約します。
 
 ```text
 Resources/Settings/PrototypeProjectAssets.asset
 ```
 
-管理対象は次です。
+現在の管理対象は次です。
 
 ```text
 Player Prefab
-Cottage Prefab
-Tree Prefab
-Lamppost Prefab
-Cottage Sprite
-Tree Sprite
-Lamppost Sprite
-Grass Tile Sprite
-Path Tile Sprite
+Player Character Stats
+Player Melee Attack
+UI Font
+Cottage / Tree / Lamppost Prefab
+Cottage / Tree / Lamppost Sprite
+Grass / Path Tile Sprite
 ```
 
-従来は `PrototypePlayerSpawner` と `PrototypeWorldPrefabFactory` が個別の `Resources.Load` 文字列パスを持っていましたが、現在は `PrototypeProjectAssets` から直接参照を受け取ります。
+`PrototypePlayerSpawner` や `PrototypeWorldPrefabFactory` は個別のResources文字列パスを持たず、ProjectAssetsから直接参照を受け取ります。
 
-`Resources.Load` は現時点で完全廃止せず、起動時のProjectAssets解決とInput Action Assetの互換フォールバックなど、少数の入口だけに限定します。
+`Resources.Load` は起動時のProjectAssets解決とInput Action Assetの互換フォールバックなど、少数の入口だけに限定します。
 
-今後SerializeFieldによるシーン参照やAddressablesへ移行する場合も、利用側のSpawnerやBuilderを変更せず、アセット供給側を置き換える方針です。
+## Gameplayデータ
 
-## 入力
+ゲームバランス値はScriptableObjectへ分離します。
 
-`PlayerControls.inputactions` に次のActionを定義しています。
+### CharacterStatsDefinition
 
 ```text
-Move
-Attack
-Interact
-Dodge
-Pause
+PlayerCharacterStats.asset
+  ├ moveSpeed
+  └ maxHealth
 ```
 
-`PlayerInputReader` がInput Action Assetの実行時インスタンスを所有し、ゲームプレイ側には論理入力だけを公開します。
+利用経路は次です。
+
+```text
+PrototypeProjectAssets
+  ↓
+PrototypePlayerSpawner
+  ├ CharacterMotor2D.Configure
+  └ Health.ConfigureMaxHealth
+```
+
+`CharacterMotor2D` は移動ロジックを担当し、移動速度の調整値そのものは `CharacterStatsDefinition` を正とします。
+
+### MeleeAttackDefinition
+
+```text
+PlayerMeleeAttack.asset
+  ├ damage
+  ├ attackRadius
+  └ attackDistance
+```
+
+利用経路は次です。
+
+```text
+PrototypeProjectAssets
+  ↓
+PrototypePlayerSpawner
+  ↓
+PlayerMeleeAttack.Configure
+```
+
+これにより、プレイヤーPrefabからゲームバランス値を分離し、将来の複数キャラクター・装備・敵種別ごとの設定差し替えに対応します。
+
+## 入力コンテキスト
+
+`PlayerControls.inputactions` は次のAction Mapへ分離します。
+
+```text
+Gameplay
+  ├ Move
+  ├ Attack
+  ├ Interact
+  ├ Dodge
+  └ Pause
+
+UI
+  ├ Navigate
+  ├ Submit
+  ├ Cancel
+  └ Pause
+```
+
+`PlayerInputReader` は `PlayerInputContext` を管理します。
+
+```text
+Gameplay
+  -> Gameplay Action Mapのみ有効
+
+UI
+  -> UI Action Mapのみ有効
+
+Disabled
+  -> すべてのAction Mapを無効
+```
+
+公開APIは次を基本とします。
+
+```text
+EnableGameplayInput()
+EnableUiInput()
+DisableInput()
+SetContext(PlayerInputContext)
+```
+
+メニュー、会話、ポーズなどの画面状態を実装する際は、個別コンポーネントを直接Enable/Disableするのではなく入力コンテキストを切り替えます。
+
+GameplayとUIのAction Mapを同時に有効化しないことで、メニュー表示中の誤攻撃やキャラクター移動を防ぎます。
 
 ## プレイヤー移動と衝突
 
 ```text
 PlayerInputReader
-  ↓
+  ↓ Gameplay Context
 MoveInputReader
   ↓
 CharacterMotor2D
@@ -204,28 +272,16 @@ PlayerInputReader.AttackPressed
   ↓
 PlayerMeleeAttack
   ↓
+MeleeAttackDefinition
+  ↓
 IDamageable
   ↓
 Health
 ```
 
-`Health` はHP、ダメージ、生存状態、死亡イベントだけを担当します。敵AI、報酬、死亡演出は外側の機能として追加します。
+`Health` はHP、ダメージ、生存状態、死亡イベントだけを担当します。最大HPはキャラクター設定から注入できます。
 
-## カメラ
-
-`CameraFollow2D` は任意のTransformを追従対象として受け取り、プレイヤー固有クラスには依存しません。
-
-```text
-PrototypeWorldBuilder
-  ↓ Player生成
-PrototypeCameraInstaller
-  ↓
-CameraFollow2D
-  ↓
-Main Camera
-```
-
-## UI
+## UIと日本語フォント
 
 本番UI基盤はCanvas（uGUI）です。
 
@@ -235,56 +291,50 @@ UI Root
   ├ CanvasScaler
   ├ GraphicRaycaster
   └ GameHudView
-      └ HUD
-          ├ Location Panel
-          └ Controls Panel
 ```
 
-UIはゲームルールやプレイヤー生成ライフサイクルから分離します。
+`GameHudView` はOSフォントを探索しません。`PrototypeProjectAssets.UiFont` からFontアセットを受け取ります。
+
+標準日本語フォントは `DotGothic16-Regular.ttf` とし、Editorツール `JapaneseUiFontInstaller` が公式Google Fontsリポジトリからフォント本体とOFLライセンスを `Assets/Fonts` へ導入します。
+
+```text
+JapaneseUiFontInstaller
+  ↓
+Assets/Fonts/DotGothic16-Regular.ttf
+Assets/Fonts/OFL_DotGothic16.txt
+  ↓
+PrototypeProjectAssets.uiFont
+  ↓
+PrototypeUiInstaller
+  ↓
+GameHudView.Initialize
+```
+
+自動導入に失敗した場合は次のUnityメニューから再実行します。
+
+```text
+Demon King > Project > Install Japanese UI Font
+```
+
+フォント導入後はFont本体・ライセンス・更新されたProjectAssetsをGitへコミットし、ローカルPC、CI、Steam／将来のコンソールビルドで同一アセットを使用します。
+
+## カメラ
+
+`CameraFollow2D` は任意のTransformを追従対象として受け取り、プレイヤー固有クラスには依存しません。
 
 ## Tilemapと外部地形アセット
 
-Ground Tilemapの描画データには外部アセットを導入しています。
+Ground Tilemapの描画データにはKenney Isometric Tiles Landscape由来のSpriteを利用します。
 
-```text
-Kenney Isometric Tiles Landscape
-  ↓
-Assets/Art/External/Kenney/grass_a.png
-Assets/Art/External/Kenney/grass_b.png
-  ↓
-PrototypeProjectAssets
-  ↓
-PrototypeRuntimeTileFactory
-  ↓
-Ground Tilemap
-```
-
-`PrototypeRuntimeTileFactory` は従来、Texture2Dと菱形Spriteを実行時生成していました。
-
-現在はインポート済みSpriteを受け取り、Unity Tileオブジェクトだけを生成します。実行時Texture生成は削除済みです。
+`PrototypeRuntimeTileFactory` はインポート済みSpriteを受け取り、Unity Tileオブジェクトだけを生成します。実行時Texture生成は削除済みです。
 
 外部アセットの出典とライセンスは `Assets/Art/External/Kenney/README.md` に記録します。
 
 ## World Prefabアート
 
-校舎、木、街灯はPrefab境界を維持しつつ、RuntimeShapeFactoryによる多層仮図形からプロジェクト管理の静的Spriteアートへ移行しています。
-
-```text
-PrototypeProjectAssets
-  ├ cottage.png
-  ├ tree.png
-  └ lamppost.png
-      ↓
-PrototypeWorldPrefabFactory
-      ↓
-PrototypeCottageVisual / PrototypeTreeVisual / PrototypeLamppostVisual
-      ↓
-SpriteRenderer
-```
+校舎、木、街灯はPrefab境界を維持しつつ、プロジェクト管理の静的Spriteアートを利用します。
 
 Builderは配置だけを担当し、見た目はPrefab側へ閉じ込めます。
-
-今後アーティスト制作の最終Spriteへ差し替える場合は `PrototypeProjectAssets` の参照を変更し、配置ロジックを変更しない方針です。
 
 ## Assembly Definition
 
@@ -298,25 +348,18 @@ DemonKing.PlayMode.Tests
 
 初期段階ではCore、Gameplay、Presentationを細かく分割せず、1つのRuntime asmdefでテスト可能な境界だけを作ります。
 
-依存関係が実際に複雑化した段階で、Core / Gameplay / Presentationへ追加分割します。
-
 ## テスト
 
 ### EditMode
 
-`WorldSortOrderTests` でYソートの共通計算規則を検証します。
+- `WorldSortOrderTests`
 
 ### PlayMode
 
-`GameplayAndCameraPlayModeTests` で次を検証します。
+- `GameplayAndCameraPlayModeTests`
+- `PlayerInputContextPlayModeTests`
 
-- `Health` の致死ダメージと死亡イベント
-- `CameraFollow2D` の追従
-- カメラZ座標の維持
-
-テストはUnity Test RunnerからEditMode / PlayModeを分離して実行します。
-
-今後Interaction、Combat当たり判定、Input、uGUIへテスト範囲を拡張します。
+`PlayerInputContextPlayModeTests` では、Gameplay / UI / Disabledの切り替え時に有効なAction Mapが意図どおり1つ以下になることを検証します。
 
 # リファクタリング・リアーキテクチャ優先順位
 
@@ -344,48 +387,39 @@ DemonKing.PlayMode.Tests
 
 ### P2-1. EditMode / PlayModeテストを追加する — 完了
 
-- `DemonKing.Runtime.asmdef` を追加
-- EditModeテストassemblyを追加
-- PlayModeテストassemblyを追加
-- Yソート計算をEditModeで検証
-- HealthとCameraFollow2DをPlayModeで検証
-
 ### P2-2. `Resources.Load` の文字列参照を減らす — 完了
-
-- `PrototypeProjectAssets` を追加
-- Player Prefab参照をSpawnerの文字列パスから直接参照へ変更
-- World Prefab参照をFactoryの文字列パスから直接参照へ変更
-- Terrain SpriteとWorld ArtもProjectAssetsへ集約
-- `Resources.Load` は少数の入口・互換フォールバックに限定
 
 ### P2-3. 外部の本番Tileアセットを導入する — 完了
 
-- Kenney Isometric Tiles Landscape由来の地形Spriteを導入
-- 外部アセットの出典とライセンスを記録
-- `PrototypeRuntimeTileFactory` からRuntime Texture2D生成を削除
-- Factoryはインポート済みSpriteからTileだけを生成
-
 ### P2-4. World Prefab内部の仮図形ビジュアルを本番アートへ置き換える — 完了
 
-- Cottage / Tree / Lamppost用の静的Spriteアートを追加
-- World PrefabのRuntimeShapeFactory依存を削除
-- `PrototypeWorldPrefabFactory` がProjectAssetsからSpriteを接続
-- 将来の最終アート差し替え時にBuilderを変更しない構造へ移行
+### P2-5. uGUI用の日本語対応フォントをプロジェクトアセットとして管理する — 完了
 
-### P2-5. uGUI用の日本語対応フォントをプロジェクトアセットとして管理する — 未着手
+- `GameHudView` のOSフォント依存を削除
+- `PrototypeProjectAssets.uiFont` からuGUIへFontを注入
+- `JapaneseUiFontInstaller` を追加
+- DotGothic16とOFLライセンスを `Assets/Fonts` へ導入する構造を追加
+- `PrototypeProjectAssetsAutoRepair` がFont参照を自動修復
 
 ### P2-6. Assembly Definitionを必要最小限で導入する — 完了
 
-- `DemonKing.Runtime` を追加
-- EditMode / PlayModeテストassemblyを分離
-- 既存EditorツールのAssembly-CSharp固定文字列依存を削除
+### P2-7. 設定値が増えた段階でScriptableObjectへデータ分離する — 完了
 
-### P2-7. 設定値が増えた段階でScriptableObjectへデータ分離する — 一部完了
+- `CharacterStatsDefinition` を追加
+- `PlayerCharacterStats.asset` に移動速度・最大HPを分離
+- `MeleeAttackDefinition` を追加
+- `PlayerMeleeAttack.asset` にダメージ・攻撃半径・攻撃距離を分離
+- `PrototypePlayerSpawner` から各Gameplayコンポーネントへ設定を注入
+- プレイヤーPrefabから重複するバランス値を削除
 
-- アセット参照は `PrototypeProjectAssets` へ分離済み
-- キャラクター能力値や戦闘データの本格的なデータ分離は未着手
+### P2-8. Input ActionのGameplay / UI / Disabledコンテキストを整理する — 完了
 
-### P2-8. Input ActionのGameplay / UI / Disabledコンテキストを整理する — 未着手
+- `Player` Action Mapを `Gameplay` へ改名
+- `UI` Action Mapを追加
+- Navigate / Submit / CancelをUI入力として分離
+- `PlayerInputContext` を追加
+- `PlayerInputReader` がGameplay / UI / Disabledを排他的に切り替える構造へ変更
+- `PlayerInputContextPlayModeTests` を追加
 
 ### P2-9. Dodgeの実挙動とPause状態管理を実装する — 未着手
 
@@ -401,16 +435,15 @@ DemonKing.PlayMode.Tests
 
 ## 直近の推奨実施順序
 
-P2-1〜P2-4とP2-6まで完了しました。次は次の順序で進めます。
+P2-1〜P2-8のうち、P2-5・P2-7・P2-8まで対応済みです。次は次の順序を推奨します。
 
-1. Unity Test RunnerでEditMode / PlayModeテストを実行し、テストassembly構成を確定する
-2. InteractionとCombatの物理当たり判定をPlayModeテストへ追加する
-3. uGUI用の日本語対応フォントをプロジェクトアセット化する
-4. Input ActionをGameplay / UIコンテキストへ分離する
-5. Dodgeの実挙動を実装する
-6. Pause状態管理とUI入力切り替えを実装する
-7. キャラクター能力値、攻撃データ、NPCデータを必要に応じてScriptableObject化する
-8. FieldBootstrapからアプリケーション全体設定を分離する
+1. Unity Editorで日本語フォントの初回導入とProjectAssets参照を確定し、生成されたFont・OFL・ProjectAssets差分をGit管理する
+2. EditMode / PlayModeテストをすべて実行する
+3. Dodgeの実挙動を実装する
+4. Pause状態管理を実装し、Pause中に `PlayerInputContext.UI` へ切り替える
+5. 会話UIやメニューUIでGameplay / UIコンテキスト切り替えを利用する
+6. InteractionとCombatの物理当たり判定テストを追加する
+7. FieldBootstrapからアプリケーション全体設定を分離する
 
 ## 移行方針
 

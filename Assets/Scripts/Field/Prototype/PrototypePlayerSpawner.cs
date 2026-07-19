@@ -1,4 +1,7 @@
 using DemonKing.Gameplay.Characters;
+using DemonKing.Gameplay.Characters.Configuration;
+using DemonKing.Gameplay.Combat;
+using DemonKing.Gameplay.Combat.Configuration;
 using DemonKing.Presentation.Characters;
 using UnityEngine;
 
@@ -6,17 +9,25 @@ namespace DemonKing.Field.Prototype
 {
     /// <summary>
     /// ProjectAssetsから受け取ったプレイヤーPrefabを生成して初期位置へ配置します。
-    /// Prefabの場所を文字列パスとして保持しません。
+    /// キャラクター能力値と攻撃データもScriptableObjectから各Gameplayコンポーネントへ注入します。
     /// </summary>
     internal sealed class PrototypePlayerSpawner
     {
         private readonly Vector3 spawnPosition;
         private readonly GameObject playerPrefab;
+        private readonly CharacterStatsDefinition characterStats;
+        private readonly MeleeAttackDefinition meleeAttackDefinition;
 
-        public PrototypePlayerSpawner(Vector3 spawnPosition, GameObject playerPrefab)
+        public PrototypePlayerSpawner(
+            Vector3 spawnPosition,
+            GameObject playerPrefab,
+            CharacterStatsDefinition characterStats,
+            MeleeAttackDefinition meleeAttackDefinition)
         {
             this.spawnPosition = spawnPosition;
             this.playerPrefab = playerPrefab;
+            this.characterStats = characterStats;
+            this.meleeAttackDefinition = meleeAttackDefinition;
         }
 
         public GameObject Spawn(Transform parent)
@@ -44,7 +55,26 @@ namespace DemonKing.Field.Prototype
             }
 
             CharacterMotor2D motor = root.GetComponent<CharacterMotor2D>();
-            motor?.DisableBounds();
+            if (motor != null)
+            {
+                motor.Configure(characterStats);
+                motor.DisableBounds();
+            }
+
+            Health health = root.GetComponent<Health>();
+            if (health == null)
+            {
+                health = root.AddComponent<Health>();
+            }
+
+            if (characterStats != null)
+            {
+                health.ConfigureMaxHealth(characterStats.MaxHealth);
+            }
+
+            PlayerMeleeAttack meleeAttack = root.GetComponent<PlayerMeleeAttack>();
+            meleeAttack?.Configure(meleeAttackDefinition);
+
             return root;
         }
     }

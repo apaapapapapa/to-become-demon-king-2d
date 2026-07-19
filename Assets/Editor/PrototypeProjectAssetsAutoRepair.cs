@@ -1,5 +1,7 @@
 using System.Linq;
 using DemonKing.Field.Prototype;
+using DemonKing.Gameplay.Characters.Configuration;
+using DemonKing.Gameplay.Combat.Configuration;
 using UnityEditor;
 using UnityEngine;
 
@@ -7,13 +9,16 @@ namespace DemonKing.EditorTools
 {
     /// <summary>
     /// PrototypeProjectAssetsの参照切れをEditor上で自動修復します。
-    /// Git経由で追加した画像やPrefabを、実際のインポート結果から再解決します。
+    /// Git経由で追加した画像、Prefab、設定アセット、UIフォントを実際のインポート結果から再解決します。
     /// </summary>
     [InitializeOnLoad]
     internal static class PrototypeProjectAssetsAutoRepair
     {
+        private const string FontInstallAttemptSessionKey = "DemonKing.FontInstallAttempted";
         private const string ProjectAssetsPath = "Assets/Resources/Settings/PrototypeProjectAssets.asset";
         private const string PlayerPrefabPath = "Assets/Resources/Prefabs/Characters/PrototypeSlime.prefab";
+        private const string PlayerCharacterStatsPath = "Assets/Resources/Settings/Gameplay/PlayerCharacterStats.asset";
+        private const string PlayerMeleeAttackPath = "Assets/Resources/Settings/Gameplay/PlayerMeleeAttack.asset";
         private const string CottagePrefabPath = "Assets/Resources/Prefabs/World/PrototypeCottage.prefab";
         private const string TreePrefabPath = "Assets/Resources/Prefabs/World/PrototypeTree.prefab";
         private const string LamppostPrefabPath = "Assets/Resources/Prefabs/World/PrototypeLamppost.prefab";
@@ -31,7 +36,12 @@ namespace DemonKing.EditorTools
         [MenuItem("Demon King/Prototype/Repair Project Assets References")]
         private static void RepairFromMenu()
         {
-            Repair(forceLog: true);
+            RepairNow(forceLog: true);
+        }
+
+        internal static void RepairNow(bool forceLog = true)
+        {
+            Repair(forceLog);
         }
 
         private static void RepairIfNeeded()
@@ -41,6 +51,18 @@ namespace DemonKing.EditorTools
 
         private static void Repair(bool forceLog)
         {
+            // 自動実行時のネットワーク試行はEditorセッションにつき1回に限定します。
+            // 手動修復時は再試行できるため、オフライン起動時にも開発を妨げません。
+            bool shouldAttemptFontInstall =
+                forceLog ||
+                !SessionState.GetBool(FontInstallAttemptSessionKey, false);
+
+            if (shouldAttemptFontInstall)
+            {
+                SessionState.SetBool(FontInstallAttemptSessionKey, true);
+                JapaneseUiFontInstaller.EnsureInstalled(forceLog: forceLog);
+            }
+
             PrototypeProjectAssets projectAssets = AssetDatabase.LoadAssetAtPath<PrototypeProjectAssets>(ProjectAssetsPath);
             if (projectAssets == null)
             {
@@ -52,6 +74,9 @@ namespace DemonKing.EditorTools
             bool changed = false;
 
             changed |= AssignIfDifferent(serializedObject, "playerPrefab", Load<GameObject>(PlayerPrefabPath));
+            changed |= AssignIfDifferent(serializedObject, "playerCharacterStats", Load<CharacterStatsDefinition>(PlayerCharacterStatsPath));
+            changed |= AssignIfDifferent(serializedObject, "playerMeleeAttack", Load<MeleeAttackDefinition>(PlayerMeleeAttackPath));
+            changed |= AssignIfDifferent(serializedObject, "uiFont", Load<Font>(JapaneseUiFontInstaller.FontAssetPath, logIfMissing: forceLog));
             changed |= AssignIfDifferent(serializedObject, "cottagePrefab", Load<GameObject>(CottagePrefabPath));
             changed |= AssignIfDifferent(serializedObject, "treePrefab", Load<GameObject>(TreePrefabPath));
             changed |= AssignIfDifferent(serializedObject, "lamppostPrefab", Load<GameObject>(LamppostPrefabPath));
@@ -74,10 +99,10 @@ namespace DemonKing.EditorTools
             }
         }
 
-        private static T Load<T>(string path) where T : Object
+        private static T Load<T>(string path, bool logIfMissing = true) where T : Object
         {
             T asset = AssetDatabase.LoadAssetAtPath<T>(path);
-            if (asset == null)
+            if (asset == null && logIfMissing)
             {
                 Debug.LogError($"ProjectAssetsへ割り当てるアセットが見つかりません: {path}");
             }

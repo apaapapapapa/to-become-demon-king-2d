@@ -43,7 +43,13 @@ namespace DemonKing.Field.Prototype
             new PrototypeGameplayFeatureInstaller().Install(world);
             terrain.BuildForeground(world);
 
-            GameObject player = new PrototypePlayerSpawner(playerSpawnPosition, projectAssets.PlayerPrefab).Spawn(world);
+            GameObject player = new PrototypePlayerSpawner(
+                    playerSpawnPosition,
+                    projectAssets.PlayerPrefab,
+                    projectAssets.PlayerCharacterStats,
+                    projectAssets.PlayerMeleeAttack)
+                .Spawn(world);
+
             PrototypeCameraInstaller.Configure(Camera.main, player == null ? null : player.transform);
 
             return world;

@@ -5,7 +5,7 @@ namespace DemonKing.Gameplay.Combat
 {
     /// <summary>
     /// HP、ダメージ、死亡状態だけを管理する汎用コンポーネントです。
-    /// 敵AIや演出、報酬処理には依存せず、状態変化をイベントで外側へ通知します。
+    /// 最大HPは外側のキャラクター設定から注入でき、敵AIや演出、報酬処理には依存しません。
     /// </summary>
     [DisallowMultipleComponent]
     public sealed class Health : MonoBehaviour, IDamageable
@@ -25,6 +25,16 @@ namespace DemonKing.Gameplay.Combat
         private void Awake()
         {
             currentHealth = maxHealth;
+        }
+
+        public void ConfigureMaxHealth(int value, bool restoreToFull = true)
+        {
+            maxHealth = Mathf.Max(1, value);
+            currentHealth = restoreToFull
+                ? maxHealth
+                : Mathf.Clamp(currentHealth, 0, maxHealth);
+
+            HealthChanged?.Invoke(currentHealth, maxHealth);
         }
 
         public void TakeDamage(int amount, GameObject source)
