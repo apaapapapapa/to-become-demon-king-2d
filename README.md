@@ -13,9 +13,8 @@
 5. HPを減らして対象を倒す
 6. Dodgeで短時間の回避移動を行う
 7. PauseでGameplay入力を止め、uGUIのPause画面へ切り替える
-8. カメラがプレイヤーを追従する
-
-この段階では、物語・クエスト・敵AI・成長要素などのコンテンツ量よりも、機能追加に耐えられる境界を優先しています。
+8. 撃破報酬として経験値を獲得し、成長状態を更新する
+9. カメラがプレイヤーを追従する
 
 ## 操作
 
@@ -27,7 +26,7 @@
 | 回避 | Left Shift | Eastボタン |
 | ポーズ | Escape | Startボタン |
 
-Pause中はUI用Input Action Mapへ切り替わります。キーボードではEscapeのCancel入力、ゲームパッドではStartまたはEastボタンのCancel入力でゲームへ復帰できます。
+Pause中はUI用Input Action Mapへ切り替わります。
 
 ## 技術基盤
 
@@ -38,9 +37,11 @@ Pause中はUI用Input Action Mapへ切り替わります。キーボードでは
 - Unity Input System
 - Canvas（uGUI）
 - Rigidbody2D / TilemapCollider2D
-- ScriptableObjectによるゲームバランス・起動設定管理
+- ScriptableObjectによるDefinition管理
+- Unity非依存の `DemonKing.Domain`
+- Unity Runtimeの `DemonKing.Runtime`
 - Unity Test Framework
-- Assembly DefinitionによるDomain / Runtime / Test分離
+- VitePressによるKnowledge Base
 
 ## 現在のランタイム構成
 
@@ -53,115 +54,105 @@ PrototypeProjectAssets
   ↓
 PrototypeApplicationInstaller
   ├ PrototypeApplicationSettings
-  ├ PrototypeSceneConfigurator
-  ├ PrototypeSortingConfigurator
   ├ PrototypeWorldBuilder
-  │   ├ Terrain / Collision / World Prefab
-  │   ├ Prototype Gameplay Features
-  │   ├ PrototypePlayerSpawner
-  │   └ PrototypeCameraInstaller
   ├ GamePauseController
   └ PrototypeUiInstaller
-      ├ GameHudView
-      └ PauseMenuView
 ```
 
 `FieldBootstrap` は設定値や具体的な初期化順序を持たず、起動処理を `PrototypeApplicationInstaller` へ委譲します。
 
-## Input Actionコンテキスト
-
-Input Actionsは用途別に分離しています。
+## 成長・報酬・保存境界
 
 ```text
-Gameplay
-  ├ Move
-  ├ Attack
-  ├ Interact
-  ├ Dodge
-  └ Pause
+CharacterDefinition
+  ↓
+CharacterProgressionState
+  ├ Level
+  ├ CurrentExperience
+  ├ UnlockedSkillIds
+  └ UnlockedEvolutionNodeIds
 
-UI
-  ├ Navigate
-  ├ Submit
-  ├ Cancel
-  └ Pause
+DefeatContext
+  ↓
+RewardService
+  ↓
+CharacterProgressionState.GainExperience
+
+CharacterProgressionState
+  ↕ CharacterProgressionSaveMapper
+PlayerSaveData / GameSaveData
+  ↓
+ISaveService
 ```
 
-`PlayerInputReader` は `Gameplay` / `UI` / `Disabled` を排他的に切り替えます。Pauseや将来の会話・メニューでは、個別のゲームプレイスクリプトを無効化するのではなくInput Contextを切り替える方針です。
+静的Definition、プレイ中に変化するRuntime State、Save DTOを分離しています。
 
-## 設定データ
+## Knowledge Base
 
-ゲームバランス値とプロトタイプ起動設定はScriptableObjectへ分離しています。
+ゲームに関する設計書、仕様書、ストーリー、世界設定、モンスター、進化、アイテム、スキル、開発判断を `docs/` で一元管理します。
 
 ```text
-Assets/Resources/Settings/
-  PrototypeProjectAssets.asset
-  PrototypeApplicationSettings.asset
-  Gameplay/
-    PlayerCharacter.asset
-    PlayerCharacterStats.asset
-    PlayerMeleeAttack.asset
-    PlayerDodge.asset
-    PlayerExperienceTable.asset
-    TrainingDummyReward.asset
+docs/
+  game/             ゲームビジョン
+  design/           アーキテクチャ・技術設計
+  specifications/   機能仕様
+  story/            ストーリー・キャラクター・クエスト
+  world/            世界設定
+  database/         モンスター・進化・アイテム・スキル
+  development/      ロードマップ・開発運用
+  decisions/        ADR
+  templates/        ドキュメントテンプレート
 ```
 
-主な責務は次のとおりです。
+Knowledge Baseのトップは `docs/index.md`、AIエージェント向けの共通ルールは `AGENTS.md` です。
 
-- `PrototypeProjectAssets`: Prefab、Sprite、Font、各設定アセットへの参照
-- `PrototypeApplicationSettings`: Spawn位置、フィールド範囲、Pause時TimeScale
-- `CharacterDefinition`: 安定Character ID、Prefab、基礎能力値、通常攻撃、回避、経験値テーブルの集約
-- `CharacterStatsDefinition`: 移動速度、最大HP
-- `MeleeAttackDefinition`: Ability ID、ダメージ属性、ダメージ、攻撃半径、攻撃距離
-- `DodgeDefinition`: 回避速度、継続時間、クールダウン
-- `ExperienceTableDefinition`: レベルごとの累積必要経験値と最大レベル時の余剰経験値方針
-- `RewardDefinition`: 安定Reward IDと付与経験値
+### VitePress
 
-プレイ中に変化する成長状態はUnity非依存の `CharacterProgressionState`、保存形式はバージョン付き `GameSaveData` / `PlayerSaveData` へ分離しています。保存先の具体実装は `ISaveService` を通して後から追加します。
-
-## UIと日本語フォント
-
-本番UI基盤はCanvas（uGUI）です。OSにインストールされたフォントへ依存せず、プロジェクト管理のFontアセットを利用します。
-
-標準フォントはDotGothic16です。未導入時はEditorツールから導入できます。
-
-```text
-Demon King > Project > Install Japanese UI Font
+```bash
+npm install
+npm run docs:dev
+npm run docs:build
+npm run docs:preview
 ```
 
-フォント参照は `PrototypeProjectAssets` から `PrototypeUiInstaller` を経由して各Viewへ渡します。
+設定は `docs/.vitepress/config.mts` にあります。
+
+## Source of Truth
+
+- 静的なRuntime設定値・Asset参照: UnityのScriptableObject Definition
+- プレイ中に変化する状態: `DemonKing.Domain` のRuntime State
+- 保存形式: Save DTO
+- ゲームビジョン・世界観・物語意図: Knowledge Base
+- 仕様の意味・制約・設計判断: Knowledge Base
+
+Runtime数値をMarkdownへ大量に複製して二重管理しません。
 
 ## テスト
 
-成長状態と保存DTOはUnity非依存の `DemonKing.Domain.asmdef`、Unity上のRuntimeコードは `DemonKing.Runtime.asmdef` にまとめ、EditMode / PlayModeテストを独立assemblyで管理します。
+現在の主な自動テスト対象:
 
-現在の主な自動テスト対象は次です。
-
-- Y座標による描画順計算
-- Healthの致死ダメージと死亡イベント
-- DamageRequest / DamageResult / DefeatContextのCombat結果
-- 成長状態と保存DTOの相互変換
-- CharacterDefinitionの必須アセット参照
-- 経験値テーブルの境界、複数レベルアップ、最大レベル処理
-- 訓練用ダミー撃破からRewardServiceを経由した経験値付与と重複防止
-- CameraFollow2Dの追従とZ座標維持
-- Gameplay / UI / Disabled入力コンテキスト切り替え
-- Dodge開始時のRigidbody2D移動
-- Pause / Resume時のTimeScaleとInput Context切り替え
+- 描画順
+- Health / Combat結果
+- CharacterProgressionState
+- ExperienceTable / LevelUpResult
+- RewardServiceによる経験値付与と重複防止
+- Save DTO相互変換
+- CharacterDefinition
+- CameraFollow2D
+- Input Context
+- Dodge
+- Pause / Resume
 
 ## 開発フェーズ
 
-P0〜P2に加え、成長システム実装前のDefinition、Runtime State、Save DTO、Combat境界整備と、経験値／撃破報酬の最小経路が完了しています。
+P0〜P2に加え、Definition、Runtime State、Save DTO、Combat境界、経験値／撃破報酬の最小経路まで完了しています。
 
-次は既存の通常攻撃をAbility実行基盤へ移し、スキル、進化、NPC・会話・敵AI・クエストを段階的に追加します。Addressablesや大規模なシーン分割は、コンテンツ量とロード時間が必要性を示した段階で導入します。
+次はAbility実行基盤、Skill、Evolution、NPC・会話、敵AI、クエストを段階的に追加します。
 
-## ドキュメント
+詳細:
 
-各ドキュメントの役割を分けています。
-
-- `README.md`: 現在のプロジェクト概要、操作、主要な技術基盤
-- `docs/GAME_DIRECTION.md`: ゲーム体験、ビジュアル、物語、コンテンツ開発の方針
-- `docs/TECHNICAL_DESIGN.md`: 現在の技術設計、実装規約、入力・物理・UI・データ管理の基準
-- `docs/ARCHITECTURE.md`: 依存方向、構成責務、完了したP0〜P2の整備履歴と今後の優先順位
-
-実装とドキュメントが食い違う場合は、まず現在のコードとUnityアセットを確認し、その後ドキュメントを更新してください。
+- [ゲームビジョン](docs/game/vision.md)
+- [アーキテクチャ](docs/design/architecture.md)
+- [技術設計](docs/design/technical-design.md)
+- [仕様書一覧](docs/specifications/)
+- [ロードマップ](docs/development/roadmap.md)
