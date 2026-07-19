@@ -13,20 +13,56 @@ namespace DemonKing.Field.Prototype
         private Sprite circleSprite;
         private Sprite diamondSprite;
 
-        public GameObject CreateDiamond(string name, Vector2 position, Vector2 size, Color color,
-            int order, Transform parent)
+        public GameObject CreateDiamond(
+            string name,
+            Vector2 position,
+            Vector2 size,
+            Color color,
+            int order,
+            Transform parent,
+            string sortingLayerName = SortingLayerNames.World)
         {
-            return CreatePatch(name, position, size, color, order, parent, DiamondSprite);
+            return CreatePatch(
+                name,
+                position,
+                size,
+                color,
+                order,
+                parent,
+                DiamondSprite,
+                sortingLayerName: sortingLayerName);
         }
 
-        public GameObject CreateEllipse(string name, Vector2 position, Vector2 size, Color color,
-            int order, Transform parent)
+        public GameObject CreateEllipse(
+            string name,
+            Vector2 position,
+            Vector2 size,
+            Color color,
+            int order,
+            Transform parent,
+            string sortingLayerName = SortingLayerNames.World)
         {
-            return CreatePatch(name, position, size, color, order, parent, CircleSprite);
+            return CreatePatch(
+                name,
+                position,
+                size,
+                color,
+                order,
+                parent,
+                CircleSprite,
+                sortingLayerName: sortingLayerName);
         }
 
-        public GameObject CreatePatch(string name, Vector2 position, Vector2 size, Color color,
-            int order, Transform parent, Sprite sprite = null, float rotation = 0f)
+        public GameObject CreatePatch(
+            string name,
+            Vector2 position,
+            Vector2 size,
+            Color color,
+            int order,
+            Transform parent,
+            Sprite sprite = null,
+            float rotation = 0f,
+            string sortingLayerName = SortingLayerNames.World)
         {
             GameObject patch = new(name);
             patch.transform.SetParent(parent, false);
@@ -37,7 +73,7 @@ namespace DemonKing.Field.Prototype
             SpriteRenderer renderer = patch.AddComponent<SpriteRenderer>();
             renderer.sprite = sprite != null ? sprite : SquareSprite;
             renderer.color = color;
-            renderer.sortingLayerName = SortingLayerNames.World;
+            renderer.sortingLayerName = sortingLayerName;
             renderer.sortingOrder = order;
             return patch;
         }

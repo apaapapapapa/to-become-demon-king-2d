@@ -3,17 +3,22 @@ using UnityEngine;
 namespace DemonKing.Field.Prototype
 {
     /// <summary>
-    /// 池、木、茂み、草花など、自然物を構築します。
+    /// 池、茂み、草花などの自然物を構築し、木はPrefabとして配置します。
     /// </summary>
     internal sealed class NatureBuilder
     {
         private readonly RuntimeShapeFactory shapes;
         private readonly AmbientEffectController ambientEffects;
+        private readonly PrototypeWorldPrefabFactory prefabs;
 
-        public NatureBuilder(RuntimeShapeFactory shapes, AmbientEffectController ambientEffects)
+        public NatureBuilder(
+            RuntimeShapeFactory shapes,
+            AmbientEffectController ambientEffects,
+            PrototypeWorldPrefabFactory prefabs)
         {
             this.shapes = shapes;
             this.ambientEffects = ambientEffects;
+            this.prefabs = prefabs;
         }
 
         public void Build(Transform parent)
@@ -76,34 +81,12 @@ namespace DemonKing.Field.Prototype
 
             foreach (Vector2 position in positions)
             {
-                CreateTree(position, parent);
+                prefabs.CreateTree(position, parent);
             }
 
             CreateBush(new Vector2(-2.55f, 2.65f), parent);
             CreateBush(new Vector2(3.38f, 2.83f), parent);
             CreateBush(new Vector2(6.1f, -2.7f), parent);
-        }
-
-        private void CreateTree(Vector2 basePosition, Transform parent)
-        {
-            int order = PrototypeWorldMath.SortOrder(basePosition.y);
-            shapes.CreateEllipse("木の影", basePosition + new Vector2(0.22f, -0.14f), new Vector2(1.85f, 0.48f),
-                new Color(0.05f, 0.15f, 0.14f, 0.62f), order - 3, parent);
-            shapes.CreatePatch("木の幹", basePosition + new Vector2(0f, 0.72f), new Vector2(0.38f, 1.55f),
-                new Color(0.31f, 0.20f, 0.14f), order, parent);
-            shapes.CreatePatch("幹の光", basePosition + new Vector2(-0.09f, 0.82f), new Vector2(0.10f, 1.20f),
-                new Color(0.55f, 0.37f, 0.20f), order + 1, parent);
-
-            shapes.CreateEllipse("樹冠の影", basePosition + new Vector2(0.12f, 1.72f), new Vector2(2.10f, 1.72f),
-                new Color(0.08f, 0.29f, 0.22f), order + 2, parent);
-            shapes.CreateEllipse("左の樹冠", basePosition + new Vector2(-0.52f, 1.82f), new Vector2(1.45f, 1.35f),
-                new Color(0.12f, 0.42f, 0.25f), order + 3, parent);
-            shapes.CreateEllipse("右の樹冠", basePosition + new Vector2(0.48f, 1.98f), new Vector2(1.58f, 1.43f),
-                new Color(0.16f, 0.49f, 0.27f), order + 3, parent);
-            shapes.CreateEllipse("樹冠の光", basePosition + new Vector2(-0.32f, 2.28f), new Vector2(0.92f, 0.68f),
-                new Color(0.39f, 0.68f, 0.34f), order + 4, parent);
-            shapes.CreateEllipse("葉のきらめき", basePosition + new Vector2(-0.52f, 2.43f), new Vector2(0.31f, 0.20f),
-                new Color(0.65f, 0.82f, 0.45f, 0.72f), order + 5, parent);
         }
 
         private void CreateBush(Vector2 basePosition, Transform parent)
