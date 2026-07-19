@@ -4,7 +4,7 @@ namespace DemonKing.Field.Prototype
 {
     /// <summary>
     /// 試作フィールド全体の構築順序を管理する構成ルートです。
-    /// Tilemap、衝突、Prefab、演出、試作Gameplay Feature、プレイヤーを組み合わせます。
+    /// Tilemap、衝突、Prefab、演出、試作Gameplay Feature、プレイヤー、カメラを組み合わせます。
     /// </summary>
     internal sealed class PrototypeWorldBuilder
     {
@@ -37,7 +37,9 @@ namespace DemonKing.Field.Prototype
             new AtmosphereBuilder(shapes, ambientEffects).Build(world);
             new PrototypeGameplayFeatureInstaller().Install(world);
             terrain.BuildForeground(world);
-            new PrototypePlayerSpawner(playerSpawnPosition).Spawn(world);
+
+            GameObject player = new PrototypePlayerSpawner(playerSpawnPosition).Spawn(world);
+            PrototypeCameraInstaller.Configure(Camera.main, player == null ? null : player.transform);
 
             return world;
         }
