@@ -10,6 +10,7 @@ namespace DemonKing.Presentation.Rendering
     [DisallowMultipleComponent]
     public sealed class GroupYSorter : MonoBehaviour
     {
+        [SerializeField] private string sortingLayerName = SortingLayerNames.World;
         [SerializeField, Min(1)] private int precision = 100;
 
         private SpriteRenderer[] spriteRenderers;
@@ -57,6 +58,7 @@ namespace DemonKing.Presentation.Rendering
 
             for (int i = 0; i < spriteRenderers.Length; i++)
             {
+                spriteRenderers[i].sortingLayerName = sortingLayerName;
                 relativeSortingOrders[i] = spriteRenderers[i].sortingOrder;
             }
         }

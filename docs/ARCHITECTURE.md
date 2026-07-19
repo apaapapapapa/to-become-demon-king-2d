@@ -18,6 +18,9 @@ Assets/
     Prefabs/
       Characters/
         PrototypeSlime.prefab         現在の試作プレイヤーPrefab
+  Scenes/
+    Prototype/
+      Prototype.unity                 現在の正規プレイシーン
   Scripts/
     Core/
       Input/                           入力の抽象化、入力値の提供
@@ -38,6 +41,7 @@ Assets/
         RuntimeShapeFactory            仮図形Sprite生成
         PrototypeSlimeView             試作スライムの仮ビジュアル生成
         PrototypePlayerSpawner         試作プレイヤーPrefabの配置
+        PrototypeSortingConfigurator   Tilemap描画順の初期化
         PrototypeWorldBuilder          各Builderの組み立て
     World/                             ワールド上の汎用コンポーネント
     FieldBootstrap.cs                  プロトタイプ起動の最小構成ルート
@@ -73,6 +77,26 @@ Core
 
 Steamや将来のコンソールSDKなどのプラットフォーム固有処理は、必要になった時点で `Platform` 境界を追加し、ゲームプレイコードから直接参照しない構造にします。
 
+## 正規シーンと起動経路
+
+現在の正規プレイシーンは次の1つです。
+
+```text
+Assets/Scenes/Prototype/Prototype.unity
+```
+
+`ProjectSettings/EditorBuildSettings.asset` もこのシーンのみを起動対象とします。
+
+旧 `Assets/Scenes/SampleScene.unity` は削除済みです。今後、タイトル画面やBootstrap Sceneを追加するまでは、Prototypeシーンを唯一のゲーム起動経路として扱います。
+
+複数シーン構成へ移行する場合は、次のように責務を分離します。
+
+```text
+ApplicationBootstrap / Entry Scene
+    ↓
+Gameplay Scene
+```
+
 ## 入力アーキテクチャ
 
 入力バインディングは `Assets/Resources/Input/PlayerControls.inputactions` に集約します。
@@ -89,7 +113,70 @@ Player
 
 `MoveInputReader` は個別キーをコード内で生成・監視せず、`.inputactions` アセットから `Player/Move` を取得します。
 
-ゲームプレイ側の `CharacterMotor2D` は `MoveInputReader.Move` の論理値だけを利用するため、今後キーバインド変更、コントローラー追加、リバインド機能を導入しても移動ロジックへの影響を抑えられます。
+ゲームプレイ側の `CharacterMotor2D` は論理入力だけを利用するため、今後キーバインド変更、コントローラー追加、リバインド機能を導入しても移動ロジックへの影響を抑えられます。
+
+## プレイヤー移動と衝突
+
+`CharacterMotor2D` はTransformを直接更新せず、次の経路で移動します。
+
+```text
+MoveInputReader
+    ↓ Updateで入力値を取得
+CharacterMotor2D
+    ↓ FixedUpdate
+Rigidbody2D.MovePosition
+    ↓
+Collider2D / TilemapCollider2D
+```
+
+`PrototypeSlime.prefab` には `Rigidbody2D` と `CircleCollider2D` を持たせています。
+
+`Rigidbody2D` は重力を使用せず、回転を固定します。`Collision` Tilemapには `TilemapCollider2D` があるため、Collision Tileを配置すればプレイヤーとの物理衝突が成立する構成です。
+
+現在の `fieldExtents` による移動範囲制限は、実行時生成プロトタイプからTilemapへ移行する間のフォールバックとして残しています。設定値の所有者整理は次のP0対象として扱います。
+
+## アイソメトリック描画順
+
+描画順は次のSorting Layerを基準にします。
+
+```text
+Ground
+World
+Foreground
+UI
+```
+
+役割は次の通りです。
+
+- `Ground`: 地面や常に最背面にあるTilemap
+- `World`: プレイヤー、NPC、敵、木、建物などY座標による前後関係が必要な要素
+- `Foreground`: 常にWorldより手前に表示する前景
+- `UI`: ゲームワールドとは独立したUI
+
+キャラクター専用Sorting Layerは設けず、キャラクターと遮蔽物を同じ `World` Layerへ置きます。これにより、キャラクターが木や建物の手前・奥を移動できるようにします。
+
+動的Spriteの基本ルールは次の通りです。
+
+```text
+sortingOrder = -round(worldY * precision)
+```
+
+単一Spriteは `YSortSprite`、複数Spriteからなるキャラクターは `GroupYSorter` を使用します。実行時生成Spriteも `World` Layerへ統一します。
+
+Tilemapは次のルールを使用します。
+
+```text
+Ground      -> Ground Layer / Chunk
+Props       -> World Layer / Individual
+Foreground  -> Foreground Layer / Chunk
+Collision   -> 非表示 / TilemapCollider2Dのみ利用
+```
+
+`Props` はキャラクターなど他Rendererとの前後関係を持つため `Individual` Modeを使用します。
+
+現在のGridは通常の `Isometric` レイアウトであり、2D RendererのTransparency Sort AxisはY軸基準のCustom Axis `(0, 1, 0)` とします。
+
+将来 `Isometric Z as Y` へ変更する場合は、Z成分を含むCustom Axisを含め、描画順ルールを再検証します。
 
 ## SlimeControllerの責務分割
 
@@ -106,7 +193,7 @@ Player
 現在は以下へ分離しています。
 
 - `MoveInputReader`: `.inputactions` アセットから論理移動入力を提供
-- `CharacterMotor2D`: 移動と移動可能範囲
+- `CharacterMotor2D`: Rigidbody2Dを利用した移動と移動可能範囲
 - `CharacterSquashAnimator`: 試作キャラクターの見た目
 - `GroupYSorter`: 複数SpriteRendererの描画順
 - `PrototypeHud`: 試作案内UI
@@ -129,11 +216,12 @@ Player
 - 実行時図形Spriteの生成
 - プレイヤー生成
 
-現在は `FieldBootstrap` を次の2処理だけに縮小しています。
+現在は `FieldBootstrap` を次の処理だけに縮小しています。
 
 ```text
 FieldBootstrap
   ├ PrototypeSceneConfigurator.Configure
+  ├ PrototypeSortingConfigurator.Configure
   └ PrototypeWorldBuilder.Build
 ```
 
@@ -160,51 +248,25 @@ PrototypeWorldBuilder
 
 ## 現状の構造評価
 
-現時点のプロジェクトは、初期プロトタイプとしては十分に責務分割が進んでおり、今すぐ全面的な作り直しが必要な状態ではありません。
+現時点のプロジェクトは、初期プロトタイプとしては十分に責務分割が進んでおり、全面的な作り直しは不要です。
 
-一方で、このままNPC、敵、戦闘、会話、複数マップなどを追加すると変更コストが急増しやすい箇所が残っています。特に以下は、コンテンツ量が増える前に整理します。
+一方で、このままNPC、敵、戦闘、会話、複数マップなどを追加すると変更コストが増えやすい箇所は残っています。
 
-### 1. シーンと起動経路が二重化している
+### 1. シーンと起動経路の二重化 — 解消済み
 
-現在は `SampleScene.unity` と `Scenes/Prototype/Prototype.unity` が存在し、どちらにもプロトタイプ起動用の `FieldBootstrap` を配置できる状態です。また、Build Settingsの起動シーンと実際に開発対象としているPrototypeシーンが一致しない状態を作りやすくなっています。
+`Prototype.unity` を正規プレイシーンに統一し、Build Settingsも同シーンのみへ変更しました。旧 `SampleScene.unity` は削除しています。
 
-今後は「現在の正規のプレイ開始シーン」を1つに決めます。
+### 2. 移動実装とCollision Tilemapの不一致 — 解消済み
 
-```text
-Bootstrap / Entry Scene
-  ↓
-Gameplay Scene
-```
+`CharacterMotor2D` をRigidbody2Dベースへ変更し、プレイヤーPrefabへCollider2Dを追加しました。Collision Tilemapの `TilemapCollider2D` と物理衝突できる構造になっています。
 
-複数シーン構成が必要になるまでは、`Prototype.unity` を正規のプレイ対象としてBuild Settingsにも登録し、不要になった `SampleScene.unity` は削除または明確に非推奨化します。
-
-### 2. 移動実装とCollision Tilemapの設計が一致していない
-
-現在の `CharacterMotor2D` はTransformを直接更新して移動しています。一方、シーンには `Collision` Tilemapと `TilemapCollider2D` が存在します。
-
-このままでは、本番マップへCollision Tileを配置してもプレイヤー移動が物理衝突を利用しません。
-
-本番フィールドへ移行する前に、以下へ統一します。
-
-```text
-MoveInputReader
-  ↓
-CharacterMotor2D
-  ↓
-Rigidbody2D
-  ↓
-Collider2D / TilemapCollider2D
-```
-
-移動適用は原則として `FixedUpdate` と `Rigidbody2D.MovePosition` など物理システムに沿った方式へ変更します。
-
-### 3. プレイヤーPrefabにUIが結合している
+### 3. プレイヤーPrefabにUIが結合している — 未解消
 
 現在の `PrototypeSlime.prefab` は `PrototypeHud` を自身のコンポーネントとして持っています。
 
-これはプロトタイプでは動作しますが、将来プレイヤーの再生成、シーン遷移、タイトル画面、メニュー、複数キャラクターなどを導入すると、UIのライフサイクルとプレイヤーのライフサイクルが不必要に結合します。
+将来プレイヤーの再生成、シーン遷移、タイトル画面、メニュー、複数キャラクターなどを導入すると、UIのライフサイクルとプレイヤーのライフサイクルが不必要に結合します。
 
-本番UIへ移行する際は以下のように分離します。
+本番UIへ移行する際は次のように分離します。
 
 ```text
 Gameplay Scene
@@ -218,11 +280,9 @@ Gameplay Scene
 
 HUDはプレイヤーを参照して状態を表示しますが、プレイヤーPrefabの構成要素にはしません。
 
-### 4. 設定値に複数の所有者が存在する
+### 4. 設定値に複数の所有者が存在する — 未解消
 
 移動速度は `SlimeController` と `CharacterMotor2D` の双方に存在し、描画順精度は `SlimeController` と `GroupYSorter` の双方に存在します。また、フィールド境界は `PrototypePlayerSpawner` にハードコードされています。
-
-同じ意味の設定値を複数箇所で持つと、Inspector変更時にどちらが正しい値か分からなくなります。
 
 短期的には各設定の所有者を1つにします。
 
@@ -234,11 +294,9 @@ World / Map Config  -> playableBounds
 
 プレイヤー固有パラメータが増えた段階で、必要に応じて `PlayerConfig` などのScriptableObjectへまとめます。ただし、設定項目が少ない段階で巨大な設定基盤は作りません。
 
-### 5. 実行時生成ワールドとTilemapが並存している
+### 5. 実行時生成ワールドとTilemapが並存している — 移行中
 
 現在はIsometric Tilemapの器がシーンに存在する一方、実際の草原、建物、自然物の多くは `PrototypeWorldBuilder` と各Builderが実行時に生成しています。
-
-移行期間中は問題ありませんが、両方を恒久運用すると「どちらが正しいワールドデータか」が曖昧になります。
 
 移行単位を明確にし、以下の順で実行時生成を削減します。
 
@@ -253,21 +311,13 @@ RuntimeShapeFactory
   ↓ 最終的にPrototype専用または削除
 ```
 
-### 6. アイソメトリック描画順のルールを早期に固定する必要がある
+### 6. アイソメトリック描画順ルール — 確定済み
 
-現在は動的SpriteをY座標から `sortingOrder` へ変換し、Tilemap側は固定のSorting Orderを使用しています。またSorting Layerは実質的にDefaultのみです。
+`Ground`、`World`、`Foreground`、`UI` Sorting Layerを定義し、Yソートが必要なキャラクターと遮蔽物を `World` に統一しました。
 
-アートやPrefabが増える前に、次を決定します。
+`Props` TilemapはIndividual Modeを使用し、キャラクターなど他Rendererとの前後関係を持てる構成です。
 
-- Ground、World、Character、Foreground、UIなどのSorting Layer方針
-- TilemapRendererのSorting Order / Mode
-- 動的オブジェクトのYソート範囲
-- Foregroundが常に前面になる条件
-- 2D RendererのTransparency Sort設定
-
-描画順ルールを後から変更すると、多数のPrefabとTilemapの再調整が必要になるため、地形・建物の本番化より前に固定します。
-
-### 7. `Resources.Load` と文字列パスは暫定利用に留める
+### 7. `Resources.Load` と文字列パス — 暫定利用
 
 現在の入力アセットとプレイヤーPrefabは `Resources.Load` で取得しています。
 
@@ -277,13 +327,13 @@ RuntimeShapeFactory
 
 Addressablesは、大規模な非同期ロード、追加コンテンツ、シーンストリーミングなどが実際に必要になった時点で導入します。
 
-### 8. Assembly Definitionによる依存境界がまだない
+### 8. Assembly Definitionによる依存境界がまだない — 未着手
 
 現在のRuntimeスクリプトは基本的に `Assembly-CSharp`、Editorスクリプトは `Assembly-CSharp-Editor` にまとめてコンパイルされます。
 
 フォルダによる責務分割はできていますが、誤った依存をコンパイラが防ぐ状態ではありません。
 
-機能追加が本格化する前に、少なくとも以下の境界を検討します。
+機能追加が本格化する前に、必要最小限で以下の境界を検討します。
 
 ```text
 DemonKing.Core
@@ -294,13 +344,11 @@ DemonKing.Editor
 DemonKing.Tests
 ```
 
-ただし、Assembly Definitionはクラス配置と依存方向を整理した後に導入します。先に細かく分割しすぎると開発速度を落とすため、必要最小限から開始します。
-
-### 9. 入力のライフサイクルは将来拡張を見越して整理する
+### 9. 入力のライフサイクル — 将来整理
 
 現在はプレイヤーPrefab内の `MoveInputReader` がInput Action Assetを実行時に複製しています。1人用プロトタイプとしては問題ありません。
 
-今後、Pause、メニュー、会話中の操作停止、リバインド、複数Action Mapを導入する段階では、入力の有効・無効をプレイヤー個体ではなくプレイ状態から制御できる構造へ移行します。
+Pause、メニュー、会話中の操作停止、リバインド、複数Action Mapを導入する段階では、入力の有効・無効をプレイヤー個体ではなくプレイ状態から制御できる構造へ移行します。
 
 ```text
 Input Context
@@ -309,13 +357,9 @@ Input Context
   └ Disabled / Cutscene
 ```
 
-現時点では大規模な入力マネージャーを作らず、Attack、Interact、Dodge、Pauseを追加するタイミングで再設計します。
-
-### 10. プロトタイプ固有のグローバル設定を本番構成から分離する
+### 10. プロトタイプ固有のグローバル設定 — 将来分離
 
 `PrototypeSceneConfigurator` は `Application.targetFrameRate` やQuality設定、カメラ設定を変更します。
-
-シーンが増えた場合、これらをフィールド固有の初期化と同じ場所で変更すると責務が曖昧になります。
 
 複数シーン化する段階で、アプリケーション全体の設定とフィールド固有設定を分けます。
 
@@ -329,220 +373,91 @@ FieldBootstrap
 
 ## リファクタリング・リアーキテクチャの優先順位
 
-今後は次の優先順位で進めます。
+### P0: ゲーム機能を増やす前に実施する
 
-### 優先度P0: ゲーム機能を増やす前に実施する
+#### P0-1. 正規シーンとBuild Settingsを統一する — 完了
 
-#### P0-1. 正規シーンとBuild Settingsを統一する
+- `Prototype.unity` を正規プレイシーンとして統一済み
+- Build Settingsを `Prototype.unity` のみに統一済み
+- 旧 `SampleScene.unity` を削除済み
+- 現在の起動用 `FieldBootstrap` はPrototypeシーンの1経路のみ
 
-- `Prototype.unity` を現在の正規プレイシーンとして明確化する
-- Build Settingsを正規シーンへ合わせる
-- `SampleScene.unity` の役割を廃止または明文化する
-- Bootstrapが二重に存在しない状態にする
+#### P0-2. プレイヤー移動をRigidbody2Dベースへ移行する — 完了
 
-**理由:** 起動経路が複数ある状態で機能追加すると、シーンごとの設定差分や「片方では動く」問題が発生しやすいため。
+- `CharacterMotor2D` のTransform直接更新を廃止済み
+- `Update` で入力値を取得し、`FixedUpdate` で `Rigidbody2D.MovePosition` を適用
+- `PrototypeSlime.prefab` に `Rigidbody2D` と `CircleCollider2D` を追加済み
+- `Collision` Tilemapの `TilemapCollider2D` と物理衝突できる構成へ移行済み
+- `fieldExtents` は移行期間中のフォールバックとして継続
 
-#### P0-2. プレイヤー移動をRigidbody2Dベースへ移行する
+#### P0-3. アイソメトリック描画順ルールを確定する — 完了
 
-- `CharacterMotor2D` のTransform直接更新を廃止する
-- Rigidbody2DとCollider2DをプレイヤーPrefabへ追加する
-- Collision Tilemapとの衝突を成立させる
-- 移動処理と入力取得の分離は維持する
-- フィールド境界のハードコード依存を削減する
+- `Ground`、`World`、`Foreground`、`UI` Sorting Layerを定義済み
+- 動的キャラクターと遮蔽物は `World` LayerでYソート
+- `Props` Tilemapは `World` Layer / Individual Mode
+- `Ground` と `Foreground` は専用Sorting Layerへ分離
+- 2D RendererのTransparency Sort AxisをY軸基準へ固定
+- シーン生成ツールと実行時プロトタイプの双方へ同じルールを適用
 
-**理由:** マップ制作を始めた後に移動・衝突方式を変更すると、全マップと全キャラクターへ影響するため。
-
-#### P0-3. アイソメトリック描画順ルールを確定する
-
-- Sorting Layerを定義する
-- Tilemapと動的Spriteの描画順ルールを統一する
-- Foreground、建物、キャラクターの前後関係を検証する
-- Yソートの適用対象と例外ルールを決める
-
-**理由:** 本番アートとPrefabが増える前に決めないと、後から大量の再設定が必要になるため。
-
-#### P0-4. 設定値の二重管理を解消する
+#### P0-4. 設定値の二重管理を解消する — 未着手
 
 - `moveSpeed` の所有者を1つにする
 - `sortingPrecision` の所有者を1つにする
 - `FieldExtents` をSpawnerの固定値から切り離す
 - 必要になった設定だけをScriptableObject化する
 
-**理由:** Inspectorとコードのどちらが正しいか分からなくなる状態を早期に防ぐため。
+#### P0-5. HUDをプレイヤーPrefabから分離する — 未着手
 
-#### P0-5. HUDをプレイヤーPrefabから分離する
+- `PrototypeHud` をプレイヤーPrefabから外す
+- Scene側に `UI Root` を持たせる
+- プレイヤー再生成とUIライフサイクルを分離する
 
-- `PrototypeHud` をプレイヤーPrefabの必須コンポーネントから外す
-- UI Rootをシーン側へ置く
-- プレイヤー状態の表示は参照経由にする
+### P1: 戦闘・NPC・会話を追加する前後で実施する
 
-**理由:** プレイヤー生成・破棄とUIのライフサイクルを分離し、会話UIやメニュー追加に備えるため。
+1. 実行時生成の地形を本番用Isometric Tilemapへ段階的に置き換える
+2. 校舎、木、街灯などをPrefabまたはアートアセット管理へ移行する
+3. 試作スライムの実行時図形ビジュアルを本番スプライト／アニメーションへ置き換える
+4. `PlayerControls.inputactions` にAttack、Interact、Dodge、Pauseを追加する
+5. 戦闘、会話、クエスト、インベントリをそれぞれ独立したFeatureとして追加する
+6. カメラ追従をプレイヤーから独立したコンポーネントとして管理する
 
-### 優先度P1: NPC・戦闘・会話を追加する前後で実施する
+### P2: コンテンツ量が増える前に実施する
 
-#### P1-1. 実行時生成地形をIsometric Tilemapへ移行する
+1. `Resources.Load` の文字列参照を減らし、シーン参照または設定アセットへ移行する
+2. Assembly Definitionを必要最小限で導入し、依存方向をコンパイラで制約する
+3. EditMode / PlayModeテストを機能単位で追加する
+4. キャラクターやマップの設定値が増えた段階でScriptableObjectによるデータ分離を導入する
+5. Input ActionのGameplay / UI / Disabledなどのコンテキスト切り替えを整理する
 
-- `TerrainBuilder` から移行を開始する
-- GroundとCollisionをTilemapで管理する
-- PropsとForegroundの役割を整理する
-- 実行時生成とTilemapの二重管理を段階的に終了する
+### P3: 本番規模へ移行する段階で実施する
 
-#### P1-2. プレイヤー入力Actionを拡張する
+1. セーブ機能追加時に `ISaveService` を導入する
+2. Steam固有機能追加時にPlatform層を導入する
+3. 必要になった時点でAddressablesや非同期ロードを導入する
+4. 大規模マップではシーン分割またはストリーミングを検討する
+5. コンソール移植を見据えて描画・メモリ・ロード時間のパフォーマンス予算を設定する
 
-`PlayerControls.inputactions` に以下を追加します。
+## 直近の推奨実施順序
 
-```text
-Move
-Attack
-Interact
-Dodge
-Pause
-```
-
-会話中やメニュー中の入力制御が必要になった時点で、GameplayとUIのAction Map切り替えを導入します。
-
-#### P1-3. 戦闘とインタラクションをFeatureとして独立させる
-
-推奨する境界例:
-
-```text
-Gameplay/
-  Combat/
-    Health
-    IDamageable
-    DamageReceiver
-    AttackController
-  Interaction/
-    IInteractable
-    InteractionDetector
-  Characters/
-    CharacterMotor2D
-```
-
-プレイヤー、NPC、敵の個別クラスへ共通ルールを直接重複実装しません。
-
-#### P1-4. カメラをプレイヤー生成から独立したシステムにする
-
-- プレイヤー追従を独立コンポーネント化する
-- プレイヤー参照をSpawnerまたはScene Compositionから渡す
-- 将来のカットシーンやエリア固定カメラへ拡張できるようにする
-
-Cinemachineは必要性が確認できた時点で導入します。
-
-#### P1-5. 建物・木・街灯をPrefabまたはTileアセットへ移行する
-
-- `ArchitectureBuilder`
-- `NatureBuilder`
-- `RuntimeShapeFactory`
-
-の順に依存を減らし、本番アセットへ置き換えます。
-
-### 優先度P2: コンテンツ量が増える前に実施する
-
-#### P2-1. Assembly Definitionを導入する
-
-最初は過度に細分化せず、Runtime、Editor、Testsを中心に分離し、その後必要に応じてCore、Gameplay、Presentationを分けます。
-
-依存方向をコンパイル時に検証できる状態を目標にします。
-
-#### P2-2. `Resources.Load` を直接参照へ置き換える
-
-- プレイヤーPrefab
-- 入力アセット
-- 将来追加する設定アセット
-
-は、可能なものからSerializeFieldまたは設定用ScriptableObject経由の参照へ移行します。
-
-#### P2-3. データと振る舞いを分離する
-
-武器、敵、NPC、アイテム、スキルなど種類が増えた時点で、静的なマスターデータはScriptableObjectなどへ分離します。
-
-ただし、すべてを最初からデータ駆動にせず、同種データが複数存在する機能から順に適用します。
-
-#### P2-4. テスト基盤を追加する
-
-優先して自動化する対象:
-
-- `WorldSortOrder` のEditModeテスト
-- アイソメトリック座標変換のEditModeテスト
-- HP・ダメージ計算のEditModeテスト
-- Prototypeシーンが起動できるPlayModeスモークテスト
-- プレイヤーPrefabの必須コンポーネント検証
-
-ゲームの見た目そのものより、壊れると広範囲へ影響する共通ルールを優先します。
-
-### 優先度P3: 本番規模へ移行する段階で実施する
-
-#### P3-1. セーブ境界を導入する
-
-セーブ機能が必要になった時点で `ISaveService` を導入し、ゲームロジックからファイルシステムやプラットフォームSDKを直接呼ばない構造にします。
-
-#### P3-2. Platform層を追加する
-
-Steam実績、クラウドセーブ、ユーザー識別などを導入するタイミングでPlatform境界を追加します。
-
-```text
-Gameplay / Application
-  ↓
-Platform Abstraction
-  ├ Steam
-  └ Console
-```
-
-#### P3-3. 大規模アセットロード戦略を導入する
-
-複数エリア、長時間プレイ、大量アセット、DLCなどの要件が明確になった場合に、Addressablesやシーン分割、非同期ロードを導入します。
-
-#### P3-4. パフォーマンス予算を定義する
-
-- ターゲットFPS
-- 画面内Sprite数
-- 2D Light数
-- 透明描画の重なり
-- メモリ使用量
-- ロード時間
-
-を実機または想定最低スペックで計測し、Steam版だけでなく将来のコンソール移植を意識した基準を持ちます。
-
-## 当面導入しないもの
-
-現段階では以下を目的なく導入しません。
-
-- 大規模なDIコンテナ
-- ECS/DOTSへの全面移行
-- 汎用イベントバスによる全面的な疎結合化
-- すべてのクラスへのInterface追加
-- 必要性がない段階でのAddressables全面導入
-- 独自フレームワーク化
-- 将来使うかもしれない機能の先行実装
-
-このプロジェクトでは、抽象化そのものを目的にせず、実際に発生した変更理由を分離するためにリファクタリングします。
-
-## 次に実施する推奨順序
-
-直近の作業順は以下とします。
-
-```text
-1. 正規シーンとBuild Settingsの統一
-2. CharacterMotor2DのRigidbody2D化とCollision Tilemap連携
-3. Sorting Layer / Yソート方針の確定
-4. プレイヤー設定値の二重管理解消
-5. PrototypeHudのプレイヤーPrefabからの分離
-6. TerrainBuilderからIsometric Tilemapへの移行開始
-7. Attack / Interact / Dodge / Pause入力追加
-8. 戦闘・インタラクション機能の追加
-9. Assembly Definitionとテスト基盤の導入
-10. Resources依存の段階的削減
-```
-
-この順序は、今後のゲーム機能追加を止めるためのものではありません。後から変更すると広範囲へ影響する「シーン、移動、衝突、描画順、設定所有権」を先に安定させ、その後に戦闘、会話、クエストなどの機能を追加することを目的とします。
+1. P0-4 設定値の二重管理解消
+2. P0-5 HUDをプレイヤーPrefabから分離
+3. Collision Tilemapへ実際の衝突タイルを配置して物理挙動を検証
+4. Isometric TilemapへTerrainBuilderの責務を段階移行
+5. 建物・木・街灯などをPrefab化
+6. Attack / Interact / Dodge / PauseをInput Actionsへ追加
+7. Interaction機能を独立Featureとして追加
+8. Combat機能を独立Featureとして追加
+9. EditMode / PlayModeテストを追加
+10. コンテンツ増加状況を見てasmdefとResources削減を実施
 
 ## 実装ルール
 
 - 1クラスに複数の独立した変更理由を持たせない
 - 入力デバイスの具体的なキー判定をゲームプレイコードへ書かない
 - 入力バインディングは原則として `.inputactions` アセットで管理する
+- キャラクター移動は物理衝突が必要な場合、Rigidbody2D経由で行う
 - 描画順の計算規則は共通化する
+- Yソートが必要なワールド要素は原則として `World` Sorting Layerを使用する
 - UIから直接ゲームルールを変更しない
 - プロトタイプ専用処理には、そのことが分かる名前を付ける
 - 将来使うかもしれないという理由だけで抽象化を増やさない

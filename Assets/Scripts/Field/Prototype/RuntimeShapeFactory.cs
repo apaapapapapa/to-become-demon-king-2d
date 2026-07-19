@@ -1,3 +1,4 @@
+using DemonKing.Presentation.Rendering;
 using UnityEngine;
 
 namespace DemonKing.Field.Prototype
@@ -36,6 +37,7 @@ namespace DemonKing.Field.Prototype
             SpriteRenderer renderer = patch.AddComponent<SpriteRenderer>();
             renderer.sprite = sprite != null ? sprite : SquareSprite;
             renderer.color = color;
+            renderer.sortingLayerName = SortingLayerNames.World;
             renderer.sortingOrder = order;
             return patch;
         }

@@ -9,10 +9,12 @@ namespace DemonKing.Field
 {
     /// <summary>
     /// 既存のFieldBootstrapとの互換性を保つための試作プレイヤー構成ルートです。
-    /// 入力・移動・見た目・描画順・UIの実処理は個別コンポーネントへ委譲します。
+    /// 入力・移動・物理衝突・見た目・描画順・UIの実処理は個別コンポーネントへ委譲します。
     /// </summary>
     [RequireComponent(typeof(MoveInputReader))]
     [RequireComponent(typeof(CharacterMotor2D))]
+    [RequireComponent(typeof(Rigidbody2D))]
+    [RequireComponent(typeof(CircleCollider2D))]
     [RequireComponent(typeof(CharacterSquashAnimator))]
     [RequireComponent(typeof(GroupYSorter))]
     [RequireComponent(typeof(PrototypeHud))]

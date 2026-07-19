@@ -5,9 +5,10 @@ namespace DemonKing.Gameplay.Characters
 {
     /// <summary>
     /// キャラクターの2D移動だけを担当します。
-    /// 入力取得や見た目のアニメーションを分離し、将来のNPC・敵・別プレイヤー実装でも移動ロジックを再利用できる形にします。
+    /// 入力取得や見た目のアニメーションを分離し、Rigidbody2D経由で移動と衝突を成立させます。
     /// </summary>
     [RequireComponent(typeof(MoveInputReader))]
+    [RequireComponent(typeof(Rigidbody2D))]
     public sealed class CharacterMotor2D : MonoBehaviour
     {
         [SerializeField, Min(0.1f)] private float moveSpeed = 3.4f;
@@ -15,18 +16,35 @@ namespace DemonKing.Gameplay.Characters
         [SerializeField] private Vector2 fieldExtents = new(7.9f, 4.95f);
 
         private MoveInputReader inputReader;
+        private Rigidbody2D body;
+        private Vector2 currentInput;
 
-        public Vector2 CurrentInput => inputReader == null ? Vector2.zero : inputReader.Move;
+        public Vector2 CurrentInput => currentInput;
 
         private void Awake()
         {
             inputReader = GetComponent<MoveInputReader>();
+            body = GetComponent<Rigidbody2D>();
+
+            // 2D見下ろし／アイソメトリック移動では重力や回転を使用しないため、実行時にも前提を固定します。
+            body.gravityScale = 0f;
+            body.freezeRotation = true;
         }
 
         private void Update()
         {
-            Vector2 input = CurrentInput;
-            Vector3 next = transform.position + (Vector3)(input * moveSpeed * Time.deltaTime);
+            // Input Systemの値はUpdateで取得し、物理移動はFixedUpdateで適用します。
+            currentInput = inputReader == null ? Vector2.zero : inputReader.Move;
+        }
+
+        private void FixedUpdate()
+        {
+            if (body == null)
+            {
+                return;
+            }
+
+            Vector2 next = body.position + currentInput * (moveSpeed * Time.fixedDeltaTime);
 
             if (clampToBounds)
             {
@@ -34,7 +52,7 @@ namespace DemonKing.Gameplay.Characters
                 next.y = Mathf.Clamp(next.y, -fieldExtents.y, fieldExtents.y);
             }
 
-            transform.position = next;
+            body.MovePosition(next);
         }
 
         public void Configure(float speed, Vector2 extents)
