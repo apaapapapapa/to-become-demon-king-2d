@@ -1,120 +1,135 @@
 # アーキテクチャ方針
 
+## この文書の役割
+
+この文書は、プロジェクト全体の責務境界、依存方向、Composition Root、移行中の境界、今後のリアーキテクチャ優先順位を定義します。
+
+- ゲーム体験とコンテンツ方針: `GAME_DIRECTION.md`
+- 現在の実装仕様と開発規約: `TECHNICAL_DESIGN.md`
+- アーキテクチャ上の責務と将来の境界: 本書
+
+P0〜P2はすでに完了した整備履歴です。今後のTODOとして読むのではなく、「なぜ現在の構造になっているか」を確認するために残します。
+
 ## 目的
 
-現在の遊べるプロトタイプを維持しながら、NPC、敵、戦闘、会話、複数マップなどの機能追加に耐えられる構造へ段階的に移行します。
+現在の遊べるプロトタイプを維持しながら、NPC、会話、敵AI、クエスト、成長、複数マップなどの機能追加に耐えられる構造を保ちます。
 
-過剰な先行設計は避け、実際に必要になった境界だけを整備します。コメントと設計ドキュメントは日本語で記述します。
+過剰な先行設計は避け、実際のゲーム機能が必要とした境界だけを追加します。
 
 ## 基本原則
 
-- 1クラスに複数の独立した変更理由を持たせない
-- 入力デバイスの具体的なキー判定をゲームプレイコードへ書かない
-- 入力バインディングは `.inputactions` アセットで管理する
-- Input Action MapはGameplayとUIを分離し、同時に有効化しない
-- 操作を完全停止する状態はDisabledコンテキストとして明示する
-- 物理衝突が必要な移動はRigidbody2D経由で行う
-- 通常移動とDodgeなどの特殊移動は責務を分離する
-- ゲームバランス値はPrefabやMonoBehaviourへ重複保持せずScriptableObjectへ寄せる
-- アプリケーション起動設定をBootstrapコンポーネントへ直接保持しない
-- Pause状態管理はUI表示から分離する
-- UIフォントはOSフォントへ依存せずプロジェクト管理のFontアセットを使用する
-- 地形データはTilemapを正とする
-- 描画順の計算規則は共通化する
-- Yソート対象は原則 `World` Sorting Layerを使用する
-- UIとプレイヤーのライフサイクルを分離する
-- カメラはプレイヤー固有クラスへ依存しない
-- Interactionは対象固有ロジックに依存しない
-- Combatは敵種別や演出に依存しない
-- アセット参照は可能な限りUnityのシリアライズ参照へ寄せる
-- 外部アセットは出典とライセンスをプロジェクト内へ記録する
-- Steamやコンソール固有処理はゲームプレイコードから直接参照しない
+- 1クラスに複数の独立した変更理由を集めない
+- Input、Gameplay、Presentation、Application Stateを分離する
+- Steamやコンソール固有処理をGameplayへ直接持ち込まない
+- 物理移動はRigidbody2Dを経由する
+- 描画順の計算規則を共通化する
+- ゲームバランス値をPrefabやMonoBehaviourへ重複保持しない
+- UI表示とゲーム状態管理を分離する
+- Bootstrapを肥大化させない
+- アセット参照は可能な範囲でUnityのシリアライズ参照を使う
+- 依存性注入コンテナや細かすぎるasmdefは、必要性が確認できるまで導入しない
+- コメントと設計ドキュメントは日本語で記述する
 
-## 現在の主要構成
+## レイヤーと責務
+
+### Core
+
+ゲーム固有コンテンツに依存しない基盤を置きます。
+
+現在の例:
 
 ```text
-Assets/
-  Art/
-    External/
-    World/
-  Fonts/
-    README.md
-    DotGothic16-Regular.ttf
-    OFL_DotGothic16.txt
-  Resources/
-    Input/
-      PlayerControls.inputactions
-    Prefabs/
-      Characters/
-      World/
-    Settings/
-      PrototypeProjectAssets.asset
-      PrototypeApplicationSettings.asset
-      Gameplay/
-        PlayerCharacterStats.asset
-        PlayerMeleeAttack.asset
-        PlayerDodge.asset
-  Scenes/
-    Prototype/
-      Prototype.unity
-  Scripts/
-    Core/
-      Application/
-        GamePauseController.cs
-      Input/
-    Gameplay/
-      Characters/
-        CharacterMotor2D.cs
-        CharacterDodge2D.cs
-        Configuration/
-          CharacterStatsDefinition.cs
-          DodgeDefinition.cs
-      Interaction/
-      Combat/
-        Configuration/
-          MeleeAttackDefinition.cs
-    Presentation/
-      Camera/
-      Characters/
-      Rendering/
-      UI/
-        GameHudView.cs
-        PauseMenuView.cs
-    Field/
-      Prototype/
-        Configuration/
-          PrototypeApplicationSettings.cs
-        PrototypeApplicationInstaller.cs
-        PrototypeWorldBuilder.cs
-        PrototypeWorldBuildResult.cs
-        PrototypePlayerSpawner.cs
-    World/
-    DemonKing.Runtime.asmdef
-    FieldBootstrap.cs
-    SlimeController.cs
-  Tests/
-    EditMode/
-    PlayMode/
-  Editor/
+Core/
+  Application/
+    GamePauseController
+  Input/
+    PlayerInputReader
+    MoveInputReader
+    PlayerInputContext
+  Math/
+    WorldSortOrder
 ```
+
+Coreから `Gameplay`、`Presentation`、`Field/Prototype` を参照しません。
+
+### Gameplay
+
+ゲームルールとプレイヤー／キャラクターの振る舞いを置きます。
+
+```text
+Gameplay/
+  Characters/
+    CharacterMotor2D
+    CharacterDodge2D
+    Configuration/
+  Combat/
+    Health
+    IDamageable
+    PlayerMeleeAttack
+    Configuration/
+  Interaction/
+    IInteractable
+    PlayerInteractor
+```
+
+Gameplayは必要に応じてCoreへ依存できますが、Prototype固有クラスやuGUI Viewへ依存しません。
+
+### Presentation
+
+画面表示、描画順、カメラ、アニメーション、uGUI Viewを置きます。
+
+```text
+Presentation/
+  Camera/
+  Characters/
+  Rendering/
+  UI/
+```
+
+Presentationは表示に必要な範囲でCoreやGameplayの状態・イベントを参照できますが、ゲームルールの決定主体にはしません。
+
+例として、`PauseMenuView` は `GamePauseController` の状態変更イベントを表示するだけで、TimeScaleやInput Contextを変更しません。
+
+### Field/Prototype
+
+現在のPrototypeシーンを組み立てるComposition層です。
+
+```text
+Field/Prototype/
+  Configuration/
+  PrototypeApplicationInstaller
+  PrototypeWorldBuilder
+  PrototypePlayerSpawner
+  PrototypeWorldPrefabFactory
+  PrototypeGameplayFeatureInstaller
+  ...
+```
+
+Prototype固有のNPC、訓練用ダミー、ワールド構築順序などはここへ置きます。
+
+CoreやGameplayから `Field/Prototype` を参照しません。
+
+### Editor
+
+シーン生成、アセット参照修復、日本語フォント導入など、Unity Editorでのみ必要な処理を置きます。
+
+RuntimeコードからEditorツールを参照しません。
 
 ## 依存方向
 
-基本的な依存方向は次の通りです。
+概念上の依存方向は次です。
 
 ```text
-Presentation
-    ↓
-Gameplay
-    ↓
-Core
+Field / Prototype Composition
+       ↓
+Presentation    Gameplay
+       ↘         ↓
+          Core
 ```
 
-`Field/Prototype` は試作シーンを組み立てる外側の構成層です。CoreやGameplayからPrototype固有クラスを参照しません。
+重要なのは「上位のComposition層が具体クラスを組み合わせ、CoreやGameplayがPrototype固有事情を知らない」ことです。
 
-InteractionとCombatの恒久的な契約・ロジックは `Gameplay` 配下に置き、試作NPCや訓練用ダミーだけを `Field/Prototype` に置きます。
-
-Pause状態そのものは `Core/Application` に置き、uGUIの表示は `Presentation/UI` に置きます。これによりPauseルールと画面表現を分離します。
+PresentationとGameplayを常に直列の上下関係として扱うのではなく、表示が必要な状態・イベントだけを明示的に接続します。
 
 ## 起動構造
 
@@ -147,328 +162,174 @@ PrototypeApplicationInstaller
       └ PauseMenuView
 ```
 
-`FieldBootstrap` は起動時に `PrototypeProjectAssets` を1回だけ解決し、具体的な設定値や初期化順序を持ちません。
+`FieldBootstrap` は `PrototypeProjectAssets` を解決して `PrototypeApplicationInstaller` へ処理を渡すだけです。
 
-Scene、World、Pause、UIの組み立て順序は `PrototypeApplicationInstaller` が担当します。
+起動順序や設定値をFieldBootstrapへ戻さないことを基本方針とします。
 
-## PrototypeProjectAssets
+## 設定とアセット参照
 
-主要なアセット参照を次のScriptableObjectへ集約します。
+### PrototypeProjectAssets
 
-```text
-Resources/Settings/PrototypeProjectAssets.asset
-```
+Prototype実行時に必要なアセット参照の集約点です。
 
-現在の管理対象は次です。
+主な参照:
 
 ```text
-Application Settings
+PrototypeApplicationSettings
 Player Prefab
 Player Character Stats
 Player Melee Attack
 Player Dodge
 UI Font
-Cottage / Tree / Lamppost Prefab
-Cottage / Tree / Lamppost Sprite
-Grass / Path Tile Sprite
+World Prefabs
+World Sprites
+Terrain Sprites
 ```
 
-`PrototypePlayerSpawner` や `PrototypeWorldPrefabFactory` は個別のResources文字列パスを持たず、ProjectAssetsから直接参照を受け取ります。
+SpawnerやBuilderが個別のResourcesパスを持つ構造へ戻さないようにします。
 
-`Resources.Load` は起動時のProjectAssets解決とInput Action Assetの互換フォールバックなど、少数の入口だけに限定します。
+### PrototypeApplicationSettings
 
-## Application Settings
-
-プロトタイプ起動時の設定は `PrototypeApplicationSettings` へ分離します。
+アプリケーション起動時の値を保持します。
 
 ```text
-PrototypeApplicationSettings.asset
-  ├ playerSpawnPosition
-  ├ playableTileRadius
-  └ pausedTimeScale
+playerSpawnPosition
+playableTileRadius
+pausedTimeScale
 ```
 
-利用経路は次です。
+言語、品質設定、初期シーンなどのアプリケーション全体設定が増えた場合も、FieldBootstrapのSerializeFieldへ直接追加するのではなく、設定アセットまたは専用サービスへ分離します。
+
+### Gameplay Definition
+
+現在のゲームバランス定義:
 
 ```text
-PrototypeProjectAssets
-  ↓
-PrototypeApplicationInstaller
-  ↓
-PrototypeApplicationSettings
-  ├ PrototypeWorldBuilder
-  └ GamePauseController
+CharacterStatsDefinition
+MeleeAttackDefinition
+DodgeDefinition
 ```
 
-`FieldBootstrap` はこれらの値を `[SerializeField]` で保持しません。
+静的な調整値はDefinitionを正とし、PrefabやMonoBehaviourに同じ値を二重管理しません。
 
-今後、初期シーン、言語、品質設定などアプリケーション全体の設定が増える場合も、Bootstrapへ直接追加せず設定アセットまたは専用サービスへ分離します。
+## InputとApplication State
 
-## Gameplayデータ
-
-ゲームバランス値はScriptableObjectへ分離します。
-
-### CharacterStatsDefinition
-
-```text
-PlayerCharacterStats.asset
-  ├ moveSpeed
-  └ maxHealth
-```
-
-利用経路は次です。
-
-```text
-PrototypeProjectAssets
-  ↓
-PrototypePlayerSpawner
-  ├ CharacterMotor2D.Configure
-  └ Health.ConfigureMaxHealth
-```
-
-`CharacterMotor2D` は通常移動ロジックを担当し、移動速度の調整値そのものは `CharacterStatsDefinition` を正とします。
-
-### MeleeAttackDefinition
-
-```text
-PlayerMeleeAttack.asset
-  ├ damage
-  ├ attackRadius
-  └ attackDistance
-```
-
-利用経路は次です。
-
-```text
-PrototypeProjectAssets
-  ↓
-PrototypePlayerSpawner
-  ↓
-PlayerMeleeAttack.Configure
-```
-
-### DodgeDefinition
-
-```text
-PlayerDodge.asset
-  ├ dodgeSpeed
-  ├ duration
-  └ cooldown
-```
-
-利用経路は次です。
-
-```text
-PrototypeProjectAssets
-  ↓
-PrototypePlayerSpawner
-  ↓
-CharacterDodge2D.Configure
-```
-
-これにより、プレイヤーPrefabからゲームバランス値を分離し、将来の複数キャラクター・装備・敵種別ごとの設定差し替えに対応します。
-
-## 入力コンテキスト
-
-`PlayerControls.inputactions` は次のAction Mapへ分離します。
+Input Action Map:
 
 ```text
 Gameplay
-  ├ Move
-  ├ Attack
-  ├ Interact
-  ├ Dodge
-  └ Pause
-
 UI
-  ├ Navigate
-  ├ Submit
-  ├ Cancel
-  └ Pause
 ```
 
-`PlayerInputReader` は `PlayerInputContext` を管理します。
+Runtime context:
 
 ```text
 Gameplay
-  -> Gameplay Action Mapのみ有効
-
 UI
-  -> UI Action Mapのみ有効
-
 Disabled
-  -> すべてのAction Mapを無効
 ```
 
-公開APIは次を基本とします。
+`PlayerInputReader` がAction Mapの有効状態を一元管理します。
+
+Pauseでは次の責務を分離します。
 
 ```text
-EnableGameplayInput()
-EnableUiInput()
-DisableInput()
-SetContext(PlayerInputContext)
+GamePauseController
+  -> Pause状態
+  -> Time.timeScale
+  -> Input Context
+
+PauseMenuView
+  -> Pause画面の表示
 ```
 
-メニュー、会話、ポーズなどの画面状態を実装する際は、個別コンポーネントを直接Enable/Disableするのではなく入力コンテキストを切り替えます。
+今後の会話やメニューも、Gameplay入力を個別に止めるのではなくInput Context切り替えを基本にします。
 
-GameplayとUIのAction Mapを同時に有効化しないことで、メニュー表示中の誤攻撃やキャラクター移動を防ぎます。
+## 移動と特殊移動
 
-## プレイヤー移動と衝突
+通常移動:
 
 ```text
-PlayerInputReader
-  ↓ Gameplay Context
 MoveInputReader
   ↓
 CharacterMotor2D
   ↓
 Rigidbody2D.MovePosition
-  ↓
-CircleCollider2D
-  ↕
-TilemapCollider2D
 ```
 
-Collision Tilemapにはフィールド外周と校舎基部の衝突セルを配置しています。
-
-## Dodge
-
-Dodgeは通常移動から独立した `CharacterDodge2D` が担当します。
+Dodge:
 
 ```text
 PlayerInputReader.DodgePressed
   ↓
 CharacterDodge2D
-  ├ DodgeDefinition
-  ├ CharacterMotor2D.SetMovementLocked(true)
+  ├ CharacterMotor2D.SetMovementLocked
   └ Rigidbody2D.MovePosition
 ```
 
-回避開始時は現在の移動入力方向を使用し、入力がない場合は最後に移動した方向を利用します。
+通常移動へDodge、ノックバック、カットシーン移動などを直接書き足して巨大化させない方針です。
 
-回避中は `CharacterMotor2D` の通常移動だけを一時ロックし、Dodge終了時に解除します。
+複数の移動制御が競合する段階になった場合は、単純なboolロックをMovement StateやMotion Controllerへ拡張することを検討します。
 
-Dodgeの速度、継続時間、クールダウンは `PlayerDodge.asset` を正とします。
+## InteractionとCombat
 
-## Pause
-
-Pause状態は `GamePauseController` が管理します。
+恒久的な契約はGameplayへ置きます。
 
 ```text
-Gameplay/Pause
-  ↓
-GamePauseController.PauseGame
-  ├ Time.timeScale = pausedTimeScale
-  ├ PlayerInputContext.UI
-  └ PauseStateChanged(true)
-      ↓
-      PauseMenuView表示
-```
-
-復帰時は次の流れです。
-
-```text
-UI/Pause または UI/Cancel
-  ↓
-GamePauseController.ResumeGame
-  ├ Time.timeScale復元
-  ├ PlayerInputContext.Gameplay
-  └ PauseStateChanged(false)
-      ↓
-      PauseMenuView非表示
-```
-
-`GamePauseController` はuGUIクラスを参照しません。`PauseMenuView` が状態変更イベントを購読することで表示を同期します。
-
-## Interaction
-
-```text
-PlayerInputReader.InteractPressed
-  ↓
-PlayerInteractor
-  ↓
 IInteractable
-  ↓
-NPC / 扉 / 宝箱 / 調査対象
-```
-
-`PlayerInteractor` は具体的な対象ロジックを知りません。
-
-## Combat
-
-```text
-PlayerInputReader.AttackPressed
-  ↓
-PlayerMeleeAttack
-  ↓
-MeleeAttackDefinition
-  ↓
 IDamageable
-  ↓
 Health
 ```
 
-`Health` はHP、ダメージ、生存状態、死亡イベントだけを担当します。最大HPはキャラクター設定から注入できます。
+Prototype側はこれらの契約を使って、試作NPCや訓練用ダミーを組み立てます。
 
-## UIと日本語フォント
+NPC会話、敵AI、報酬、死亡演出などを `PlayerInteractor` や `Health` に直接追加しません。
+
+## ワールドとアート
+
+地形はIsometric Tilemapを正とします。
+
+主要な継続利用アセット:
+
+- Terrain Sprite
+- Player Prefab
+- Cottage Prefab
+- Tree Prefab
+- Lamppost Prefab
+
+`RuntimeShapeFactory` は完全には削除していません。現在はPrototype専用の軽量な装飾、ランドマーク、雰囲気確認用表現に限定します。
+
+主要アートをRuntimeShapeFactoryへ戻さず、コンテンツ制作が進んだ箇所からPrefabまたは静的アセットへ移行します。
+
+## 描画順
+
+Yソート計算は `WorldSortOrder` を共通ルールとします。
+
+```text
+sortingOrder = -round(worldY * precision) + offset
+```
+
+複数SpriteRendererを持つ対象は `GroupYSorter` を使用します。
+
+Yソート対象は原則 `World` Sorting Layerを使用し、オブジェクトごとに独自計算式を実装しません。
+
+## UI
 
 本番UI基盤はCanvas（uGUI）です。
 
 ```text
 UI Root
-  ├ Canvas
-  ├ CanvasScaler
-  ├ GraphicRaycaster
   ├ GameHudView
   └ PauseMenuView
 ```
 
-`GameHudView` と `PauseMenuView` はOSフォントを探索しません。`PrototypeProjectAssets.UiFont` からFontアセットを受け取ります。
+UIはPlayer Prefabから独立したライフサイクルで管理します。
 
-標準日本語フォントは `DotGothic16-Regular.ttf` とし、Editorツール `JapaneseUiFontInstaller` が公式Google Fontsリポジトリからフォント本体とOFLライセンスを `Assets/Fonts` へ導入します。
-
-```text
-JapaneseUiFontInstaller
-  ↓
-Assets/Fonts/DotGothic16-Regular.ttf
-Assets/Fonts/OFL_DotGothic16.txt
-  ↓
-PrototypeProjectAssets.uiFont
-  ↓
-PrototypeUiInstaller
-  ├ GameHudView.Initialize
-  └ PauseMenuView.Initialize
-```
-
-自動導入に失敗した場合は次のUnityメニューから再実行します。
-
-```text
-Demon King > Project > Install Japanese UI Font
-```
-
-フォント導入後はFont本体・ライセンス・更新されたProjectAssetsをGitへコミットし、ローカルPC、CI、Steam／将来のコンソールビルドで同一アセットを使用します。
-
-## カメラ
-
-`CameraFollow2D` は任意のTransformを追従対象として受け取り、プレイヤー固有クラスには依存しません。
-
-## Tilemapと外部地形アセット
-
-Ground Tilemapの描画データにはKenney Isometric Tiles Landscape由来のSpriteを利用します。
-
-`PrototypeRuntimeTileFactory` はインポート済みSpriteを受け取り、Unity Tileオブジェクトだけを生成します。実行時Texture生成は削除済みです。
-
-外部アセットの出典とライセンスは `Assets/Art/External/Kenney/README.md` に記録します。
-
-## World Prefabアート
-
-校舎、木、街灯はPrefab境界を維持しつつ、プロジェクト管理の静的Spriteアートを利用します。
-
-Builderは配置だけを担当し、見た目はPrefab側へ閉じ込めます。
+日本語Fontはプロジェクトアセットとして管理し、OSフォントへ依存しません。
 
 ## Assembly Definition
 
-Runtimeコードは `DemonKing.Runtime.asmdef` にまとめています。
+現在は必要最小限の構成です。
 
 ```text
 DemonKing.Runtime
@@ -476,128 +337,138 @@ DemonKing.EditMode.Tests
 DemonKing.PlayMode.Tests
 ```
 
-初期段階ではCore、Gameplay、Presentationを細かく分割せず、1つのRuntime asmdefでテスト可能な境界だけを作ります。
+Core / Gameplay / Presentationを別asmdefへ分割するのは、コンパイル時間や依存違反が実際の問題になった段階で検討します。
 
-## テスト
+フォルダ構成だけを理由にassemblyを増やしません。
 
-### EditMode
+## テスト方針
 
-- `WorldSortOrderTests`
+現在の主な自動テスト:
 
-### PlayMode
+```text
+EditMode
+  WorldSortOrderTests
 
-- `GameplayAndCameraPlayModeTests`
-- `PlayerInputContextPlayModeTests`
-- `DodgeAndPausePlayModeTests`
+PlayMode
+  GameplayAndCameraPlayModeTests
+  PlayerInputContextPlayModeTests
+  DodgeAndPausePlayModeTests
+```
 
-`PlayerInputContextPlayModeTests` では、Gameplay / UI / Disabledの切り替え時に有効なAction Mapが意図どおり1つ以下になることを検証します。
+優先してテストする対象:
 
-`DodgeAndPausePlayModeTests` では、Dodge開始時にRigidbody2Dが指定方向へ移動することと、Pause / Resume時にTimeScaleとInput Contextが切り替わることを検証します。
+- 純粋な計算ルール
+- 状態遷移
+- Input Context切り替え
+- HPや死亡などのGameplayルール
+- 物理やUnityライフサイクルを伴う重要境界
 
-# リファクタリング・リアーキテクチャ優先順位
+将来追加する候補:
 
-## P0: ゲーム機能を増やす前に実施する — 完了
+- Interaction対象選択
+- CombatのOverlap判定
+- NPC会話状態
+- Quest進行
+- Save / Load
 
-### P0-1. 正規シーンとBuild Settingsを統一する — 完了
-### P0-2. プレイヤー移動をRigidbody2Dベースへ移行する — 完了
-### P0-3. アイソメトリック描画順ルールを確定する — 完了
-### P0-4. 設定値の二重管理を解消する — 完了
-### P0-5. HUDをプレイヤーPrefabから分離する — 完了
+## 現在残している移行境界
 
-## P1: 戦闘・NPC・会話を追加する前後で実施する — 完了
+大筋のリアーキテクチャは完了していますが、次は意図的に残しています。
 
-### P1-1. Collision Tilemapへ実際の衝突タイルを配置する — 完了
-### P1-2. TerrainBuilderをIsometric Tilemapへ移行する — 完了
-### P1-3. 建物、木、街灯をPrefab管理へ移行する — 完了
-### P1-4. 試作スライムをスプライト／アニメーション構造へ置き換える — 完了
-### P1-5. Attack / Interact / Dodge / PauseをInput Actionsへ追加する — 完了
-### P1-6. Interactionを独立Featureとして追加する — 完了
-### P1-7. Combatを独立Featureとして追加する — 完了
-### P1-8. カメラ追従をプレイヤーから独立させる — 完了
-### P1-9. 本番UIをCanvas（uGUI）へ移行する — 完了
+### Prototype名前空間／クラス
 
-## P2: コンテンツ量が増える前に実施する — 完了
+現在のゲーム世界はまだPrototypeシーン中心です。
 
-### P2-1. EditMode / PlayModeテストを追加する — 完了
+実際の複数マップや本番ゲームフローが作られるまでは、無理に `Prototype` 名を消しません。本番シーンへ移行する際に、再利用する機能とPrototype固有機能を分離します。
 
-### P2-2. `Resources.Load` の文字列参照を減らす — 完了
+### SlimeController
 
-### P2-3. 外部の本番Tileアセットを導入する — 完了
+`SlimeController` は既存Prototype Player Prefabとの互換性を保つための薄いマーカー／RequireComponent集約です。
 
-### P2-4. World Prefab内部の仮図形ビジュアルを本番アートへ置き換える — 完了
+ゲームプレイロジックを再びSlimeControllerへ追加しません。プレイヤーキャラクターがスライム以外へ変わる、または正式なPlayer compositionが確立した段階で削除または改名を検討します。
 
-### P2-5. uGUI用の日本語対応フォントをプロジェクトアセットとして管理する — 完了
+### RuntimeShapeFactory
 
-- `GameHudView` のOSフォント依存を削除
-- `PrototypeProjectAssets.uiFont` からuGUIへFontを注入
-- `JapaneseUiFontInstaller` を追加
-- DotGothic16とOFLライセンスを `Assets/Fonts` へ導入する構造を追加
-- `PrototypeProjectAssetsAutoRepair` がFont参照を自動修復
+主要アートの生成には使用しませんが、Prototype専用の補助表示には残しています。
 
-### P2-6. Assembly Definitionを必要最小限で導入する — 完了
+### Resources
 
-### P2-7. 設定値が増えた段階でScriptableObjectへデータ分離する — 完了
+`Resources.Load` は少数の入口とフォールバックに限定しています。
 
-- `CharacterStatsDefinition` を追加
-- `PlayerCharacterStats.asset` に移動速度・最大HPを分離
-- `MeleeAttackDefinition` を追加
-- `PlayerMeleeAttack.asset` にダメージ・攻撃半径・攻撃距離を分離
-- `DodgeDefinition` を追加
-- `PlayerDodge.asset` に回避速度・継続時間・クールダウンを分離
-- `PrototypePlayerSpawner` から各Gameplayコンポーネントへ設定を注入
-- プレイヤーPrefabから重複するバランス値を削除
+コンテンツ量やロード要件が増えるまではAddressablesへ一括移行しません。
 
-### P2-8. Input ActionのGameplay / UI / Disabledコンテキストを整理する — 完了
+### PrototypeProjectAssetsAutoRepair
 
-- `Player` Action Mapを `Gameplay` へ改名
-- `UI` Action Mapを追加
-- Navigate / Submit / CancelをUI入力として分離
-- `PlayerInputContext` を追加
-- `PlayerInputReader` がGameplay / UI / Disabledを排他的に切り替える構造へ変更
-- `PlayerInputContextPlayModeTests` を追加
+Unityアセット参照が破損した場合にEditor上で復旧する保守ツールです。
 
-### P2-9. Dodgeの実挙動とPause状態管理を実装する — 完了
+Runtimeの正常動作がAutoRepairの毎回実行を前提とする構造にはしません。参照が安定したアセットは通常のUnityシリアライズ参照を正とします。
 
-- `CharacterDodge2D` を追加
-- Dodge中は `CharacterMotor2D` の通常移動を一時ロック
-- `Rigidbody2D.MovePosition` による回避移動を実装
-- `GamePauseController` を追加
-- Pause時にTimeScale停止と `PlayerInputContext.UI` 切り替えを実装
-- Resume時にTimeScale復元と `PlayerInputContext.Gameplay` 復帰を実装
-- `PauseMenuView` をuGUIで追加
-- `DodgeAndPausePlayModeTests` を追加
+## 完了した基礎整備
 
-### P2-10. アプリケーション全体設定をFieldBootstrapから分離する — 完了
+### P0 — 完了
 
-- `PrototypeApplicationSettings` を追加
-- Player Spawn Position、Playable Tile Radius、Paused Time Scaleを設定アセットへ移動
-- `PrototypeApplicationInstaller` を追加
-- `FieldBootstrap` から設定値と具体的な初期化順序を削除
-- `PrototypeWorldBuildResult` によりPlayer参照をApplication層へ明示的に返却
-- Scene / World / Pause / UIの構成をApplicationInstallerへ集約
+ゲーム機能を増やす前の構造整理:
 
-## P3: 本番規模へ移行する段階で実施する
+- 正規シーンとBuild Settingsの統一
+- Rigidbody2Dベースの移動
+- Yソートルール統一
+- 設定値の二重管理解消
+- HUDのPlayer Prefabからの分離
 
-1. セーブ機能追加時に `ISaveService` を導入する
-2. Steam固有機能追加時にPlatform層を導入する
-3. 必要になった時点でAddressablesや非同期ロードを導入する
-4. 大規模マップではシーン分割またはストリーミングを検討する
-5. コンソール移植向けに描画・メモリ・ロード時間の予算を設定する
+### P1 — 完了
 
-## 直近の推奨実施順序
+Gameplay Feature追加に必要な境界:
 
-P0、P1、P2の構造整備は完了しました。次は次の順序を推奨します。
+- Collision Tilemap
+- Isometric Terrain
+- World Prefab化
+- Player Sprite / Animation構造
+- Input Actions
+- Interaction
+- Combat
+- Camera分離
+- Canvas（uGUI）
 
-1. Unity Editorでコンパイル、PlayMode、Dodge、Pause、uGUI表示を確認する
-2. EditMode / PlayModeテストをすべて実行する
-3. InteractionとCombatの物理当たり判定テストを拡充する
-4. 実際のゲーム進行に必要なNPC、会話、敵AI、クエストなどのFeatureを追加する
-5. セーブが必要になった時点で `ISaveService` と保存データ境界を設計する
-6. Steam機能追加時にPlatform層を導入する
-7. コンテンツ量・ロード時間が増えた段階でAddressablesやシーン分割を検討する
+### P2 — 完了
 
-## 移行方針
+コンテンツ量増加前の基盤:
 
-大規模な一括書き換えではなく、機能追加のタイミングで既存コードを小さく置き換えます。
+- EditMode / PlayModeテスト
+- Resources文字列参照の削減
+- 外部Terrainアセット導入
+- 主要World Prefabの静的Sprite化
+- 日本語Font管理
+- 最小asmdef
+- ScriptableObject設定分離
+- Gameplay / UI / Disabled Input Context
+- Dodge
+- Pause状態管理
+- FieldBootstrapからApplication Settingsと起動構成を分離
 
-常に `main` のプロトタイプが遊べる状態を維持し、本番用のシーン、Prefab、Tilemap、UI、アートが揃った機能から `Field/Prototype` への依存を減らします。
+詳細な実装仕様は `TECHNICAL_DESIGN.md` を参照してください。
+
+## P3 — 本番規模へ進む段階
+
+P3は先行してすべて実装するのではなく、実際のゲーム機能に合わせて導入します。
+
+優先候補:
+
+1. NPC会話、敵AI、クエスト、成長など実ゲームコンテンツを増やす
+2. セーブが必要になった時点で `ISaveService` と保存データ境界を導入する
+3. Steam機能が必要になった時点でPlatform層を導入する
+4. コンテンツ量とロード時間が増えた段階でAddressablesやシーン分割を検討する
+5. コンソール移植の具体化後に描画・メモリ・ロード時間の予算を設定する
+
+## リファクタリング判断基準
+
+今後は「きれいに見えるから」ではなく、次の兆候が出たときに追加リファクタを行います。
+
+- 同じルールが3箇所以上へ重複し始めた
+- 1機能の変更で無関係な複数レイヤーを同時修正する必要がある
+- Prototype固有コードを本番シーンでも再利用したくなった
+- Input / Pause / Dialogue / Menuの状態競合が増えた
+- CharacterMotor2Dの単純な移動ロックでは複数Motionを管理できなくなった
+- Resourcesロードが起動時間やメモリの問題になった
+- Runtime assemblyが大きくなりコンパイル時間や依存違反が問題になった
+
+常に `main` が遊べる状態を維持し、機能追加と同時に必要な境界だけを段階的に整備します。
