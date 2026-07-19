@@ -40,7 +40,7 @@ namespace DemonKing.Core.Application
         private void OnDisable()
         {
             UnsubscribeInput();
-            RestoreTimeScaleWithoutChangingInput();
+            RestoreActiveState();
         }
 
         public void TogglePause()
@@ -120,7 +120,10 @@ namespace DemonKing.Core.Application
             }
         }
 
-        private void RestoreTimeScaleWithoutChangingInput()
+        /// <summary>
+        /// シーン破棄やコンポーネント無効化でTimeScale=0が残留しないよう、通常状態へ戻します。
+        /// </summary>
+        private void RestoreActiveState()
         {
             if (!IsPaused)
             {
@@ -129,6 +132,8 @@ namespace DemonKing.Core.Application
 
             IsPaused = false;
             Time.timeScale = resumeTimeScale;
+            inputReader?.EnableGameplayInput();
+            PauseStateChanged?.Invoke(false);
         }
     }
 }
