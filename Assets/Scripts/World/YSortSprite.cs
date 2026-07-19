@@ -1,10 +1,11 @@
+using DemonKing.Core.Math;
 using UnityEngine;
 
 namespace DemonKing.World
 {
     /// <summary>
-    /// 画面下側のオブジェクトが手前に描画されるよう、SpriteRenderer に一貫した Y座標ベースの並び替えを適用します。
-    /// 現在の実行時生成スライム試作以外で、今後追加する動的なワールドオブジェクトに使用します。
+    /// 画面下側のオブジェクトが手前に描画されるよう、単一のSpriteRendererへY座標ベースの描画順を適用します。
+    /// 複数SpriteRendererを持つオブジェクトにはGroupYSorterを使用します。
     /// </summary>
     [RequireComponent(typeof(SpriteRenderer))]
     public sealed class YSortSprite : MonoBehaviour
@@ -21,7 +22,10 @@ namespace DemonKing.World
 
         private void LateUpdate()
         {
-            spriteRenderer.sortingOrder = -Mathf.RoundToInt(transform.position.y * precision) + orderOffset;
+            spriteRenderer.sortingOrder = WorldSortOrder.FromWorldY(
+                transform.position.y,
+                precision,
+                orderOffset);
         }
     }
 }
