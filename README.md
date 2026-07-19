@@ -12,7 +12,7 @@
 - Unity Input System
 - Canvas（uGUI）
 - Rigidbody2D／TilemapCollider2D
-- ScriptableObjectによるゲームバランスデータ管理
+- ScriptableObjectによるゲームバランス・起動設定管理
 - Unity Test Framework
 - Assembly DefinitionによるRuntime / Test分離
 - キーボードとゲームパッドに対応
@@ -28,7 +28,9 @@
 | 回避 | Left Shift | Eastボタン |
 | ポーズ | Escape | Startボタン |
 
-AttackとInteractはゲームプレイ機能へ接続済みです。DodgeとPauseは入力境界まで実装済みで、実際の挙動は後続実装です。
+Attack、Interact、Dodge、Pauseはいずれもゲームプレイへ接続済みです。
+
+DodgeはRigidbody2Dによる短時間の回避移動として実装し、Pause中は `Time.timeScale` を停止してInput Contextを `UI` へ切り替えます。Escape、Start、UIのCancel入力でゲームへ復帰できます。
 
 ## Input Actionコンテキスト
 
@@ -55,7 +57,7 @@ UI
 - `UI`: UI Action Mapのみ有効
 - `Disabled`: すべてのAction Mapを無効
 
-ポーズメニューや会話UIは、このコンテキストAPIを利用してGameplay入力とUI入力を切り替えます。
+`GamePauseController` はPause開始時に `UI`、復帰時に `Gameplay` へ切り替えます。
 
 ## Gameplay設定データ
 
@@ -71,9 +73,42 @@ Assets/Resources/Settings/Gameplay/
     ├ damage
     ├ attackRadius
     └ attackDistance
+
+  PlayerDodge.asset
+    ├ dodgeSpeed
+    ├ duration
+    └ cooldown
 ```
 
-`PrototypeProjectAssets` がこれらを参照し、`PrototypePlayerSpawner` が `CharacterMotor2D`、`Health`、`PlayerMeleeAttack` へ設定を注入します。
+`PrototypeProjectAssets` がこれらを参照し、`PrototypePlayerSpawner` が `CharacterMotor2D`、`Health`、`PlayerMeleeAttack`、`CharacterDodge2D` へ設定を注入します。
+
+## Application Settings
+
+FieldBootstrapはゲーム設定値を直接保持しません。
+
+```text
+PrototypeApplicationSettings.asset
+  ├ playerSpawnPosition
+  ├ playableTileRadius
+  └ pausedTimeScale
+```
+
+起動経路は次です。
+
+```text
+FieldBootstrap
+  ↓
+PrototypeProjectAssets
+  ↓
+PrototypeApplicationInstaller
+  ├ PrototypeSceneConfigurator
+  ├ PrototypeSortingConfigurator
+  ├ PrototypeWorldBuilder
+  ├ GamePauseController
+  └ PrototypeUiInstaller
+```
+
+これにより、`FieldBootstrap` はProjectAssetsを解決してApplicationInstallerへ委譲するだけの最小エントリーポイントになっています。
 
 ## uGUI日本語フォント
 
@@ -93,7 +128,7 @@ Assets/Fonts/
 Demon King > Project > Install Japanese UI Font
 ```
 
-導入後は `PrototypeProjectAssets.uiFont` を経由して `GameHudView` へFontを渡します。生成されたFont・ライセンス・ProjectAssetsの差分はGit管理対象です。
+導入後は `PrototypeProjectAssets.uiFont` を経由してuGUIへFontを渡します。生成されたFont・ライセンス・ProjectAssetsの差分はGit管理対象です。
 
 ## 現在のプレイ可能ループ
 
@@ -102,12 +137,13 @@ Demon King > Project > Install Japanese UI Font
 3. NPCへ近づいてInteractする
 4. 訓練用スライムへAttackする
 5. HPを減らして対象を倒す
-6. カメラがプレイヤーへ追従する
-7. Canvas（uGUI）のHUDを表示する
+6. Shift／Eastボタンで回避移動する
+7. Escape／StartでPauseし、uGUIのPause画面を表示する
+8. カメラがプレイヤーへ追従する
 
 ## コンテンツアセット構造
 
-主要なPrefab、Sprite、Gameplay設定、UI Font参照は `PrototypeProjectAssets` に集約しています。
+主要なPrefab、Sprite、Gameplay設定、Application設定、UI Font参照は `PrototypeProjectAssets` に集約しています。
 
 ```text
 Assets/
@@ -120,9 +156,11 @@ Assets/
       PlayerControls.inputactions
     Settings/
       PrototypeProjectAssets.asset
+      PrototypeApplicationSettings.asset
       Gameplay/
         PlayerCharacterStats.asset
         PlayerMeleeAttack.asset
+        PlayerDodge.asset
     Prefabs/
       Characters/
       World/
@@ -139,6 +177,7 @@ Assets/Tests/
   PlayMode/
     GameplayAndCameraPlayModeTests.cs
     PlayerInputContextPlayModeTests.cs
+    DodgeAndPausePlayModeTests.cs
 ```
 
 現在の自動テスト対象は次です。
@@ -147,10 +186,12 @@ Assets/Tests/
 - Healthの致死ダメージと死亡イベント
 - CameraFollow2Dの追従とZ座標維持
 - Gameplay / UI / Disabled入力コンテキスト切り替え
+- Dodge開始時のRigidbody2D移動
+- Pause / Resume時のTimeScaleとInput Context切り替え
 
 ## 開発フェーズ
 
-P0とP1は完了しています。
+P0、P1、P2のアーキテクチャ整備項目は完了しています。
 
 P2では次を実装済みです。
 
@@ -160,10 +201,13 @@ P2では次を実装済みです。
 - World Prefabの静的Spriteアート化
 - uGUI日本語フォントのプロジェクト管理基盤
 - 必要最小限のAssembly Definition導入
-- キャラクター能力値と近接攻撃データのScriptableObject化
+- キャラクター能力値・近接攻撃・Dodge設定のScriptableObject化
 - Gameplay / UI / Disabled入力コンテキスト分離
+- Rigidbody2DベースのDodge実挙動
+- Pause状態管理とuGUI Pause画面
+- FieldBootstrapからApplication Settingsと起動構成を分離
 
-次はDodgeの実挙動、Pause状態管理、FieldBootstrapからのアプリケーション全体設定分離を優先します。
+今後はP3として、セーブ、Steam／コンソール向けPlatform層、必要に応じたAddressablesやマップ分割へ進みます。
 
 詳細は以下を参照してください。
 
