@@ -189,15 +189,32 @@ namespace DemonKing.Presentation.UI
 
         private static Font LoadUiFont()
         {
-            Font font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-            if (font != null)
+#if UNITY_EDITOR || UNITY_STANDALONE
+            Font osFont = Font.CreateDynamicFontFromOSFont(
+                new[]
+                {
+                    "Yu Gothic UI",
+                    "Yu Gothic",
+                    "Meiryo",
+                    "Hiragino Sans",
+                    "Noto Sans CJK JP",
+                    "Arial"
+                },
+                18);
+            if (osFont != null)
             {
-                return font;
+                return osFont;
+            }
+#endif
+
+            Font builtInFont = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            if (builtInFont == null)
+            {
+                Debug.LogWarning(
+                    "uGUI用フォントを取得できませんでした。本番配布前に日本語対応フォントをプロジェクトアセットとして設定してください。");
             }
 
-            // Built-in Fontを取得できない環境向けの開発時フォールバックです。
-            // コンソール対応前にはプロジェクト管理の日本語対応Font Assetへ置き換えます。
-            return Font.CreateDynamicFontFromOSFont("Arial", 18);
+            return builtInFont;
         }
     }
 }
