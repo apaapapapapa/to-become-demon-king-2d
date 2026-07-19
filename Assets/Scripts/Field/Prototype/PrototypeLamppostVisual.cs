@@ -31,13 +31,7 @@ namespace DemonKing.Field.Prototype
             GameObject glow = shapes.CreateEllipse("街灯の光輪", Vector2.up * 1.44f, new Vector2(1.35f, 1.35f),
                 new Color(1f, 0.65f, 0.25f, 0.13f), 3, transform);
             PrototypeGlowPulse pulse = glow.AddComponent<PrototypeGlowPulse>();
-
-            // Prefabごとに異なる位相を持たせたい場合はInspector値を利用します。
-            if (!Mathf.Approximately(glowPhase, 0f))
-            {
-                // 現状はコンポーネント生成時の既定値で十分なため、位相差はルート回転値を小さな入力として利用します。
-                glow.transform.localRotation = Quaternion.Euler(0f, 0f, glowPhase);
-            }
+            pulse.SetPhase(glowPhase);
         }
 
         private void Start()
