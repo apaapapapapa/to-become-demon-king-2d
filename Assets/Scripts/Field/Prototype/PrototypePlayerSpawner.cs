@@ -5,23 +5,29 @@ using UnityEngine;
 namespace DemonKing.Field.Prototype
 {
     /// <summary>
-    /// 試作プレイヤーPrefabを生成して初期位置へ配置します。
-    /// フィールド境界はCollision Tilemapが担当するため、プレイヤー側の座標Clampは使用しません。
+    /// ProjectAssetsから受け取ったプレイヤーPrefabを生成して初期位置へ配置します。
+    /// Prefabの場所を文字列パスとして保持しません。
     /// </summary>
     internal sealed class PrototypePlayerSpawner
     {
-        private const string PrefabResourcesPath = "Prefabs/Characters/PrototypeSlime";
-
         private readonly Vector3 spawnPosition;
+        private readonly GameObject playerPrefab;
 
-        public PrototypePlayerSpawner(Vector3 spawnPosition)
+        public PrototypePlayerSpawner(Vector3 spawnPosition, GameObject playerPrefab)
         {
             this.spawnPosition = spawnPosition;
+            this.playerPrefab = playerPrefab;
         }
 
         public GameObject Spawn(Transform parent)
         {
-            GameObject root = InstantiatePrefab(parent);
+            if (playerPrefab == null)
+            {
+                Debug.LogError("プレイヤーPrefab参照が設定されていません。");
+                return null;
+            }
+
+            GameObject root = Object.Instantiate(playerPrefab, parent, false);
             root.transform.localPosition = spawnPosition;
 
             SlimeController controller = root.GetComponent<SlimeController>();
@@ -39,23 +45,6 @@ namespace DemonKing.Field.Prototype
 
             CharacterMotor2D motor = root.GetComponent<CharacterMotor2D>();
             motor?.DisableBounds();
-
-            return root;
-        }
-
-        private static GameObject InstantiatePrefab(Transform parent)
-        {
-            GameObject prefab = Resources.Load<GameObject>(PrefabResourcesPath);
-            if (prefab != null)
-            {
-                return Object.Instantiate(prefab, parent, false);
-            }
-
-            Debug.LogError(
-                $"試作プレイヤーPrefabが見つかりません。Resources/{PrefabResourcesPath}.prefab を確認してください。");
-
-            GameObject root = new("スライム");
-            root.transform.SetParent(parent, false);
             return root;
         }
     }
