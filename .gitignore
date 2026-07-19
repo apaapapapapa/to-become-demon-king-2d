@@ -105,8 +105,3 @@ InitTestScene*.unity*
 
 # Play Mode テストが自動生成するシーン
 /[Aa]ssets/[Ii]nit[Tt]est[Ss]cene*.unity*
-
-# Node.js / VitePress
-/node_modules/
-/docs/.vitepress/cache/
-/docs/.vitepress/dist/
