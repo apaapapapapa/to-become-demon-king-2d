@@ -1,4 +1,5 @@
 using System.IO;
+using DemonKing.Presentation.Rendering;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -32,7 +33,7 @@ namespace DemonKing.EditorTools
 
             EditorSceneManager.SaveScene(scene, ScenePath);
             Selection.activeObject = AssetDatabase.LoadAssetAtPath<SceneAsset>(ScenePath);
-            Debug.Log($"Created isometric prototype scene: {ScenePath}");
+            Debug.Log($"アイソメトリック試作シーンを作成しました: {ScenePath}");
         }
 
         private static void CreateCamera()
@@ -62,19 +63,27 @@ namespace DemonKing.EditorTools
             grid.cellLayout = GridLayout.CellLayout.Isometric;
             grid.cellSize = new Vector3(1f, 0.5f, 1f);
 
-            CreateTilemap("Ground", gridObject.transform, -100);
-            CreateTilemap("Collision", gridObject.transform, -50, false);
-            CreateTilemap("Props", gridObject.transform, 0);
-            CreateTilemap("Foreground", gridObject.transform, 100);
+            CreateTilemap("Ground", gridObject.transform, SortingLayerNames.Ground, 0, true, TilemapRenderer.Mode.Chunk);
+            CreateTilemap("Collision", gridObject.transform, SortingLayerNames.Ground, 0, false, TilemapRenderer.Mode.Chunk);
+            CreateTilemap("Props", gridObject.transform, SortingLayerNames.World, 0, true, TilemapRenderer.Mode.Individual);
+            CreateTilemap("Foreground", gridObject.transform, SortingLayerNames.Foreground, 0, true, TilemapRenderer.Mode.Chunk);
         }
 
-        private static void CreateTilemap(string name, Transform parent, int sortingOrder, bool visible = true)
+        private static void CreateTilemap(
+            string name,
+            Transform parent,
+            string sortingLayerName,
+            int sortingOrder,
+            bool visible,
+            TilemapRenderer.Mode mode)
         {
             GameObject tilemapObject = new(name);
             tilemapObject.transform.SetParent(parent, false);
             tilemapObject.AddComponent<Tilemap>();
             TilemapRenderer renderer = tilemapObject.AddComponent<TilemapRenderer>();
+            renderer.sortingLayerName = sortingLayerName;
             renderer.sortingOrder = sortingOrder;
+            renderer.mode = mode;
             renderer.enabled = visible;
 
             if (name == "Collision")
@@ -93,7 +102,7 @@ namespace DemonKing.EditorTools
             }
             else
             {
-                Debug.LogWarning("FieldBootstrap type was not found. Add it manually after scripts finish compiling.");
+                Debug.LogWarning("FieldBootstrapが見つかりません。スクリプトのコンパイル完了後に手動で追加してください。");
             }
         }
 
