@@ -7,7 +7,7 @@ namespace DemonKing.Field.Prototype
     /// 水面のきらめきや蛍など、試作フィールドの軽量な環境アニメーションを一括更新します。
     /// フィールド構築処理と毎フレーム更新処理を分離するためのコンポーネントです。
     /// </summary>
-    internal sealed class AmbientEffectController : MonoBehaviour
+    public sealed class AmbientEffectController : MonoBehaviour
     {
         private readonly List<AmbientElement> elements = new();
         private float elapsedTime;
