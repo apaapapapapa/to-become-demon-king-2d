@@ -9,7 +9,7 @@ namespace DemonKing.Presentation.CameraSystem
     [DisallowMultipleComponent]
     public sealed class CameraFollow2D : MonoBehaviour
     {
-        [SerializeField] private Vector3 offset = new(0f, 0.35f, 0f);
+        [SerializeField] private Vector3 offset = new(0f, 1.7f, 0f);
         [SerializeField, Min(0f)] private float smoothTime = 0.18f;
         [SerializeField, Min(0.1f)] private float maxSpeed = 30f;
 
