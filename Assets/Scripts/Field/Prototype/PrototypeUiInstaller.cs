@@ -27,7 +27,7 @@ namespace DemonKing.Field.Prototype
 
             uiRoot.AddComponent<GraphicRaycaster>();
             GameHudView hudView = uiRoot.AddComponent<GameHudView>();
-            hudView.SetFont(uiFont);
+            hudView.Initialize(uiFont);
             return uiRoot;
         }
     }
