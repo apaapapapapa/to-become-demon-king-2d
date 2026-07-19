@@ -5,16 +5,20 @@ namespace DemonKing.Field
 {
     /// <summary>
     /// Responsive prototype movement driven by a logical Input Action rather than direct key polling.
-    /// Supports keyboard and gamepad and keeps the current runtime meadow prototype playable.
+    /// Supports keyboard and gamepad while preserving the current runtime meadow prototype.
+    /// Also applies Y-based sorting to the slime's child renderers for future 2.5D depth behavior.
     /// </summary>
     public sealed class SlimeController : MonoBehaviour
     {
         [SerializeField, Min(0.1f)] private float moveSpeed = 3.4f;
+        [SerializeField, Min(1)] private int sortingPrecision = 100;
 
         private readonly InputAction moveAction = new("Move", InputActionType.Value, expectedControlType: "Vector2");
         private Vector2 fieldExtents = new(7.9f, 4.95f);
         private Vector2 input;
         private float animationTime;
+        private SpriteRenderer[] spriteRenderers;
+        private int[] relativeSortingOrders;
 
         public void Configure(Vector2 extents) => fieldExtents = extents;
 
@@ -33,6 +37,13 @@ namespace DemonKing.Field
                 .With("Right", "<Keyboard>/rightArrow");
 
             moveAction.AddBinding("<Gamepad>/leftStick");
+
+            spriteRenderers = GetComponentsInChildren<SpriteRenderer>(includeInactive: true);
+            relativeSortingOrders = new int[spriteRenderers.Length];
+            for (int i = 0; i < spriteRenderers.Length; i++)
+            {
+                relativeSortingOrders[i] = spriteRenderers[i].sortingOrder;
+            }
         }
 
         private void OnEnable() => moveAction.Enable();
@@ -53,6 +64,17 @@ namespace DemonKing.Field
             animationTime += Time.deltaTime * (input.sqrMagnitude > 0 ? 10f : 3f);
             float bounce = input.sqrMagnitude > 0 ? Mathf.Abs(Mathf.Sin(animationTime)) : 0;
             transform.localScale = new Vector3(1f + bounce * 0.08f, 1f - bounce * 0.08f, 1f);
+
+            UpdateSortingOrder();
+        }
+
+        private void UpdateSortingOrder()
+        {
+            int yOrder = -Mathf.RoundToInt(transform.position.y * sortingPrecision);
+            for (int i = 0; i < spriteRenderers.Length; i++)
+            {
+                spriteRenderers[i].sortingOrder = yOrder + relativeSortingOrders[i];
+            }
         }
 
         private void OnGUI()
