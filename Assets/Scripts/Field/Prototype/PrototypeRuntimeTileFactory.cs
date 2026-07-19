@@ -4,8 +4,8 @@ using UnityEngine.Tilemaps;
 namespace DemonKing.Field.Prototype
 {
     /// <summary>
-    /// インポート済みの本番地形Spriteから、実行時に使用するTileオブジェクトだけを生成します。
-    /// Texture2DやSprite自体は生成せず、外部Tileアセットを描画データの正とします。
+    /// プロジェクト管理のインポート済み地形Spriteから、実行時に使用するTileオブジェクトだけを生成します。
+    /// Texture2DやSprite自体は生成せず、描画データは外部から渡されたSprite参照を正とします。
     /// </summary>
     internal sealed class PrototypeRuntimeTileFactory
     {
