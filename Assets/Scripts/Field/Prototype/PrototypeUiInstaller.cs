@@ -6,11 +6,11 @@ namespace DemonKing.Field.Prototype
 {
     /// <summary>
     /// プロトタイプシーンへCanvas（uGUI）ベースのUIルートを構築します。
-    /// UIはプレイヤーPrefabから独立したシーンライフサイクルで管理します。
+    /// UIはプレイヤーPrefabから独立したシーンライフサイクルで管理し、フォントはProjectAssetsから注入します。
     /// </summary>
     internal static class PrototypeUiInstaller
     {
-        public static GameObject Create()
+        public static GameObject Create(Font uiFont)
         {
             GameObject uiRoot = new("UI Root", typeof(RectTransform));
 
@@ -26,7 +26,8 @@ namespace DemonKing.Field.Prototype
             scaler.referencePixelsPerUnit = 100f;
 
             uiRoot.AddComponent<GraphicRaycaster>();
-            uiRoot.AddComponent<GameHudView>();
+            GameHudView hudView = uiRoot.AddComponent<GameHudView>();
+            hudView.SetFont(uiFont);
             return uiRoot;
         }
     }
