@@ -27,7 +27,8 @@ namespace DemonKing.Field.Prototype
 
         public static PrototypeTilemapContext Resolve()
         {
-            Grid grid = Object.FindFirstObjectByType<Grid>();
+            // シーン内にGridは1つだけ存在する前提のため、順序保証が不要なFindAnyObjectByTypeを使用します。
+            Grid grid = Object.FindAnyObjectByType<Grid>();
             if (grid == null)
             {
                 GameObject gridObject = new("Grid");
