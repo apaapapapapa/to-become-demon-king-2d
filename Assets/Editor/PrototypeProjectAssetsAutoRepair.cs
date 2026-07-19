@@ -18,6 +18,7 @@ namespace DemonKing.EditorTools
         private const string FontInstallAttemptSessionKey = "DemonKing.FontInstallAttempted";
         private const string ProjectAssetsPath = "Assets/Resources/Settings/PrototypeProjectAssets.asset";
         private const string ApplicationSettingsPath = "Assets/Resources/Settings/PrototypeApplicationSettings.asset";
+        private const string PlayerCharacterPath = "Assets/Resources/Settings/Gameplay/PlayerCharacter.asset";
         private const string PlayerPrefabPath = "Assets/Resources/Prefabs/Characters/PrototypeSlime.prefab";
         private const string PlayerCharacterStatsPath = "Assets/Resources/Settings/Gameplay/PlayerCharacterStats.asset";
         private const string PlayerMeleeAttackPath = "Assets/Resources/Settings/Gameplay/PlayerMeleeAttack.asset";
@@ -75,12 +76,11 @@ namespace DemonKing.EditorTools
 
             SerializedObject serializedObject = new(projectAssets);
             bool changed = false;
+            CharacterDefinition playerCharacter = Load<CharacterDefinition>(PlayerCharacterPath);
+            bool characterDefinitionChanged = RepairPlayerCharacterDefinition(playerCharacter);
 
             changed |= AssignIfDifferent(serializedObject, "applicationSettings", Load<PrototypeApplicationSettings>(ApplicationSettingsPath));
-            changed |= AssignIfDifferent(serializedObject, "playerPrefab", Load<GameObject>(PlayerPrefabPath));
-            changed |= AssignIfDifferent(serializedObject, "playerCharacterStats", Load<CharacterStatsDefinition>(PlayerCharacterStatsPath));
-            changed |= AssignIfDifferent(serializedObject, "playerMeleeAttack", Load<MeleeAttackDefinition>(PlayerMeleeAttackPath));
-            changed |= AssignIfDifferent(serializedObject, "playerDodge", Load<DodgeDefinition>(PlayerDodgePath));
+            changed |= AssignIfDifferent(serializedObject, "playerCharacter", playerCharacter);
             changed |= AssignIfDifferent(serializedObject, "uiFont", Load<Font>(JapaneseUiFontInstaller.FontAssetPath, logIfMissing: forceLog));
             changed |= AssignIfDifferent(serializedObject, "cottagePrefab", Load<GameObject>(CottagePrefabPath));
             changed |= AssignIfDifferent(serializedObject, "treePrefab", Load<GameObject>(TreePrefabPath));
@@ -91,17 +91,44 @@ namespace DemonKing.EditorTools
             changed |= AssignIfDifferent(serializedObject, "grassTileSprite", LoadSprite(GrassSpritePath));
             changed |= AssignIfDifferent(serializedObject, "pathTileSprite", LoadSprite(PathSpritePath));
 
-            if (changed)
+            if (changed || characterDefinitionChanged)
             {
-                serializedObject.ApplyModifiedPropertiesWithoutUndo();
-                EditorUtility.SetDirty(projectAssets);
+                if (changed)
+                {
+                    serializedObject.ApplyModifiedPropertiesWithoutUndo();
+                    EditorUtility.SetDirty(projectAssets);
+                }
+
                 AssetDatabase.SaveAssets();
-                Debug.Log("PrototypeProjectAssetsの参照切れを自動修復しました。");
+                Debug.Log("PrototypeProjectAssetsとCharacterDefinitionの参照切れを自動修復しました。");
             }
             else if (forceLog)
             {
                 Debug.Log("PrototypeProjectAssetsの参照は正常です。");
             }
+        }
+
+        private static bool RepairPlayerCharacterDefinition(CharacterDefinition definition)
+        {
+            if (definition == null)
+            {
+                return false;
+            }
+
+            SerializedObject serializedObject = new(definition);
+            bool changed = false;
+            changed |= AssignIfDifferent(serializedObject, "prefab", Load<GameObject>(PlayerPrefabPath));
+            changed |= AssignIfDifferent(serializedObject, "statsDefinition", Load<CharacterStatsDefinition>(PlayerCharacterStatsPath));
+            changed |= AssignIfDifferent(serializedObject, "basicMeleeAttackDefinition", Load<MeleeAttackDefinition>(PlayerMeleeAttackPath));
+            changed |= AssignIfDifferent(serializedObject, "dodgeDefinition", Load<DodgeDefinition>(PlayerDodgePath));
+
+            if (changed)
+            {
+                serializedObject.ApplyModifiedPropertiesWithoutUndo();
+                EditorUtility.SetDirty(definition);
+            }
+
+            return changed;
         }
 
         private static T Load<T>(string path, bool logIfMissing = true) where T : Object
@@ -180,7 +207,7 @@ namespace DemonKing.EditorTools
             SerializedProperty property = serializedObject.FindProperty(propertyName);
             if (property == null)
             {
-                Debug.LogError($"PrototypeProjectAssetsにSerializedProperty '{propertyName}' が見つかりません。");
+                Debug.LogError($"対象アセットにSerializedProperty '{propertyName}' が見つかりません。");
                 return false;
             }
 

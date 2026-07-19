@@ -1,6 +1,5 @@
 using DemonKing.Field.Prototype.Configuration;
 using DemonKing.Gameplay.Characters.Configuration;
-using DemonKing.Gameplay.Combat.Configuration;
 using UnityEngine;
 
 namespace DemonKing.Field.Prototype
@@ -16,10 +15,7 @@ namespace DemonKing.Field.Prototype
         [SerializeField] private PrototypeApplicationSettings applicationSettings;
 
         [Header("Characters")]
-        [SerializeField] private GameObject playerPrefab;
-        [SerializeField] private CharacterStatsDefinition playerCharacterStats;
-        [SerializeField] private MeleeAttackDefinition playerMeleeAttack;
-        [SerializeField] private DodgeDefinition playerDodge;
+        [SerializeField] private CharacterDefinition playerCharacter;
 
         [Header("UI")]
         [SerializeField] private Font uiFont;
@@ -39,10 +35,7 @@ namespace DemonKing.Field.Prototype
         [SerializeField] private Sprite pathTileSprite;
 
         public PrototypeApplicationSettings ApplicationSettings => applicationSettings;
-        public GameObject PlayerPrefab => playerPrefab;
-        public CharacterStatsDefinition PlayerCharacterStats => playerCharacterStats;
-        public MeleeAttackDefinition PlayerMeleeAttack => playerMeleeAttack;
-        public DodgeDefinition PlayerDodge => playerDodge;
+        public CharacterDefinition PlayerCharacter => playerCharacter;
         public Font UiFont => uiFont;
         public bool HasUiFont => uiFont != null;
         public GameObject CottagePrefab => cottagePrefab;
@@ -60,10 +53,8 @@ namespace DemonKing.Field.Prototype
         /// </summary>
         public bool IsConfigured =>
             applicationSettings != null &&
-            playerPrefab != null &&
-            playerCharacterStats != null &&
-            playerMeleeAttack != null &&
-            playerDodge != null &&
+            playerCharacter != null &&
+            playerCharacter.IsConfigured &&
             cottagePrefab != null &&
             treePrefab != null &&
             lamppostPrefab != null &&

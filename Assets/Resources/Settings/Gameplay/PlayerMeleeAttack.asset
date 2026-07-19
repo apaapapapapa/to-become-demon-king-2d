@@ -12,6 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 30111111111111111111111111111104, type: 3}
   m_Name: PlayerMeleeAttack
   m_EditorClassIdentifier:
+  abilityId: ability.basic_melee
   damage: 1
   attackRadius: 0.65
   attackDistance: 0.65
+  damageType: 0

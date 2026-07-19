@@ -27,6 +27,9 @@ namespace DemonKing.Gameplay.Combat
         private int Damage => attackDefinition == null ? DefaultDamage : attackDefinition.Damage;
         private float AttackRadius => attackDefinition == null ? DefaultAttackRadius : attackDefinition.AttackRadius;
         private float AttackDistance => attackDefinition == null ? DefaultAttackDistance : attackDefinition.AttackDistance;
+        private string AbilityId => attackDefinition == null ? "ability.basic_melee" : attackDefinition.AbilityId;
+        private DamageType AttackDamageType =>
+            attackDefinition == null ? DamageType.Physical : attackDefinition.DamageType;
 
         private void Awake()
         {
@@ -77,6 +80,14 @@ namespace DemonKing.Gameplay.Combat
         {
             Vector2 center = (Vector2)transform.position + facingDirection * AttackDistance;
             Collider2D[] colliders = Physics2D.OverlapCircleAll(center, AttackRadius, attackLayers);
+            Health sourceHealth = GetComponent<Health>();
+            var request = new DamageRequest(
+                Damage,
+                gameObject,
+                sourceHealth == null ? string.Empty : sourceHealth.ActorId,
+                AbilityId,
+                AttackDamageType,
+                DamageTags.BasicAttack);
 
             damagedTargets.Clear();
 
@@ -96,7 +107,7 @@ namespace DemonKing.Gameplay.Combat
                         continue;
                     }
 
-                    damageable.TakeDamage(Damage, gameObject);
+                    damageable.ApplyDamage(request);
                 }
             }
         }

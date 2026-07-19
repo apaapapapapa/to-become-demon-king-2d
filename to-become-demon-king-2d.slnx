@@ -3,4 +3,5 @@
   <Project Path="Assembly-CSharp-Editor.csproj" />
   <Project Path="DemonKing.PlayMode.Tests.csproj" />
   <Project Path="DemonKing.EditMode.Tests.csproj" />
+  <Project Path="DemonKing.Domain.csproj" />
 </Solution>

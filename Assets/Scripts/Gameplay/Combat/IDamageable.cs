@@ -1,5 +1,3 @@
-using UnityEngine;
-
 namespace DemonKing.Gameplay.Combat
 {
     /// <summary>
@@ -10,6 +8,6 @@ namespace DemonKing.Gameplay.Combat
     {
         bool IsAlive { get; }
 
-        void TakeDamage(int amount, GameObject source);
+        DamageResult ApplyDamage(DamageRequest request);
     }
 }

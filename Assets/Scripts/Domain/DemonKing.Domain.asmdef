@@ -1,11 +1,7 @@
 {
-  "name": "DemonKing.Runtime",
-  "rootNamespace": "DemonKing",
-  "references": [
-    "DemonKing.Domain",
-    "Unity.InputSystem",
-    "UnityEngine.UI"
-  ],
+  "name": "DemonKing.Domain",
+  "rootNamespace": "DemonKing.Domain",
+  "references": [],
   "includePlatforms": [],
   "excludePlatforms": [],
   "allowUnsafeCode": false,
@@ -14,5 +10,5 @@
   "autoReferenced": true,
   "defineConstraints": [],
   "versionDefines": [],
-  "noEngineReferences": false
+  "noEngineReferences": true
 }

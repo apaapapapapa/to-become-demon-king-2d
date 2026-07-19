@@ -21,6 +21,7 @@
 *.hlsl                  text linguist-language=hlsl
 *.raytrace              text linguist-language=hlsl
 *.shader                text
+*.slnx                  text eol=lf
 
 # Unity JSON ファイル
 *.asmdef                unity-json

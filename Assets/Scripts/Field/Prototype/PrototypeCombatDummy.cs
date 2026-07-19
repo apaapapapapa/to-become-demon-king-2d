@@ -14,11 +14,15 @@ namespace DemonKing.Field.Prototype
     [RequireComponent(typeof(Health))]
     public sealed class PrototypeCombatDummy : MonoBehaviour
     {
+        [SerializeField] private string actorId = "character.training_dummy";
+        [SerializeField] private string rewardDefinitionId = "reward.training_dummy";
+
         private Health health;
 
         private void Awake()
         {
             health = GetComponent<Health>();
+            health.ConfigureCombatIdentity(actorId, rewardDefinitionId);
 
             CircleCollider2D hitCollider = GetComponent<CircleCollider2D>();
             hitCollider.isTrigger = true;
@@ -58,14 +62,14 @@ namespace DemonKing.Field.Prototype
             GetComponent<GroupYSorter>()?.RefreshRenderers();
         }
 
-        private void HandleDamaged(int amount, GameObject source)
+        private void HandleDamaged(DamageResult result)
         {
-            Debug.Log($"訓練用スライムに{amount}ダメージ。残りHP: {health.CurrentHealth}/{health.MaxHealth}", this);
+            Debug.Log($"訓練用スライムに{result.AppliedAmount}ダメージ。残りHP: {health.CurrentHealth}/{health.MaxHealth}", this);
         }
 
-        private void HandleDied(GameObject source)
+        private void HandleDied(DefeatContext context)
         {
-            Debug.Log("訓練用スライムを倒した。Combatの攻撃→HP→死亡ループを確認しました。", this);
+            Debug.Log($"訓練用スライムを倒した。報酬ID: {context.RewardDefinitionId}", this);
             Destroy(gameObject);
         }
 

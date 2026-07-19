@@ -45,10 +45,7 @@ namespace DemonKing.Field.Prototype
 
             GameObject player = new PrototypePlayerSpawner(
                     playerSpawnPosition,
-                    projectAssets.PlayerPrefab,
-                    projectAssets.PlayerCharacterStats,
-                    projectAssets.PlayerMeleeAttack,
-                    projectAssets.PlayerDodge)
+                    projectAssets.PlayerCharacter)
                 .Spawn(world);
 
             PrototypeCameraInstaller.Configure(Camera.main, player == null ? null : player.transform);

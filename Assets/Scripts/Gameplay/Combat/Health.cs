@@ -1,4 +1,5 @@
 using System;
+using DemonKing.Domain;
 using UnityEngine;
 
 namespace DemonKing.Gameplay.Combat
@@ -13,14 +14,17 @@ namespace DemonKing.Gameplay.Combat
         [SerializeField, Min(1)] private int maxHealth = 3;
 
         private int currentHealth;
+        private string actorId = string.Empty;
+        private string defeatRewardDefinitionId = string.Empty;
 
         public event Action<int, int> HealthChanged;
-        public event Action<int, GameObject> Damaged;
-        public event Action<GameObject> Died;
+        public event Action<DamageResult> Damaged;
+        public event Action<DefeatContext> Died;
 
         public int CurrentHealth => currentHealth;
         public int MaxHealth => maxHealth;
         public bool IsAlive => currentHealth > 0;
+        public string ActorId => actorId;
 
         private void Awake()
         {
@@ -37,23 +41,36 @@ namespace DemonKing.Gameplay.Combat
             HealthChanged?.Invoke(currentHealth, maxHealth);
         }
 
-        public void TakeDamage(int amount, GameObject source)
+        public void ConfigureCombatIdentity(string stableActorId, string rewardDefinitionId = "")
         {
-            if (!IsAlive || amount <= 0)
+            actorId = StableContentId.Normalize(stableActorId);
+            defeatRewardDefinitionId = StableContentId.Normalize(rewardDefinitionId);
+        }
+
+        public DamageResult ApplyDamage(DamageRequest request)
+        {
+            if (!IsAlive || !request.IsValid)
             {
-                return;
+                return new DamageResult(request, 0, currentHealth, gameObject, null);
             }
 
-            int appliedDamage = Mathf.Min(amount, currentHealth);
+            int appliedDamage = Mathf.Min(request.Amount, currentHealth);
             currentHealth -= appliedDamage;
 
-            Damaged?.Invoke(appliedDamage, source);
+            DefeatContext defeatContext = currentHealth == 0
+                ? new DefeatContext(request, gameObject, actorId, defeatRewardDefinitionId)
+                : null;
+            var result = new DamageResult(request, appliedDamage, currentHealth, gameObject, defeatContext);
+
+            Damaged?.Invoke(result);
             HealthChanged?.Invoke(currentHealth, maxHealth);
 
-            if (currentHealth == 0)
+            if (defeatContext != null)
             {
-                Died?.Invoke(source);
+                Died?.Invoke(defeatContext);
             }
+
+            return result;
         }
 
         public void RestoreToFull()

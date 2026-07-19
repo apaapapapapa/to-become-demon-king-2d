@@ -2,6 +2,7 @@
   "name": "DemonKing.EditMode.Tests",
   "rootNamespace": "DemonKing.Tests.EditMode",
   "references": [
+    "DemonKing.Domain",
     "DemonKing.Runtime"
   ],
   "includePlatforms": [

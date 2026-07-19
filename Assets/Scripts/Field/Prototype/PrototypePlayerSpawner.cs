@@ -1,48 +1,53 @@
+using DemonKing.Domain.Progression;
 using DemonKing.Gameplay.Characters;
 using DemonKing.Gameplay.Characters.Configuration;
 using DemonKing.Gameplay.Combat;
-using DemonKing.Gameplay.Combat.Configuration;
 using DemonKing.Presentation.Characters;
 using UnityEngine;
 
 namespace DemonKing.Field.Prototype
 {
     /// <summary>
-    /// ProjectAssetsから受け取ったプレイヤーPrefabを生成して初期位置へ配置します。
-    /// キャラクター能力値、攻撃、回避データをScriptableObjectから各Gameplayコンポーネントへ注入します。
+    /// CharacterDefinitionからプレイヤーを生成し、不変な定義と実行時状態を各Gameplayコンポーネントへ接続します。
     /// </summary>
     internal sealed class PrototypePlayerSpawner
     {
         private readonly Vector3 spawnPosition;
-        private readonly GameObject playerPrefab;
-        private readonly CharacterStatsDefinition characterStats;
-        private readonly MeleeAttackDefinition meleeAttackDefinition;
-        private readonly DodgeDefinition dodgeDefinition;
+        private readonly CharacterDefinition characterDefinition;
+        private readonly CharacterProgressionState progressionState;
 
         public PrototypePlayerSpawner(
             Vector3 spawnPosition,
-            GameObject playerPrefab,
-            CharacterStatsDefinition characterStats,
-            MeleeAttackDefinition meleeAttackDefinition,
-            DodgeDefinition dodgeDefinition)
+            CharacterDefinition characterDefinition,
+            CharacterProgressionState progressionState = null)
         {
             this.spawnPosition = spawnPosition;
-            this.playerPrefab = playerPrefab;
-            this.characterStats = characterStats;
-            this.meleeAttackDefinition = meleeAttackDefinition;
-            this.dodgeDefinition = dodgeDefinition;
+            this.characterDefinition = characterDefinition;
+            this.progressionState = progressionState;
         }
 
         public GameObject Spawn(Transform parent)
         {
-            if (playerPrefab == null)
+            if (characterDefinition == null || !characterDefinition.IsConfigured)
             {
-                Debug.LogError("プレイヤーPrefab参照が設定されていません。");
+                Debug.LogError("プレイヤーのCharacterDefinitionが正しく設定されていません。");
                 return null;
             }
 
-            GameObject root = Object.Instantiate(playerPrefab, parent, false);
+            CharacterProgressionState state = progressionState ??
+                CharacterProgressionState.CreateInitial(characterDefinition.CharacterId);
+            var runtimeContext = new CharacterRuntimeContext(characterDefinition, state);
+
+            GameObject root = Object.Instantiate(characterDefinition.Prefab, parent, false);
             root.transform.localPosition = spawnPosition;
+
+            CharacterRuntimeContextHost contextHost = root.GetComponent<CharacterRuntimeContextHost>();
+            if (contextHost == null)
+            {
+                contextHost = root.AddComponent<CharacterRuntimeContextHost>();
+            }
+
+            contextHost.Initialize(runtimeContext);
 
             SlimeController controller = root.GetComponent<SlimeController>();
             if (controller == null)
@@ -60,7 +65,7 @@ namespace DemonKing.Field.Prototype
             CharacterMotor2D motor = root.GetComponent<CharacterMotor2D>();
             if (motor != null)
             {
-                motor.Configure(characterStats);
+                motor.Configure(characterDefinition.StatsDefinition);
                 motor.DisableBounds();
             }
 
@@ -70,13 +75,11 @@ namespace DemonKing.Field.Prototype
                 health = root.AddComponent<Health>();
             }
 
-            if (characterStats != null)
-            {
-                health.ConfigureMaxHealth(characterStats.MaxHealth);
-            }
+            health.ConfigureMaxHealth(characterDefinition.StatsDefinition.MaxHealth);
+            health.ConfigureCombatIdentity(characterDefinition.CharacterId);
 
             PlayerMeleeAttack meleeAttack = root.GetComponent<PlayerMeleeAttack>();
-            meleeAttack?.Configure(meleeAttackDefinition);
+            meleeAttack?.Configure(characterDefinition.BasicMeleeAttackDefinition);
 
             CharacterDodge2D dodge = root.GetComponent<CharacterDodge2D>();
             if (dodge == null)
@@ -84,7 +87,7 @@ namespace DemonKing.Field.Prototype
                 dodge = root.AddComponent<CharacterDodge2D>();
             }
 
-            dodge.Configure(dodgeDefinition);
+            dodge.Configure(characterDefinition.DodgeDefinition);
             return root;
         }
     }

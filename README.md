@@ -40,7 +40,7 @@ Pause中はUI用Input Action Mapへ切り替わります。キーボードでは
 - Rigidbody2D / TilemapCollider2D
 - ScriptableObjectによるゲームバランス・起動設定管理
 - Unity Test Framework
-- Assembly DefinitionによるRuntime / Test分離
+- Assembly DefinitionによるDomain / Runtime / Test分離
 
 ## 現在のランタイム構成
 
@@ -98,6 +98,7 @@ Assets/Resources/Settings/
   PrototypeProjectAssets.asset
   PrototypeApplicationSettings.asset
   Gameplay/
+    PlayerCharacter.asset
     PlayerCharacterStats.asset
     PlayerMeleeAttack.asset
     PlayerDodge.asset
@@ -107,9 +108,12 @@ Assets/Resources/Settings/
 
 - `PrototypeProjectAssets`: Prefab、Sprite、Font、各設定アセットへの参照
 - `PrototypeApplicationSettings`: Spawn位置、フィールド範囲、Pause時TimeScale
+- `CharacterDefinition`: 安定Character ID、Prefab、基礎能力値、通常攻撃、回避の集約
 - `CharacterStatsDefinition`: 移動速度、最大HP
-- `MeleeAttackDefinition`: ダメージ、攻撃半径、攻撃距離
+- `MeleeAttackDefinition`: Ability ID、ダメージ属性、ダメージ、攻撃半径、攻撃距離
 - `DodgeDefinition`: 回避速度、継続時間、クールダウン
+
+プレイ中に変化する成長状態はUnity非依存の `CharacterProgressionState`、保存形式はバージョン付き `GameSaveData` / `PlayerSaveData` へ分離しています。保存先の具体実装は `ISaveService` を通して後から追加します。
 
 ## UIと日本語フォント
 
@@ -125,12 +129,15 @@ Demon King > Project > Install Japanese UI Font
 
 ## テスト
 
-Runtimeコードは `DemonKing.Runtime.asmdef` にまとめ、EditMode / PlayModeテストを独立assemblyで管理します。
+成長状態と保存DTOはUnity非依存の `DemonKing.Domain.asmdef`、Unity上のRuntimeコードは `DemonKing.Runtime.asmdef` にまとめ、EditMode / PlayModeテストを独立assemblyで管理します。
 
 現在の主な自動テスト対象は次です。
 
 - Y座標による描画順計算
 - Healthの致死ダメージと死亡イベント
+- DamageRequest / DamageResult / DefeatContextのCombat結果
+- 成長状態と保存DTOの相互変換
+- CharacterDefinitionの必須アセット参照
 - CameraFollow2Dの追従とZ座標維持
 - Gameplay / UI / Disabled入力コンテキスト切り替え
 - Dodge開始時のRigidbody2D移動
@@ -138,9 +145,9 @@ Runtimeコードは `DemonKing.Runtime.asmdef` にまとめ、EditMode / PlayMod
 
 ## 開発フェーズ
 
-P0〜P2の基礎リファクタリング／リアーキテクチャ項目は完了しています。
+P0〜P2に加え、成長システム実装前のDefinition、Runtime State、Save DTO、Combat境界整備が完了しています。
 
-今後は、実際のゲームコンテンツを増やしながら必要になった境界だけを追加します。主な次段階は、NPC・会話・敵AI・クエスト・成長要素、続いてセーブ機能とPlatform層です。Addressablesや大規模なシーン分割は、コンテンツ量とロード時間が必要性を示した段階で導入します。
+次は経験値テーブルとRewardServiceを実装し、撃破結果から経験値加算までを接続します。その後にAbility、スキル、進化、NPC・会話・敵AI・クエストを段階的に追加します。Addressablesや大規模なシーン分割は、コンテンツ量とロード時間が必要性を示した段階で導入します。
 
 ## ドキュメント
 
