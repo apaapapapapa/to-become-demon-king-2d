@@ -452,7 +452,7 @@ namespace DemonKing.Field
                 float size = Next(random, 0.07f, 0.13f);
                 GameObject firefly = CreateEllipse("漂う光", position, new Vector2(size, size),
                     new Color(1f, 0.87f, 0.39f, 0.84f), 1450 + i, parent);
-                Vector2 direction = new(Next(random, -0.45f, 0.45f), 1f).normalized;
+                Vector2 direction = new Vector2(Next(random, -0.45f, 0.45f), 1f).normalized;
                 AddAmbient(firefly, direction, Next(random, 0.08f, 0.22f),
                     Next(random, 0.55f, 1.15f), Next(random, 0f, Mathf.PI * 2f));
             }
