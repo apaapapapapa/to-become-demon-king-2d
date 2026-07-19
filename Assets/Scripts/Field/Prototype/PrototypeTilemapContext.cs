@@ -36,8 +36,20 @@ namespace DemonKing.Field.Prototype
                 grid.cellSize = new Vector3(1f, 0.5f, 1f);
             }
 
-            Tilemap ground = ResolveTilemap(grid.transform, "Ground", SortingLayerNames.Ground, 0, true, false);
-            Tilemap collision = ResolveTilemap(grid.transform, "Collision", SortingLayerNames.Ground, -50, false, true);
+            Tilemap ground = ResolveTilemap(
+                grid.transform,
+                "Ground",
+                SortingLayerNames.Ground,
+                PrototypeWorldMath.GroundOrder,
+                true,
+                false);
+            Tilemap collision = ResolveTilemap(
+                grid.transform,
+                "Collision",
+                SortingLayerNames.Ground,
+                PrototypeWorldMath.GroundOrder,
+                false,
+                true);
             Tilemap props = ResolveTilemap(grid.transform, "Props", SortingLayerNames.World, 0, true, false);
             Tilemap foreground = ResolveTilemap(grid.transform, "Foreground", SortingLayerNames.Foreground, 0, true, false);
 
