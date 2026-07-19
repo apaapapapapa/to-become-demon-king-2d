@@ -37,6 +37,9 @@ jobs:
       - name: 依存関係を復元
         run: npm ci
 
+      - name: リリース更新処理を検証
+        run: npm run test:release
+
       - name: リリースを判定・公開
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
