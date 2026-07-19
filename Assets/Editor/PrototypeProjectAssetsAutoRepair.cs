@@ -1,3 +1,4 @@
+using System.Linq;
 using DemonKing.Field.Prototype;
 using UnityEditor;
 using UnityEngine;
@@ -6,7 +7,7 @@ namespace DemonKing.EditorTools
 {
     /// <summary>
     /// PrototypeProjectAssetsの参照切れをEditor上で自動修復します。
-    /// Git経由で追加した画像やPrefabの再インポート時にfileIDが変わっても、AssetDatabaseから実体を再解決します。
+    /// Git経由で追加した画像やPrefabを、実際のインポート結果から再解決します。
     /// </summary>
     [InitializeOnLoad]
     internal static class PrototypeProjectAssetsAutoRepair
@@ -54,11 +55,11 @@ namespace DemonKing.EditorTools
             changed |= AssignIfDifferent(serializedObject, "cottagePrefab", Load<GameObject>(CottagePrefabPath));
             changed |= AssignIfDifferent(serializedObject, "treePrefab", Load<GameObject>(TreePrefabPath));
             changed |= AssignIfDifferent(serializedObject, "lamppostPrefab", Load<GameObject>(LamppostPrefabPath));
-            changed |= AssignIfDifferent(serializedObject, "cottageSprite", Load<Sprite>(CottageSpritePath));
-            changed |= AssignIfDifferent(serializedObject, "treeSprite", Load<Sprite>(TreeSpritePath));
-            changed |= AssignIfDifferent(serializedObject, "lamppostSprite", Load<Sprite>(LamppostSpritePath));
-            changed |= AssignIfDifferent(serializedObject, "grassTileSprite", Load<Sprite>(GrassSpritePath));
-            changed |= AssignIfDifferent(serializedObject, "pathTileSprite", Load<Sprite>(PathSpritePath));
+            changed |= AssignIfDifferent(serializedObject, "cottageSprite", LoadSprite(CottageSpritePath));
+            changed |= AssignIfDifferent(serializedObject, "treeSprite", LoadSprite(TreeSpritePath));
+            changed |= AssignIfDifferent(serializedObject, "lamppostSprite", LoadSprite(LamppostSpritePath));
+            changed |= AssignIfDifferent(serializedObject, "grassTileSprite", LoadSprite(GrassSpritePath));
+            changed |= AssignIfDifferent(serializedObject, "pathTileSprite", LoadSprite(PathSpritePath));
 
             if (changed)
             {
@@ -84,6 +85,64 @@ namespace DemonKing.EditorTools
             return asset;
         }
 
+        /// <summary>
+        /// PNGのMain AssetがTexture2Dとして扱われる環境でも、Spriteサブアセットまで探索して取得します。
+        /// Sprite設定になっていない場合はTextureImporterを修正して再インポートします。
+        /// </summary>
+        private static Sprite LoadSprite(string path)
+        {
+            Sprite sprite = FindImportedSprite(path);
+            if (sprite != null)
+            {
+                return sprite;
+            }
+
+            TextureImporter importer = AssetImporter.GetAtPath(path) as TextureImporter;
+            if (importer == null)
+            {
+                Debug.LogError($"Sprite画像のTextureImporterが見つかりません: {path}");
+                return null;
+            }
+
+            bool needsReimport =
+                importer.textureType != TextureImporterType.Sprite ||
+                importer.spriteImportMode != SpriteImportMode.Single;
+
+            if (needsReimport)
+            {
+                importer.textureType = TextureImporterType.Sprite;
+                importer.spriteImportMode = SpriteImportMode.Single;
+                importer.mipmapEnabled = false;
+                importer.filterMode = FilterMode.Point;
+                importer.SaveAndReimport();
+            }
+            else
+            {
+                AssetDatabase.ImportAsset(path, ImportAssetOptions.ForceUpdate);
+            }
+
+            sprite = FindImportedSprite(path);
+            if (sprite == null)
+            {
+                Debug.LogError($"画像は存在しますがSpriteとして読み込めません: {path}");
+            }
+
+            return sprite;
+        }
+
+        private static Sprite FindImportedSprite(string path)
+        {
+            Sprite direct = AssetDatabase.LoadAssetAtPath<Sprite>(path);
+            if (direct != null)
+            {
+                return direct;
+            }
+
+            return AssetDatabase.LoadAllAssetsAtPath(path)
+                .OfType<Sprite>()
+                .FirstOrDefault();
+        }
+
         private static bool AssignIfDifferent(
             SerializedObject serializedObject,
             string propertyName,
@@ -96,7 +155,7 @@ namespace DemonKing.EditorTools
                 return false;
             }
 
-            if (property.objectReferenceValue == value)
+            if (value == null || property.objectReferenceValue == value)
             {
                 return false;
             }
