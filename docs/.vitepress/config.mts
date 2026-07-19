@@ -52,6 +52,7 @@ export default defineConfig({
       '/development/': [{ text: '開発', items: [
         { text: '概要', link: '/development/' },
         { text: 'ロードマップ', link: '/development/roadmap' },
+        { text: 'リリース運用', link: '/development/release' },
         { text: 'ドキュメント規約', link: '/development/documentation-rules' },
         { text: 'AI開発ガイド', link: '/development/ai-development' }
       ] }],
