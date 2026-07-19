@@ -26,6 +26,11 @@ namespace DemonKing.Gameplay.Interaction
 
         private void OnEnable()
         {
+            if (inputReader == null)
+            {
+                inputReader = GetComponent<PlayerInputReader>();
+            }
+
             if (inputReader != null)
             {
                 inputReader.InteractPressed += HandleInteractPressed;
@@ -62,10 +67,11 @@ namespace DemonKing.Gameplay.Interaction
                     continue;
                 }
 
-                MonoBehaviour[] behaviours = collider.GetComponentsInParent<MonoBehaviour>(includeInactive: false);
+                MonoBehaviour[] behaviours = collider.GetComponentsInParent<MonoBehaviour>(false);
                 foreach (MonoBehaviour behaviour in behaviours)
                 {
-                    if (behaviour is not IInteractable interactable || !visited.Add(interactable))
+                    IInteractable interactable = behaviour as IInteractable;
+                    if (interactable == null || !visited.Add(interactable))
                     {
                         continue;
                     }
