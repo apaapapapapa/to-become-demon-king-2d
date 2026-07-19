@@ -1,24 +1,37 @@
 using UnityEngine;
+using UnityEngine.Tilemaps;
 
 namespace DemonKing.Field.Prototype
 {
     /// <summary>
-    /// 背景、地面、小道、手前フレームなど、フィールドの大きな地形レイヤーを構築します。
+    /// 背景と前景の演出を維持しつつ、歩行地形と小道は実際のIsometric Tilemapへ構築します。
+    /// 1マスごとのGameObject生成を廃止し、地形データの所有先をGround Tilemapへ統一します。
     /// </summary>
     internal sealed class TerrainBuilder
     {
         private readonly RuntimeShapeFactory shapes;
+        private readonly PrototypeTilemapContext tilemaps;
+        private readonly PrototypeRuntimeTileFactory tiles;
+        private readonly int playableRadius;
 
-        public TerrainBuilder(RuntimeShapeFactory shapes)
+        public TerrainBuilder(
+            RuntimeShapeFactory shapes,
+            PrototypeTilemapContext tilemaps,
+            PrototypeRuntimeTileFactory tiles,
+            int playableRadius)
         {
             this.shapes = shapes;
+            this.tilemaps = tilemaps;
+            this.tiles = tiles;
+            this.playableRadius = Mathf.Max(4, playableRadius);
         }
 
         public void BuildBase(Transform parent)
         {
             CreateBackdrop(parent);
-            CreateGround(parent);
-            CreatePath(parent);
+            PaintGround();
+            PaintPath(parent);
+            CreateGroundEdge(parent);
         }
 
         public void BuildForeground(Transform parent)
@@ -48,57 +61,51 @@ namespace DemonKing.Field.Prototype
             }
         }
 
-        private void CreateGround(Transform parent)
+        private void PaintGround()
         {
-            shapes.CreatePatch("地面の影", new Vector2(0.16f, -0.24f), new Vector2(15.7f, 7.95f),
-                new Color(0.035f, 0.08f, 0.10f, 0.72f), PrototypeWorldMath.GroundOrder - 30, parent);
-            shapes.CreatePatch("地面の厚み", new Vector2(0f, -0.16f), new Vector2(15.35f, 7.78f),
-                new Color(0.25f, 0.27f, 0.18f), PrototypeWorldMath.GroundOrder - 20, parent);
+            Tilemap ground = tilemaps.Ground;
+            ground.ClearAllTiles();
 
-            for (int x = -15; x <= 15; x++)
+            for (int x = -playableRadius; x <= playableRadius; x++)
             {
-                for (int y = -15; y <= 15; y++)
+                for (int y = -playableRadius; y <= playableRadius; y++)
                 {
-                    if (Mathf.Abs(x) + Mathf.Abs(y) > 15)
+                    if (Mathf.Abs(x) + Mathf.Abs(y) > playableRadius)
                     {
                         continue;
                     }
 
-                    Vector2 position = PrototypeWorldMath.Iso(x, y);
+                    Vector3Int cell = new(x, y, 0);
                     float variation = 0.12f + ((x * 17 + y * 31) & 3) * 0.055f;
                     Color color = Color.Lerp(PrototypePalette.Grass, PrototypePalette.GrassLight, variation);
-                    shapes.CreateDiamond("草地タイル", position, new Vector2(1.03f, 0.53f),
-                        color, PrototypeWorldMath.GroundOrder, parent);
+                    ground.SetTile(cell, tiles.GrassTile);
+                    ground.SetColor(cell, color);
                 }
             }
-
-            shapes.CreatePatch("手前の土の断面", new Vector2(0f, -3.88f), new Vector2(15.2f, 0.27f),
-                new Color(0.29f, 0.20f, 0.15f), PrototypeWorldMath.GroundOrder + 1, parent);
-            shapes.CreatePatch("断面の明るい縁", new Vector2(0f, -3.73f), new Vector2(15.2f, 0.06f),
-                new Color(0.56f, 0.43f, 0.25f), PrototypeWorldMath.GroundOrder + 2, parent);
         }
 
-        private void CreatePath(Transform parent)
+        private void PaintPath(Transform parent)
         {
-            for (int x = -13; x <= 13; x++)
+            Tilemap ground = tilemaps.Ground;
+
+            for (int x = -playableRadius + 2; x <= playableRadius - 2; x++)
             {
                 int centerY = PrototypeWorldMath.PathY(x);
                 for (int width = -1; width <= 1; width++)
                 {
                     int tileY = centerY + width;
-                    if (Mathf.Abs(x) + Mathf.Abs(tileY) > 14)
+                    if (Mathf.Abs(x) + Mathf.Abs(tileY) > playableRadius - 1)
                     {
                         continue;
                     }
 
-                    Vector2 position = PrototypeWorldMath.Iso(x, tileY);
-                    shapes.CreateDiamond("小道の影", position + Vector2.down * 0.045f, new Vector2(1.06f, 0.55f),
-                        new Color(0.34f, 0.25f, 0.18f), PrototypeWorldMath.GroundOrder + 89, parent);
+                    Vector3Int cell = new(x, tileY, 0);
                     Color color = ((x + tileY) & 1) == 0 ? PrototypePalette.Path : PrototypePalette.PathLight;
-                    shapes.CreateDiamond("小道タイル", position, new Vector2(1.02f, 0.50f),
-                        color, PrototypeWorldMath.GroundOrder + 90, parent);
+                    ground.SetTile(cell, tiles.PathTile);
+                    ground.SetColor(cell, color);
                 }
 
+                // 小石はタイル地形の上に置く装飾なので、移行期間中は軽量なSprite演出として残します。
                 if (x % 3 == 0)
                 {
                     Vector2 pebble = PrototypeWorldMath.Iso(x, centerY) + new Vector2(0.18f, 0.03f);
@@ -106,6 +113,18 @@ namespace DemonKing.Field.Prototype
                         new Color(0.48f, 0.34f, 0.23f), PrototypeWorldMath.GroundOrder + 92, parent);
                 }
             }
+        }
+
+        private void CreateGroundEdge(Transform parent)
+        {
+            shapes.CreatePatch("地面の影", new Vector2(0.16f, -0.24f), new Vector2(15.7f, 7.95f),
+                new Color(0.035f, 0.08f, 0.10f, 0.72f), PrototypeWorldMath.GroundOrder - 30, parent);
+            shapes.CreatePatch("地面の厚み", new Vector2(0f, -0.16f), new Vector2(15.35f, 7.78f),
+                new Color(0.25f, 0.27f, 0.18f), PrototypeWorldMath.GroundOrder - 20, parent);
+            shapes.CreatePatch("手前の土の断面", new Vector2(0f, -3.88f), new Vector2(15.2f, 0.27f),
+                new Color(0.29f, 0.20f, 0.15f), PrototypeWorldMath.GroundOrder + 1, parent);
+            shapes.CreatePatch("断面の明るい縁", new Vector2(0f, -3.73f), new Vector2(15.2f, 0.06f),
+                new Color(0.56f, 0.43f, 0.25f), PrototypeWorldMath.GroundOrder + 2, parent);
         }
 
         private void CreateForegroundFrame(Transform parent)
