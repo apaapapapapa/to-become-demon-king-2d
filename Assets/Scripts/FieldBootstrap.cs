@@ -3,8 +3,8 @@ using UnityEngine;
 namespace DemonKing.Field
 {
     /// <summary>
-    /// Builds a lightweight isometric-looking prototype world without imported art assets.
-    /// This keeps the project immediately playable while the real Isometric Tilemap and pixel art are prepared.
+    /// インポート済みのアートアセットを使わず、アイソメトリック風の軽量な試作ワールドを構築します。
+    /// 実際の Isometric Tilemap とピクセルアートを準備している間も、プロジェクトをすぐに遊べる状態に保ちます。
     /// </summary>
     public sealed class FieldBootstrap : MonoBehaviour
     {
