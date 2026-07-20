@@ -29,6 +29,9 @@ namespace DemonKing.Field.Prototype
 
         [Header("Content")]
         [SerializeField] private DialogueDefinition apprenticeMageDialogue;
+        [SerializeField] private DialogueDefinition apprenticeMageActiveDialogue;
+        [SerializeField] private DialogueDefinition apprenticeMageTurnInDialogue;
+        [SerializeField] private DialogueDefinition apprenticeMageCompletedDialogue;
         [SerializeField] private QuestDefinition[] questDefinitions = Array.Empty<QuestDefinition>();
 
         [Header("Rewards")]
@@ -56,6 +59,9 @@ namespace DemonKing.Field.Prototype
         public CharacterDefinition PlayerCharacter => playerCharacter;
         public EnemyAiDefinition TrainingSlimeAi => trainingSlimeAi;
         public DialogueDefinition ApprenticeMageDialogue => apprenticeMageDialogue;
+        public DialogueDefinition ApprenticeMageActiveDialogue => apprenticeMageActiveDialogue;
+        public DialogueDefinition ApprenticeMageTurnInDialogue => apprenticeMageTurnInDialogue;
+        public DialogueDefinition ApprenticeMageCompletedDialogue => apprenticeMageCompletedDialogue;
         public QuestDefinition[] QuestDefinitions => questDefinitions ?? Array.Empty<QuestDefinition>();
         public QuestDefinition TrainingQuestDefinition => QuestDefinitions.FirstOrDefault();
         public RewardDefinition TrainingDummyReward => trainingDummyReward;
@@ -120,6 +126,12 @@ namespace DemonKing.Field.Prototype
             trainingSlimeAi.IsConfigured &&
             apprenticeMageDialogue != null &&
             apprenticeMageDialogue.IsConfigured &&
+            apprenticeMageActiveDialogue != null &&
+            apprenticeMageActiveDialogue.IsConfigured &&
+            apprenticeMageTurnInDialogue != null &&
+            apprenticeMageTurnInDialogue.IsConfigured &&
+            apprenticeMageCompletedDialogue != null &&
+            apprenticeMageCompletedDialogue.IsConfigured &&
             questDefinitions != null &&
             questDefinitions.Length > 0 &&
             questDefinitions.All(definition => definition != null && definition.IsConfigured) &&
