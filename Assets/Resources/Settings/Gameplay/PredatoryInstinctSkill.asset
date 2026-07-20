@@ -15,7 +15,9 @@ MonoBehaviour:
   skillId: skill.combat.predatory_instinct
   displayName: 捕食者の本能
   description: 敵を捕食対象として捉え、与えるダメージを高める受動Skill。
+  encyclopediaDescription: 捕食を軸にした戦闘成長を表す本能的なSkill。実行可能な攻撃そのものは追加せず、対象Abilityを限定しない常時補正として使用者の攻撃性能を高める。
   icon: {fileID: 0}
+  visibleInEncyclopedia: 1
   category: combat
   modifiers:
   - target: 0
