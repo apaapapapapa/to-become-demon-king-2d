@@ -108,6 +108,8 @@ namespace DemonKing.Gameplay.Characters
         {
             pendingElevationDelta = 0f;
             Body ??= GetComponent<Rigidbody>();
+            StopElevationVelocity();
+
             Vector3 position = Body.position;
             position.z = elevation;
             Body.position = position;
@@ -121,6 +123,7 @@ namespace DemonKing.Gameplay.Characters
             if (locked)
             {
                 pendingElevationDelta = 0f;
+                StopElevationVelocity();
             }
 
             RigidbodyConstraints constraints =
@@ -133,6 +136,13 @@ namespace DemonKing.Gameplay.Characters
             }
 
             Body.constraints = constraints;
+        }
+
+        private void StopElevationVelocity()
+        {
+            Vector3 velocity = Body.linearVelocity;
+            velocity.z = 0f;
+            Body.linearVelocity = velocity;
         }
 
         private void ClearPendingMovement()
