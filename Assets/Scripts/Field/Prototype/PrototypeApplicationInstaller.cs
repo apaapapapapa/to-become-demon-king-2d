@@ -76,7 +76,8 @@ namespace DemonKing.Field.Prototype
                 projectAssets.UiFont,
                 pauseController,
                 dialogueLog,
-                evolutionSelectionController);
+                evolutionSelectionController,
+                worldResult.QuestProgressionService);
             return applicationRoot;
         }
     }

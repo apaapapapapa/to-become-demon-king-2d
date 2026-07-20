@@ -66,6 +66,7 @@ namespace DemonKing.Field.Prototype
                     projectAssets.TrainingDummyReward,
                     projectAssets.FireMagicTrainingGrant,
                     projectAssets.ApprenticeMageDialogue,
+                    projectAssets.TrainingQuestDefinition,
                     dialogueLog);
             }
 
@@ -76,7 +77,8 @@ namespace DemonKing.Field.Prototype
                 world,
                 player,
                 gameplayServices?.RewardService,
-                gameplayServices?.GameContentCatalog);
+                gameplayServices?.GameContentCatalog,
+                gameplayServices?.QuestProgressionService);
         }
     }
 }

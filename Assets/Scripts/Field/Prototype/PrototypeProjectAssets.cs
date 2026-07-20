@@ -57,6 +57,7 @@ namespace DemonKing.Field.Prototype
         public EnemyAiDefinition TrainingSlimeAi => trainingSlimeAi;
         public DialogueDefinition ApprenticeMageDialogue => apprenticeMageDialogue;
         public QuestDefinition[] QuestDefinitions => questDefinitions ?? Array.Empty<QuestDefinition>();
+        public QuestDefinition TrainingQuestDefinition => QuestDefinitions.FirstOrDefault();
         public RewardDefinition TrainingDummyReward => trainingDummyReward;
         public ProgressionGrantDefinition FireMagicTrainingGrant => fireMagicTrainingGrant;
         public Font UiFont => uiFont;

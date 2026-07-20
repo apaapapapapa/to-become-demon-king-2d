@@ -5,6 +5,7 @@ using DemonKing.Gameplay.Events;
 using DemonKing.Gameplay.Progression;
 using DemonKing.Gameplay.Progression.Configuration;
 using DemonKing.Gameplay.Quests;
+using DemonKing.Gameplay.Quests.Configuration;
 using DemonKing.Gameplay.Rewards;
 using DemonKing.Gameplay.Spawning;
 using UnityEngine;
@@ -26,6 +27,7 @@ namespace DemonKing.Field.Prototype
         private RewardService rewardService;
         private GameplayEventHub gameplayEventHub;
         private QuestProgressionService questProgressionService;
+        private QuestDefinition trainingQuestDefinition;
         private bool initialized;
 
         public void Initialize(
@@ -36,7 +38,8 @@ namespace DemonKing.Field.Prototype
             DialogueLog dialogueLog,
             RewardService rewardService,
             GameplayEventHub gameplayEventHub,
-            QuestProgressionService questProgressionService)
+            QuestProgressionService questProgressionService,
+            QuestDefinition trainingQuestDefinition)
         {
             if (initialized)
             {
@@ -52,6 +55,7 @@ namespace DemonKing.Field.Prototype
             this.rewardService = rewardService;
             this.gameplayEventHub = gameplayEventHub;
             this.questProgressionService = questProgressionService;
+            this.trainingQuestDefinition = trainingQuestDefinition;
 
             npc.Interacted += HandleNpcInteracted;
             npc.DialogueCompleted += HandleDialogueCompleted;
@@ -103,6 +107,11 @@ namespace DemonKing.Field.Prototype
 
         private void HandleNpcInteracted()
         {
+            if (trainingQuestDefinition != null)
+            {
+                questProgressionService.AcceptQuest(trainingQuestDefinition.QuestId);
+            }
+
             dummyLifecycle.SpawnOrRestore();
         }
 
@@ -114,7 +123,6 @@ namespace DemonKing.Field.Prototype
                 result.WasGranted
                     ? "火炎魔法を習得した！ Kキー／ゲームパッドYで火炎弾を放てる。"
                     : "火炎魔法はもう身についている。実戦で熟練を重ねよう。");
-
             gameplayEventHub.Publish(new GameplayEvent(
                 GameplayEventIds.DialogueCompleted,
                 npc.DialogueId));
