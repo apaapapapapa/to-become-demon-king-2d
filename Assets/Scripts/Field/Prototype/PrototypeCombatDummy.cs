@@ -23,6 +23,7 @@ namespace DemonKing.Field.Prototype
 
         public event Action<DefeatContext> Defeated;
 
+        public string ActorId => actorId;
         public string RewardDefinitionId => rewardDefinitionId;
         public bool IsAlive => health != null && health.IsAlive;
 
