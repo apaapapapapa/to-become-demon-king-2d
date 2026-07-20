@@ -1,6 +1,7 @@
 using System.Linq;
 using DemonKing.Field.Prototype;
 using DemonKing.Field.Prototype.Configuration;
+using DemonKing.Gameplay.AI.Configuration;
 using DemonKing.Gameplay.Abilities.Configuration;
 using DemonKing.Gameplay.Characters.Configuration;
 using DemonKing.Gameplay.Combat.Configuration;
@@ -27,6 +28,7 @@ namespace DemonKing.EditorTools
         private const string PlayerPrefabPath = "Assets/Resources/Prefabs/Characters/PrototypeSlime.prefab";
         private const string PlayerCharacterStatsPath = "Assets/Resources/Settings/Gameplay/PlayerCharacterStats.asset";
         private const string PlayerMeleeAttackPath = "Assets/Resources/Settings/Gameplay/PlayerMeleeAttack.asset";
+        private const string TrainingSlimeAiPath = "Assets/Resources/Settings/Gameplay/TrainingSlimeAi.asset";
         private const string FireMagicArtPath = "Assets/Resources/Settings/Gameplay/FireMagicArt.asset";
         private const string FireMagicTrainingGrantPath = "Assets/Resources/Settings/Gameplay/FireMagicTrainingGrant.asset";
         private const string ApprenticeMageDialoguePath = "Assets/Resources/Settings/Gameplay/ApprenticeMageDialogue.asset";
@@ -97,6 +99,7 @@ namespace DemonKing.EditorTools
 
             changed |= AssignIfDifferent(serializedObject, "applicationSettings", Load<PrototypeApplicationSettings>(ApplicationSettingsPath));
             changed |= AssignIfDifferent(serializedObject, "playerCharacter", playerCharacter);
+            changed |= AssignIfDifferent(serializedObject, "trainingSlimeAi", Load<EnemyAiDefinition>(TrainingSlimeAiPath));
             changed |= AssignIfDifferent(serializedObject, "apprenticeMageDialogue", Load<DialogueDefinition>(ApprenticeMageDialoguePath));
             changed |= AssignArrayIfDifferent(serializedObject, "questDefinitions", Load<QuestDefinition>(FirstTrainingQuestPath));
             changed |= AssignIfDifferent(serializedObject, "trainingDummyReward", Load<RewardDefinition>(TrainingDummyRewardPath));
@@ -202,7 +205,6 @@ namespace DemonKing.EditorTools
             bool needsReimport =
                 importer.textureType != TextureImporterType.Sprite ||
                 importer.spriteImportMode != SpriteImportMode.Single;
-
             if (needsReimport)
             {
                 importer.textureType = TextureImporterType.Sprite;
