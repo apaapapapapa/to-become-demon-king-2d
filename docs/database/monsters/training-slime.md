@@ -1,13 +1,11 @@
 ---
 title: 訓練用スライム
-contentId: character.training_dummy
-contentType: monster
-status: Prototype Only
+runtimeSource: Assets/Scripts/Field/Prototype/PrototypeCombatDummy.cs
 relatedContentIds:
   - character.player.slime
 ---
 
-# 訓練用スライム
+<RuntimeContentHeader />
 
 ## 概要
 
@@ -21,6 +19,6 @@ relatedContentIds:
 
 再生成・復元の振る舞いは [Spawning仕様](../../specifications/spawning.md)、撃破と報酬の境界は [Feature間の責務境界](../../design/feature-boundaries.md#ability--combat--reward--progression) を参照してください。
 
-## Stable Content IDでの関連
+## 関連コンテンツ
 
-<ContentRelations content-id="character.training_dummy" />
+<ContentRelations />

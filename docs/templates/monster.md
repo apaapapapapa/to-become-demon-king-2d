@@ -1,14 +1,9 @@
 ---
-title: モンスター名
-contentId: character.category.name
-contentType: monster
-status: Draft
-relatedContentIds: []
+title: モンスター表示名
+runtimeSource: Assets/Resources/Settings/Gameplay/ExampleCharacter.asset
 ---
 
-# モンスター名
-
-Unity Definition: `Assets/...`
+<RuntimeContentHeader />
 
 ## 概要
 
@@ -26,9 +21,6 @@ Unity Definition: `Assets/...`
 
 ## 関連コンテンツ
 
-- Evolution:
-- Arts:
-- Skills:
-- Items:
+<ContentRelations />
 
-Runtimeルールは対応する仕様書へリンクし、frontmatterのメタデータ規則は [ドキュメント規約](../development/documentation-rules.md) を参照する。
+`title` はRuntime Sourceに `displayName` が存在しない場合だけ記載する。`contentId`、`contentType`、`status`、Runtime上の参照関係は重複記載しない。詳細は [ドキュメント規約](../development/documentation-rules.md) を参照する。

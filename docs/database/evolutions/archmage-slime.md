@@ -1,17 +1,8 @@
 ---
-title: 大魔導スライム
-contentId: evolution.slime.archmage
-contentType: evolution
-status: Runtime Implemented
-relatedContentIds:
-  - character.player.slime
-  - evolution.slime.lineage
-  - art.magic.fire
+runtimeSource: Assets/Resources/Settings/Gameplay/ArchmageSlimeEvolution.asset
 ---
 
-# 大魔導スライム
-
-Unity Definition: `Assets/Resources/Settings/Gameplay/ArchmageSlimeEvolution.asset`
+<RuntimeContentHeader />
 
 ## 概要
 
@@ -23,6 +14,6 @@ Unity Definition: `Assets/Resources/Settings/Gameplay/ArchmageSlimeEvolution.ass
 
 条件、補正、排他ルールは [Evolution仕様](../../specifications/evolution.md) を参照してください。
 
-## Stable Content IDでの関連
+## 関連コンテンツ
 
-<ContentRelations content-id="evolution.slime.archmage" />
+<ContentRelations />

@@ -1,8 +1,6 @@
 ---
 title: 進化系列名
 contentId: evolution.category.name
-contentType: evolution
-status: Draft
 relatedContentIds: []
 ---
 
@@ -14,30 +12,22 @@ relatedContentIds: []
 
 ## 進化関係
 
-```text
-Base Monster
-  ├ Condition A -> Evolution A
-  └ Condition B -> Evolution B
-```
+Runtime Node IDや具体的な前提条件を複製せず、系統としての意味と分岐構造だけを記載する。
 
 ## 分岐の意味
 
-### Evolution A
+### 分岐A
 
-この分岐が表す成長方針と関連コンテンツを記載する。
+この分岐が表す成長方針を記載する。
 
-### Evolution B
+### 分岐B
 
-この分岐が表す成長方針と関連コンテンツを記載する。
+この分岐が表す成長方針を記載する。
 
-条件評価、排他、Save、補正等のRuntimeルールを再掲せず、[Evolution仕様](../specifications/evolution.md) を参照する。
+条件評価、排他、Save、補正等のRuntimeルールは [Evolution仕様](../specifications/evolution.md) を参照する。
 
-## 関連リンク
+## 関連コンテンツ
 
-- Monsters:
-- Items:
-- Skills:
-- Arts:
-- Story:
+<ContentRelations />
 
-frontmatterのメタデータ規則は [ドキュメント規約](../development/documentation-rules.md) を参照する。
+このテンプレートはRuntime Nodeそのものではなく、複数NodeをまとめるKnowledge Base固有の系列ページ向け。Runtime-backedな個別Evolutionページは `runtimeSource` と `<RuntimeContentHeader />` を使用する。詳細は [ドキュメント規約](../development/documentation-rules.md) を参照する。

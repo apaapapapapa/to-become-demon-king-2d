@@ -54,15 +54,10 @@ export default defineConfig({
       '/database/': [{ text: 'ゲームデータベース', items: [
         { text: '概要', link: '/database/' },
         { text: 'モンスター', link: '/database/monsters/' },
-        { text: 'プレイヤースライム', link: '/database/monsters/player-slime' },
-        { text: '訓練用スライム', link: '/database/monsters/training-slime' },
-        { text: '進化テーブル', link: '/database/evolutions/' },
-        { text: 'スライム進化系列', link: '/database/evolutions/slime-lineage' },
+        { text: '進化', link: '/database/evolutions/' },
         { text: 'アイテム', link: '/database/items/' },
         { text: 'アーツ', link: '/database/arts/' },
-        { text: '火炎魔法', link: '/database/arts/fire-magic' },
-        { text: 'スキル', link: '/database/skills/' },
-        { text: '捕食者の本能', link: '/database/skills/predatory-instinct' }
+        { text: 'スキル', link: '/database/skills/' }
       ] }],
       '/development/': [{ text: '開発', items: [
         { text: '概要', link: '/development/' },

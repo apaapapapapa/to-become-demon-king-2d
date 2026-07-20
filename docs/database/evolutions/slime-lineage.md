@@ -1,8 +1,6 @@
 ---
 title: スライム進化系列
 contentId: evolution.slime.lineage
-contentType: evolution
-status: Prototype Selection and Visual Forms Implemented
 relatedContentIds:
   - character.player.slime
   - art.magic.fire
@@ -20,33 +18,27 @@ relatedContentIds:
 ## 進化関係
 
 ```text
-character.player.slime
-  ├ 捕食経験と戦闘系Skill -> evolution.slime.predator
-  │                         -> evolution.slime.apex_predator
-  └ 魔法Artの習得・熟練   -> evolution.slime.arcane
-                            -> evolution.slime.archmage
+初期形態
+  ├ 捕食・直接戦闘を重視する系統
+  │   └ 捕食系の上位形態
+  └ 魔法Artの習得・熟練を重視する系統
+      └ 魔術系の上位形態
 ```
+
+Evolution Node ID、前提Node、必要Skill・Art、排他グループなどのRuntime条件はUnityの `EvolutionDefinition` を正とし、このページでは重複管理しません。
 
 ## 分岐の意味
 
 ### 捕食系
 
-魔物としての捕食と直接戦闘を重ね、身体能力へ成長を集中する経路です。[捕食者の本能](../skills/predatory-instinct.md) と関連します。
+魔物としての捕食と直接戦闘を重ね、身体能力へ成長を集中する経路です。
 
 ### 魔術系
 
-外部へ魔力を放つArtを習得・熟練し、術者としての器を形成する経路です。[火炎魔法](../arts/fire-magic.md) と関連します。
+外部へ魔力を放つArtを習得・熟練し、術者としての器を形成する経路です。
 
 具体的な条件、排他、適用、Save、UIのルールは [Evolution仕様](../../specifications/evolution.md) を参照してください。
 
-## 関連リンク
+## 関連コンテンツ
 
-- [プレイヤースライム](../monsters/player-slime.md)
-- [火炎魔法](../arts/fire-magic.md)
-- [捕食者の本能](../skills/predatory-instinct.md)
-- [覇王捕食スライム](./apex-predator-slime.md)
-- [大魔導スライム](./archmage-slime.md)
-
-## Stable Content IDでの関連
-
-<ContentRelations content-id="evolution.slime.lineage" />
+<ContentRelations />

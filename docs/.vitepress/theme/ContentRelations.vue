@@ -1,16 +1,29 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { withBase } from 'vitepress'
+import { useData, withBase } from 'vitepress'
 import { data } from './content-catalog.data'
 
-const props = defineProps<{ contentId: string }>()
+const props = defineProps<{ contentId?: string }>()
+const { frontmatter } = useData()
 const entriesById = new Map(data.map(entry => [entry.contentId, entry]))
-const relatedEntries = computed(() => {
-  const current = entriesById.get(props.contentId)
-  return (current?.relatedContentIds ?? [])
-    .map(contentId => entriesById.get(contentId))
-    .filter(entry => entry !== undefined)
+
+const currentEntry = computed(() => {
+  if (props.contentId) {
+    return entriesById.get(props.contentId)
+  }
+
+  const runtimeSource = String(frontmatter.value.runtimeSource ?? '')
+  if (runtimeSource) {
+    return data.find(entry => entry.runtimeSource === runtimeSource)
+  }
+
+  const contentId = String(frontmatter.value.contentId ?? '')
+  return contentId ? entriesById.get(contentId) : undefined
 })
+
+const relatedEntries = computed(() => (currentEntry.value?.relatedContentIds ?? [])
+  .map(contentId => entriesById.get(contentId))
+  .filter(entry => entry !== undefined))
 </script>
 
 <template>

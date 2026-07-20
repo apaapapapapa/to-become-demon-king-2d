@@ -17,14 +17,14 @@ const entries = computed(() => props.contentType
       <tr>
         <th>Stable Content ID</th>
         <th>名称</th>
-        <th>Status</th>
+        <th>Source</th>
       </tr>
     </thead>
     <tbody>
       <tr v-for="entry in entries" :key="entry.contentId">
         <td><code>{{ entry.contentId }}</code></td>
         <td><a :href="withBase(entry.url)">{{ entry.title }}</a></td>
-        <td>{{ entry.status }}</td>
+        <td>{{ entry.sourceKind }}</td>
       </tr>
     </tbody>
   </table>
