@@ -1,3 +1,9 @@
+## [1.4.0](https://github.com/apaapapapapa/to-become-demon-king-2d/compare/v1.3.0...v1.4.0) (2026-07-20)
+
+### Features
+
+* implement art progression foundation ([21dc9c9](https://github.com/apaapapapapa/to-become-demon-king-2d/commit/21dc9c9180eca43d17920ce08d353954a8cb2044))
+
 ## [1.3.0](https://github.com/apaapapapapa/to-become-demon-king-2d/compare/v1.2.1...v1.3.0) (2026-07-20)
 
 ### Features
