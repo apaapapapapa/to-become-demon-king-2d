@@ -66,6 +66,9 @@ namespace DemonKing.Field.Prototype
                     projectAssets.TrainingDummyReward,
                     projectAssets.FireMagicTrainingGrant,
                     projectAssets.ApprenticeMageDialogue,
+                    projectAssets.ApprenticeMageActiveDialogue,
+                    projectAssets.ApprenticeMageTurnInDialogue,
+                    projectAssets.ApprenticeMageCompletedDialogue,
                     projectAssets.TrainingQuestDefinition,
                     dialogueLog);
             }
