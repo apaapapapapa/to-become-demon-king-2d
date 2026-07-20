@@ -34,7 +34,9 @@ namespace DemonKing.Gameplay.Characters
         private bool groundedOnBasePlane;
 
         public CharacterElevationMode Mode { get; private set; }
-        public float Elevation => physicsBody == null ? transform.position.z : physicsBody.Elevation;
+        public float Elevation => groundedOnBasePlane
+            ? groundElevation
+            : physicsBody == null ? transform.position.z : physicsBody.Elevation;
         public float VerticalVelocity => verticalVelocity;
         public bool IsGrounded => Mode == CharacterElevationMode.Grounded;
         public bool IsFlying => Mode == CharacterElevationMode.Flying;
@@ -44,7 +46,7 @@ namespace DemonKing.Gameplay.Characters
             physicsBody = GetComponent<CharacterPhysicsBody3D>();
             physicsBody.EnsureConfigured();
 
-            if (Elevation <= groundElevation + groundTolerance)
+            if (physicsBody.Elevation <= groundElevation + groundTolerance)
             {
                 SnapToGround();
             }
@@ -110,7 +112,7 @@ namespace DemonKing.Gameplay.Characters
 
             flightVerticalInput = 0f;
             verticalVelocity = 0f;
-            if (Elevation <= groundElevation + groundTolerance)
+            if (physicsBody.Elevation <= groundElevation + groundTolerance)
             {
                 SnapToGround();
             }
@@ -152,7 +154,7 @@ namespace DemonKing.Gameplay.Characters
             verticalVelocity -= fallAcceleration * Time.fixedDeltaTime;
 
             float delta = verticalVelocity * Time.fixedDeltaTime;
-            if (Elevation + delta <= groundElevation)
+            if (physicsBody.Elevation + delta <= groundElevation)
             {
                 SnapToGround();
                 return;
@@ -167,10 +169,10 @@ namespace DemonKing.Gameplay.Characters
             verticalVelocity = 0f;
 
             float targetElevation = Mathf.Clamp(
-                Elevation + flightVerticalInput * flightSpeed * Time.fixedDeltaTime,
+                physicsBody.Elevation + flightVerticalInput * flightSpeed * Time.fixedDeltaTime,
                 groundElevation,
                 maxFlightElevation);
-            physicsBody.QueueElevationDelta(targetElevation - Elevation);
+            physicsBody.QueueElevationDelta(targetElevation - physicsBody.Elevation);
         }
 
         private void OnCollisionEnter(Collision collision)
@@ -198,11 +200,20 @@ namespace DemonKing.Gameplay.Characters
                     continue;
                 }
 
-                groundedOnBasePlane = false;
+                groundedOnBasePlane = contact.point.z <= groundElevation + groundTolerance;
                 lastSupportContactFixedTime = Time.fixedTime;
                 verticalVelocity = 0f;
                 Mode = CharacterElevationMode.Grounded;
-                physicsBody.SetElevationLocked(true);
+
+                if (groundedOnBasePlane)
+                {
+                    LockToBaseGround();
+                }
+                else
+                {
+                    physicsBody.SetElevationLocked(true);
+                }
+
                 return;
             }
         }
@@ -223,7 +234,6 @@ namespace DemonKing.Gameplay.Characters
 
         private void LockToBaseGround()
         {
-            // 直前フレームのMovePosition予約をGround Elevationへ上書きしてからZを固定します。
             physicsBody.SetElevationLocked(false);
             physicsBody.SetElevationImmediate(groundElevation);
             physicsBody.SetElevationLocked(true);
