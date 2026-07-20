@@ -1,4 +1,5 @@
 using DemonKing.Core.Input;
+using DemonKing.Gameplay.Abilities;
 using DemonKing.Gameplay.Characters;
 using DemonKing.Gameplay.Combat;
 using DemonKing.Gameplay.Interaction;
@@ -16,7 +17,9 @@ namespace DemonKing.Field
     [RequireComponent(typeof(MoveInputReader))]
     [RequireComponent(typeof(CharacterMotor2D))]
     [RequireComponent(typeof(PlayerInteractor))]
-    [RequireComponent(typeof(PlayerMeleeAttack))]
+    [RequireComponent(typeof(AbilityController))]
+    [RequireComponent(typeof(PlayerAbilityInput))]
+    [RequireComponent(typeof(MeleeAttackExecutor))]
     [RequireComponent(typeof(Rigidbody2D))]
     [RequireComponent(typeof(CircleCollider2D))]
     [RequireComponent(typeof(CharacterSquashAnimator))]

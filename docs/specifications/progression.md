@@ -2,7 +2,9 @@
 
 ## 現在の状態
 
-経験値加算とレベル更新まで実装済みです。SkillとEvolutionは未実装です。
+経験値加算、レベル更新、Ability基盤まで実装済みです。SkillとEvolutionは未実装です。
+
+Abilityは実行可能な行動、SkillはAbility等を獲得・強化する成長要素、Evolutionは形態・成長経路を変える不可逆または排他的な選択です。SkillとEvolutionの判定をAbility実行処理へ埋め込みません。
 
 ## Runtime State
 
@@ -48,8 +50,8 @@ CharacterProgressionState.GainExperience
 
 ## 今後
 
-1. Ability / Skill
-2. Skill解放ルール
+1. Skill Definitionと解放ルール
+2. SkillからAbilityを付与・強化する接続
 3. Evolution Node / Tree
 4. Evolution条件と実行処理
 5. 成長UI

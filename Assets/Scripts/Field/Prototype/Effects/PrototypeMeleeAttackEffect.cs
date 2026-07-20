@@ -8,35 +8,35 @@ namespace DemonKing.Field.Prototype
     /// 攻撃判定とはイベントで分離し、演出の有無がダメージ適用へ影響しないようにします。
     /// </summary>
     [DisallowMultipleComponent]
-    [RequireComponent(typeof(PlayerMeleeAttack))]
+    [RequireComponent(typeof(MeleeAttackExecutor))]
     public sealed class PrototypeMeleeAttackEffect : MonoBehaviour
     {
         [SerializeField, Min(0.05f)] private float duration = 0.22f;
 
-        private PlayerMeleeAttack meleeAttack;
+        private MeleeAttackExecutor meleeAttackExecutor;
 
         public GameObject LastSpawnedEffect { get; private set; }
 
         private void Awake()
         {
-            meleeAttack = GetComponent<PlayerMeleeAttack>();
+            meleeAttackExecutor = GetComponent<MeleeAttackExecutor>();
         }
 
         private void OnEnable()
         {
-            if (meleeAttack == null)
+            if (meleeAttackExecutor == null)
             {
-                meleeAttack = GetComponent<PlayerMeleeAttack>();
+                meleeAttackExecutor = GetComponent<MeleeAttackExecutor>();
             }
 
-            meleeAttack.AttackPerformed += HandleAttackPerformed;
+            meleeAttackExecutor.AttackPerformed += HandleAttackPerformed;
         }
 
         private void OnDisable()
         {
-            if (meleeAttack != null)
+            if (meleeAttackExecutor != null)
             {
-                meleeAttack.AttackPerformed -= HandleAttackPerformed;
+                meleeAttackExecutor.AttackPerformed -= HandleAttackPerformed;
             }
         }
 

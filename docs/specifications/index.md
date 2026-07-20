@@ -3,6 +3,7 @@
 実装と同期して管理する機能仕様です。
 
 - [入力](./input.md)
+- [Ability](./ability.md)
 - [戦闘](./combat.md)
 - [インタラクション](./interaction.md)
 - [成長](./progression.md)
