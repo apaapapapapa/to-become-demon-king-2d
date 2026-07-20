@@ -1,8 +1,12 @@
 using System;
 using DemonKing.Field.Prototype.Configuration;
+using DemonKing.Gameplay.AI.Configuration;
 using DemonKing.Gameplay.Characters.Configuration;
 using DemonKing.Gameplay.Content;
+using DemonKing.Gameplay.Dialogue.Configuration;
+using DemonKing.Gameplay.Progression.Configuration;
 using DemonKing.Gameplay.Quests.Configuration;
+using DemonKing.Gameplay.Rewards.Configuration;
 using UnityEngine;
 
 namespace DemonKing.Field.Prototype
@@ -43,10 +47,21 @@ namespace DemonKing.Field.Prototype
         public PrototypeApplicationSettings ApplicationSettings => applicationSettings;
         public CharacterDefinition PlayerCharacter => playerCharacter;
         public TrainingScenarioDefinition TrainingScenario => trainingScenario;
+
+        // Scenario内部参照のSource of TruthはTrainingScenarioDefinitionです。
+        // 既存利用側の段階移行用に読み取り専用の派生アクセサだけを公開します。
         public QuestDefinition TrainingQuestDefinition => trainingScenario?.QuestDefinition;
         public QuestDefinition[] QuestDefinitions => trainingScenario?.QuestDefinition == null
             ? Array.Empty<QuestDefinition>()
             : new[] { trainingScenario.QuestDefinition };
+        public EnemyAiDefinition TrainingSlimeAi => trainingScenario?.EnemyAiDefinition;
+        public RewardDefinition TrainingDummyReward => trainingScenario?.DefeatReward;
+        public ProgressionGrantDefinition FireMagicTrainingGrant => trainingScenario?.CompletionGrant;
+        public DialogueDefinition ApprenticeMageDialogue => trainingScenario?.OfferDialogue;
+        public DialogueDefinition ApprenticeMageActiveDialogue => trainingScenario?.ActiveDialogue;
+        public DialogueDefinition ApprenticeMageTurnInDialogue => trainingScenario?.TurnInDialogue;
+        public DialogueDefinition ApprenticeMageCompletedDialogue => trainingScenario?.CompletedDialogue;
+
         public Font UiFont => uiFont;
         public bool HasUiFont => uiFont != null;
         public GameObject CottagePrefab => cottagePrefab;
