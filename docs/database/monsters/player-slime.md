@@ -1,23 +1,14 @@
 ---
-title: プレイヤースライム
 runtimeSource: Assets/Resources/Settings/Gameplay/PlayerCharacter.asset
 ---
 
 <RuntimeContentHeader />
 
-## 概要
+## 開発者向け参照
 
-魔王を目指して成長する主人公の初期形態です。小さく単純な身体から始まり、Art、Skill、Evolutionの選択によって戦い方と形態を分岐させます。
+戦闘行動は [Ability仕様](../../specifications/ability.md)、Art・Skill・Evolutionによる成長は [Art仕様](../../specifications/art.md)、[Skill仕様](../../specifications/skill.md)、[Evolution仕様](../../specifications/evolution.md) を参照してください。
 
-## ゲームプレイ上の役割
-
-- 出現場所: はじまりの草原
-- 戦闘上の特徴: 生得Abilityによる近距離戦闘
-- プレイヤーに要求する行動: 探索、訓練、成長経路の選択
-
-## 世界観
-
-現時点では最弱に近い魔物ですが、捕食、学習、進化によって魔王へ至る可能性を持ちます。詳細な出自は [ストーリー](../../story/) で管理します。
+物語上の出自や設定は [ストーリー](../../story/) が所有します。
 
 ## 関連コンテンツ
 
