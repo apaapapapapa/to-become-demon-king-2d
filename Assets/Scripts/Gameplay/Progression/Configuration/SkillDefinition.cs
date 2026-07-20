@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using DemonKing.Domain;
+using DemonKing.Gameplay.Content;
 using DemonKing.Gameplay.Modifiers.Configuration;
 using UnityEngine;
 
@@ -10,7 +11,7 @@ namespace DemonKing.Gameplay.Progression.Configuration
     /// 能動行動を所有せず、取得中に常時作用する受動Skillの静的定義です。
     /// </summary>
     [CreateAssetMenu(fileName = "Skill", menuName = "Demon King/Gameplay/Progression/Skill")]
-    public sealed class SkillDefinition : ScriptableObject
+    public sealed class SkillDefinition : ScriptableObject, IGameContentDefinition
     {
         private const string SkillIdPrefix = "skill.";
 
@@ -18,17 +19,22 @@ namespace DemonKing.Gameplay.Progression.Configuration
         [SerializeField] private string skillId = string.Empty;
         [SerializeField] private string displayName = string.Empty;
         [SerializeField, TextArea] private string description = string.Empty;
+        [SerializeField, TextArea] private string encyclopediaDescription = string.Empty;
         [SerializeField] private Sprite icon;
+        [SerializeField] private bool visibleInEncyclopedia = true;
         [SerializeField] private string category = string.Empty;
 
         [Header("Passive Modifiers")]
         [SerializeField] private GameplayModifierEntry[] modifiers =
             Array.Empty<GameplayModifierEntry>();
 
+        public string ContentId => skillId;
         public string SkillId => skillId;
         public string DisplayName => displayName;
         public string Description => description;
+        public string EncyclopediaDescription => encyclopediaDescription;
         public Sprite Icon => icon;
+        public bool VisibleInEncyclopedia => visibleInEncyclopedia;
         public string Category => category;
         public IReadOnlyList<GameplayModifierEntry> Modifiers =>
             modifiers ?? Array.Empty<GameplayModifierEntry>();
@@ -63,6 +69,7 @@ namespace DemonKing.Gameplay.Progression.Configuration
             skillId = StableContentId.Normalize(skillId);
             displayName = displayName?.Trim() ?? string.Empty;
             description = description?.Trim() ?? string.Empty;
+            encyclopediaDescription = encyclopediaDescription?.Trim() ?? string.Empty;
             category = category?.Trim() ?? string.Empty;
             modifiers ??= Array.Empty<GameplayModifierEntry>();
             foreach (GameplayModifierEntry modifier in modifiers)
