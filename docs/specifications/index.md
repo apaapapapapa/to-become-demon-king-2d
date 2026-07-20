@@ -3,6 +3,7 @@
 各Featureの振る舞いを管理します。
 
 - [入力](./input.md)
+- [移動](./movement.md)
 - [Interaction](./interaction.md)
 - [Dialogue](./dialogue.md)
 - [Ability](./ability.md)
