@@ -1,8 +1,10 @@
 using System.Linq;
 using DemonKing.Field.Prototype;
 using DemonKing.Field.Prototype.Configuration;
+using DemonKing.Gameplay.AI.Configuration;
 using DemonKing.Gameplay.Abilities.Configuration;
 using DemonKing.Gameplay.Characters.Configuration;
+using DemonKing.Gameplay.Combat.Configuration;
 using DemonKing.Gameplay.Progression.Configuration;
 using UnityEditor;
 using UnityEngine;
