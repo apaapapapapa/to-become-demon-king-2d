@@ -21,10 +21,10 @@
 `DemonKing.Domain` はUnity非依存の純C#領域です。
 
 ```text
-Progression/
-  ArtMasteryTable
-  ArtProgressState
-  CharacterProgressionState
+  Progression/
+    ArtMasteryTable
+    ArtProgressState
+    CharacterProgressionState
   ExperienceTable
   LevelUpResult
 Save/
@@ -68,6 +68,8 @@ Gameplay/
   Progression/
     ArtProgressionController
     ArtProgressionService
+    EvolutionProgressionController
+    EvolutionProgressionService
     SkillProgressionController
     SkillProgressionService
   Modifiers/
@@ -98,6 +100,7 @@ Prototypeシーンを組み立てるComposition層です。恒久的なDomain/Ga
 Definition
   AbilityDefinition
   ArtDefinition
+  EvolutionDefinition
   SkillDefinition
   CharacterDefinition
   CharacterStatsDefinition
@@ -158,6 +161,7 @@ CharacterDefinition
   ├ abilityDefinitions[]
   ├ artDefinitions[]
   ├ skillDefinitions[]
+  ├ evolutionDefinitions[]
   ├ dodgeDefinition
   └ experienceTableDefinition
 ```
@@ -206,6 +210,8 @@ Art進捗はDomain、静的なランク閾値とAbility対応はDefinition、習
 
 Skillは `CharacterProgressionState.UnlockedSkillIds` と `SkillDefinition` から受動補正を導出します。`SkillProgressionController` が補正を汎用Modifier Source契約として公開し、Ability、Combat、Artは補正取得元がSkill、装備、バフのどれであるかを知りません。
 
+EvolutionはNode Definitionと `UnlockedEvolutionNodeIds` を組み合わせ、レベル、Skill、Artランク、前提Node、排他グループを `EvolutionProgressionService` で評価します。選択済みNodeの永続補正はSkillと同じModifier Source境界へ公開し、見た目の形態変更は `EvolutionApplied` 通知の外側へ分離します。
+
 ## Save境界
 
 ```text
@@ -250,15 +256,16 @@ ISaveService
 - Ability Execution ID / 効果成立通知
 - Save DTO Version 2 / Version 1 Migration
 - 受動Skill Definition / 取得 / 汎用補正接続
+- Evolution Node Definition / 条件評価 / 排他選択 / 永続補正
 - EditMode / PlayModeテスト
 
 ## 直近の拡張方針
 
-1. Evolution
-2. NPC会話
-3. 敵AI
-4. クエスト・目的管理
-5. Art / Skill入力・UIと正式Runtimeコンテンツ
+1. NPC会話
+2. 敵AI
+3. クエスト・目的管理
+4. Art / Skill / Evolution入力・UIと正式Runtimeコンテンツ
+5. Evolutionの見た目・演出と上位Node
 6. 実際のセーブ保存実装
 
 ## リアーキテクチャ判断基準

@@ -23,7 +23,7 @@ relatedContentIds:
 
 - 主な習得経路: 魔術訓練または関連アイテム（未実装）
 - 条件の意味: 魔力を外部へ放出する制御を身につけること
-- 関連Evolution: `evolution.slime.arcane` はこのArtの熟練を条件候補とする
+- 関連Evolution: `evolution.slime.arcane` はこのArtの熟練ランクを条件として参照する
 
 ## Ability解放
 

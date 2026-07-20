@@ -63,7 +63,7 @@ Art成長側がAbility IDから所属Artを逆引きし、同じ使用者とExec
 
 ## 受動補正
 
-`MeleeAttackExecutor` は使用者上の `IOutgoingDamageModifierSource` を集約し、補正後の値を `DamageRequest` へ渡します。補正取得元はSkillに限定せず、Executorは取得済みSkill IDを直接参照しません。現在の正式Skill `skill.combat.predatory_instinct` はこの境界を通じて与ダメージへ作用します。
+`MeleeAttackExecutor` は使用者上の `IOutgoingDamageModifierSource` を集約し、補正後の値を `DamageRequest` へ渡します。補正取得元はSkillやEvolutionに限定せず、Executorは取得済みIDを直接参照しません。現在の正式Skill `skill.combat.predatory_instinct` と捕食系Evolution Nodeはこの境界を通じて与ダメージへ作用します。
 
 受けるダメージ、属性、耐性への補正は未実装です。
 

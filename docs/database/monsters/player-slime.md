@@ -33,7 +33,7 @@ relatedContentIds:
 ## 進化
 
 - 進化元: なし
-- 進化先: `evolution.slime.predator`、`evolution.slime.arcane`（計画中）
+- 進化先: `evolution.slime.predator`、`evolution.slime.arcane`（Node Definition登録済み、専用外見は未実装）
 - 関連進化ページ: [スライム進化系列](../evolutions/slime-lineage.md)
 
 ## Skill

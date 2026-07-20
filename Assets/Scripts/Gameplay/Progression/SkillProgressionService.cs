@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using DemonKing.Domain;
 using DemonKing.Domain.Progression;
 using DemonKing.Gameplay.Modifiers;
+using DemonKing.Gameplay.Modifiers.Configuration;
 using DemonKing.Gameplay.Progression.Configuration;
 
 namespace DemonKing.Gameplay.Progression
@@ -78,7 +79,7 @@ namespace DemonKing.Gameplay.Progression
             return result;
         }
 
-        public NumericModifier GetModifier(SkillModifierTarget target, string contentId)
+        public NumericModifier GetModifier(GameplayModifierTarget target, string contentId)
         {
             string normalizedContentId = StableContentId.Normalize(contentId);
             NumericModifier result = NumericModifier.Identity;
@@ -90,7 +91,7 @@ namespace DemonKing.Gameplay.Progression
                     continue;
                 }
 
-                foreach (SkillModifierEntry entry in definition.Modifiers)
+                foreach (GameplayModifierEntry entry in definition.Modifiers)
                 {
                     if (entry.AppliesTo(target, normalizedContentId))
                     {

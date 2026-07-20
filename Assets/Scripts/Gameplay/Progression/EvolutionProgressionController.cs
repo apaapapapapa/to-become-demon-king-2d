@@ -10,28 +10,38 @@ using UnityEngine;
 namespace DemonKing.Gameplay.Progression
 {
     /// <summary>
-    /// キャラクターのSkill進捗を汎用補正契約へ公開するUnity接続点です。
+    /// Unity上のキャラクターへEvolution評価・実行と永続補正を接続します。
+    /// 見た目の形態変更はEvolutionApplied通知を購読するPresentation側の責務です。
     /// </summary>
     [DisallowMultipleComponent]
-    public sealed class SkillProgressionController : MonoBehaviour,
+    public sealed class EvolutionProgressionController : MonoBehaviour,
         IAbilityCooldownModifierSource,
         IOutgoingDamageModifierSource,
         IArtMasteryModifierSource
     {
-        public SkillProgressionService Service { get; private set; }
+        public EvolutionProgressionService Service { get; private set; }
         public bool IsInitialized => Service != null;
 
         public void Initialize(
             CharacterProgressionState progressionState,
-            IEnumerable<SkillDefinition> skillDefinitions)
+            IEnumerable<EvolutionDefinition> evolutionDefinitions)
         {
-            Service = new SkillProgressionService(progressionState, skillDefinitions);
+            Service = new EvolutionProgressionService(
+                progressionState,
+                evolutionDefinitions,
+                TryResolveArtRank);
         }
 
-        public SkillUnlockResult Unlock(string skillId)
+        public EvolutionEvaluationResult Evaluate(string evolutionNodeId)
         {
             EnsureInitialized();
-            return Service.Unlock(skillId);
+            return Service.Evaluate(evolutionNodeId);
+        }
+
+        public EvolutionApplyResult Evolve(string evolutionNodeId)
+        {
+            EnsureInitialized();
+            return Service.Evolve(evolutionNodeId);
         }
 
         public NumericModifier GetAbilityCooldownModifier(AbilityDefinition definition)
@@ -61,11 +71,23 @@ namespace DemonKing.Gameplay.Progression
                     definition.ArtId);
         }
 
+        private bool TryResolveArtRank(string artId, out int rank)
+        {
+            ArtProgressionController artController = GetComponent<ArtProgressionController>();
+            if (artController != null && artController.IsInitialized)
+            {
+                return artController.Service.TryGetCurrentRank(artId, out rank);
+            }
+
+            rank = 0;
+            return false;
+        }
+
         private void EnsureInitialized()
         {
             if (Service == null)
             {
-                throw new InvalidOperationException("Skill進捗が初期化されていません。");
+                throw new InvalidOperationException("Evolution進捗が初期化されていません。");
             }
         }
     }

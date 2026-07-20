@@ -2,7 +2,7 @@
 title: スライム進化系列
 contentId: evolution.slime.lineage
 contentType: evolution
-status: Planned / Runtime Not Implemented
+status: Runtime Nodes Registered / Visual Forms Not Implemented
 relatedContentIds:
   - character.player.slime
   - art.magic.fire
@@ -11,7 +11,7 @@ relatedContentIds:
 
 # スライム進化系列
 
-- Status: Planned / Runtime Not Implemented
+- Status: Runtime Nodes Registered / Visual Forms Not Implemented
 - Evolution Series ID: `evolution.slime.lineage`
 - Base Character ID: `character.player.slime`
 
@@ -33,21 +33,23 @@ character.player.slime
 
 - 条件の意味: 魔物としての捕食と直接戦闘を重ね、身体能力へ成長を集中する
 - 関連Skill: `skill.combat.predatory_instinct`
-- 必要な行動・具体的閾値: 未確定
+- 必要な行動: 必要レベルへ到達し、関連Skillを取得する
 
 ### 魔術系 `evolution.slime.arcane`
 
 - 条件の意味: 外部へ魔力を放つArtを習得・熟練し、術者としての器を形成する
 - 関連Art: `art.magic.fire`
-- 必要な行動・具体的閾値: 未確定
+- 必要な行動: 必要レベルへ到達し、関連Artを規定ランクまで熟練する
 
 ## 排他・再進化ルール
 
-同じ進化段階の2分岐は排他的にする計画です。確定後は選ばなかった分岐を同一キャラクターで取得できません。再進化や上位形態は未設計です。
+同じ進化段階の2分岐は `evolution-group.slime.tier1` に所属し、片方を選択するともう片方は取得できません。選択済みNodeを取り消すRuntime APIはありません。再進化や上位形態は未設計です。
 
 ## Runtimeデータ
 
-Evolution Definition、条件評価、実行処理は未実装です。具体的な閾値や変化量は将来のUnity DefinitionをSource of Truthとします。
+両分岐のEvolution Definition、条件評価、排他選択、Save復元、Gameplay補正は実装済みです。具体的な閾値や変化量はUnity DefinitionをSource of Truthとします。
+
+専用Sprite、Prefab、Animator、進化演出、選択UIは未実装です。魔術系分岐が参照する火炎魔法ArtもRuntime未登録のため、現在のPrototypeでは魔術系条件を満たせません。
 
 ## 関連リンク
 

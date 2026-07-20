@@ -2,7 +2,7 @@
 
 ## 現在の状態
 
-経験値加算、レベル更新、Ability基盤、Artの習得・熟練・Ability付与・Save境界、受動SkillのDefinition・取得・補正接続まで実装済みです。Evolutionは未実装です。
+経験値加算、レベル更新、Ability基盤、Artの習得・熟練・Ability付与・Save境界、受動Skill、Evolution Nodeの条件評価・排他選択・補正接続まで実装済みです。
 
 Abilityは実行可能な行動、Artは複数Abilityを習得・熟練する能動技能、Skillは受動的な成長要素、Evolutionは形態・成長経路を変える不可逆または排他的な選択です。Art、Skill、Evolutionの判定をAbility実行処理へ埋め込みません。
 
@@ -41,6 +41,12 @@ Skillをきっかけに能動行動を利用可能にする場合も、その行
 
 `SkillProgressionService` が `skill.*` Definitionの存在を検証し、`CharacterProgressionState.UnlockedSkillIds` へ冪等に取得状態を追加します。現在は汎用補正契約を介して、与ダメージ、Abilityクールダウン、Art熟練ポイントへ接続済みです。詳細は [Skill仕様](./skill.md) を参照してください。
 
+## Evolution
+
+Evolutionは `evolution.*` Nodeとして定義し、レベル、Skill、Artランク、前提Node、排他グループを共通サービスで評価します。適用済みNode IDだけをRuntime Stateへ不可逆に追加し、同じ排他グループの別Nodeを拒否します。
+
+選択済みNodeのGameplay補正はSkillと同じ汎用Modifier Sourceへ公開します。専用の見た目と進化選択UIは未実装です。詳細は [Evolution仕様](./evolution.md) を参照してください。
+
 ## Experience
 
 `ExperienceTable` はレベルごとの累積必要経験値を表し、`CharacterProgressionState.GainExperience` が経験値とレベルを同時に更新します。
@@ -71,7 +77,7 @@ CharacterProgressionState.GainExperience
 
 ## 今後
 
-1. Evolution Node / Treeと条件・実行処理
-2. SkillとArtの具体的な取得元・選択UI
-3. Abilityコスト、能力値、習得条件への追加Skill補正
+1. Skill、Art、Evolutionの具体的な取得元・選択UI
+2. Evolution専用の見た目・演出と上位Node
+3. Abilityコスト、能力値、習得条件への追加補正
 4. 回復、バフ、デバフなどの効果成立通知

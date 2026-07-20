@@ -136,6 +136,33 @@ namespace DemonKing.Domain.Progression
             return unlockedSkillIds.Contains(normalizedId);
         }
 
+        public bool TryUnlockEvolutionNode(string evolutionNodeId)
+        {
+            string normalizedId = StableContentId.Require(
+                evolutionNodeId,
+                nameof(evolutionNodeId));
+            if (!normalizedId.StartsWith("evolution.", StringComparison.Ordinal))
+            {
+                throw new ArgumentException(
+                    "Evolution Node IDはevolution.*形式である必要があります。",
+                    nameof(evolutionNodeId));
+            }
+
+            if (unlockedEvolutionNodeIds.Contains(normalizedId))
+            {
+                return false;
+            }
+
+            unlockedEvolutionNodeIds.Add(normalizedId);
+            return true;
+        }
+
+        public bool IsEvolutionNodeUnlocked(string evolutionNodeId)
+        {
+            string normalizedId = StableContentId.Normalize(evolutionNodeId);
+            return unlockedEvolutionNodeIds.Contains(normalizedId);
+        }
+
         public bool TryGetArtProgress(string artId, out ArtProgressState progressState)
         {
             string normalizedId = StableContentId.Normalize(artId);

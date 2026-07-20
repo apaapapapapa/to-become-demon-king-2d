@@ -11,6 +11,7 @@ using DemonKing.Gameplay.Combat.Configuration;
 using DemonKing.Gameplay.Progression;
 using DemonKing.Gameplay.Progression.Configuration;
 using DemonKing.Gameplay.Modifiers;
+using DemonKing.Gameplay.Modifiers.Configuration;
 using DemonKing.Gameplay.Rewards;
 using DemonKing.Presentation.CameraSystem;
 using NUnit.Framework;
@@ -393,6 +394,66 @@ namespace DemonKing.Tests.PlayMode
         }
 
         [UnityTest]
+        public IEnumerator Evolution_適用通知と永続補正がAbility実行へ反映される()
+        {
+            PrototypeProjectAssets projectAssets =
+                Resources.Load<PrototypeProjectAssets>("Settings/PrototypeProjectAssets");
+            MeleeAttackDefinition ability = CreateMeleeAbility(
+                "ability.test.evolution_strike",
+                "Evolution補正攻撃");
+            GameObject attacker = new("Evolution Test User");
+            attacker.transform.position = new Vector3(300f, 300f, 0f);
+            attacker.AddComponent<MeleeAttackExecutor>();
+            AbilityController abilityController = attacker.AddComponent<AbilityController>();
+            abilityController.Configure(new[] { ability });
+
+            CharacterProgressionState progressionState = CharacterProgressionState.Restore(
+                "character.player.slime",
+                level: 2,
+                currentExperience: 5,
+                unlockedSkillIds: new[] { "skill.combat.predatory_instinct" },
+                unlockedEvolutionNodeIds: null);
+            EvolutionProgressionController evolutionController =
+                attacker.AddComponent<EvolutionProgressionController>();
+            evolutionController.Initialize(
+                progressionState,
+                projectAssets.PlayerCharacter.EvolutionDefinitions);
+
+            int appliedCount = 0;
+            evolutionController.Service.EvolutionApplied += _ => appliedCount++;
+            EvolutionApplyResult evolutionResult = evolutionController.Evolve(
+                "evolution.slime.predator");
+
+            Assert.That(evolutionResult.Succeeded, Is.True);
+            Assert.That(appliedCount, Is.EqualTo(1));
+            Assert.That(
+                evolutionController.Evolve("evolution.slime.predator").Succeeded,
+                Is.False);
+            Assert.That(appliedCount, Is.EqualTo(1));
+
+            Vector2 attackCenter = (Vector2)attacker.transform.position +
+                                   Vector2.down * ability.AttackDistance;
+            GameObject target = CreateDamageTarget("Evolution Target", attackCenter);
+            Health health = target.GetComponent<Health>();
+            health.ConfigureMaxHealth(10);
+
+            yield return null;
+            Physics2D.SyncTransforms();
+
+            AbilityUseResult useResult = abilityController.TryUse(
+                ability.AbilityId,
+                attacker,
+                new AbilityExecutionInput(Vector2.down));
+
+            Assert.That(useResult.Succeeded, Is.True);
+            Assert.That(health.CurrentHealth, Is.EqualTo(8));
+
+            Object.Destroy(attacker);
+            Object.Destroy(target);
+            Object.Destroy(ability);
+        }
+
+        [UnityTest]
         public IEnumerator CameraFollow2D_ターゲットへ追従しZ座標を維持する()
         {
             GameObject cameraObject = new("Camera Follow Test");
@@ -480,21 +541,21 @@ namespace DemonKing.Tests.PlayMode
             string abilityId,
             string artId)
         {
-            var damage = new SkillModifierEntry();
-            SetPrivateField(damage, "target", SkillModifierTarget.OutgoingDamage);
-            SetPrivateField(damage, "operation", SkillModifierOperation.AddFlat);
+            var damage = new GameplayModifierEntry();
+            SetPrivateField(damage, "target", GameplayModifierTarget.OutgoingDamage);
+            SetPrivateField(damage, "operation", NumericModifierOperation.AddFlat);
             SetPrivateField(damage, "value", 1f);
             SetPrivateField(damage, "targetContentId", abilityId);
 
-            var cooldown = new SkillModifierEntry();
-            SetPrivateField(cooldown, "target", SkillModifierTarget.AbilityCooldown);
-            SetPrivateField(cooldown, "operation", SkillModifierOperation.AddRate);
+            var cooldown = new GameplayModifierEntry();
+            SetPrivateField(cooldown, "target", GameplayModifierTarget.AbilityCooldown);
+            SetPrivateField(cooldown, "operation", NumericModifierOperation.AddRate);
             SetPrivateField(cooldown, "value", -0.5f);
             SetPrivateField(cooldown, "targetContentId", abilityId);
 
-            var mastery = new SkillModifierEntry();
-            SetPrivateField(mastery, "target", SkillModifierTarget.ArtMasteryGain);
-            SetPrivateField(mastery, "operation", SkillModifierOperation.AddFlat);
+            var mastery = new GameplayModifierEntry();
+            SetPrivateField(mastery, "target", GameplayModifierTarget.ArtMasteryGain);
+            SetPrivateField(mastery, "operation", NumericModifierOperation.AddFlat);
             SetPrivateField(mastery, "value", 1f);
             SetPrivateField(mastery, "targetContentId", artId);
 

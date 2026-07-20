@@ -25,17 +25,18 @@
 - Ability Execution ID / 効果成立通知 / 1実行1回の熟練度加算
 - 受動Skill Definition / 取得 / Save接続
 - 与ダメージ / Abilityクールダウン / Art熟練ポイント補正
+- Evolution Node Definition / 条件評価 / 排他選択 / Save / 永続補正
 - Stable Content ID相互リンク / VitePress Data Loader一覧
 - EditMode / PlayModeテスト
 - VitePress Knowledge Base基盤
 
 ## 直近の開発フェーズ
 
-1. Evolution
-2. NPC会話
-3. 敵AI
-4. クエスト・目的管理
-5. Art / Skillの取得・入力・UIと正式Runtimeコンテンツ
+1. NPC会話
+2. 敵AI
+3. クエスト・目的管理
+4. Art / Skill / Evolutionの取得・入力・UIと正式Runtimeコンテンツ
+5. Evolutionの見た目・演出と上位Node
 6. 縦切りゲームループ完成
 
 ## P3候補

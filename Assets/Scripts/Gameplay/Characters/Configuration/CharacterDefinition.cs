@@ -20,6 +20,8 @@ namespace DemonKing.Gameplay.Characters.Configuration
         [SerializeField] private AbilityDefinition[] abilityDefinitions = Array.Empty<AbilityDefinition>();
         [SerializeField] private ArtDefinition[] artDefinitions = Array.Empty<ArtDefinition>();
         [SerializeField] private SkillDefinition[] skillDefinitions = Array.Empty<SkillDefinition>();
+        [SerializeField] private EvolutionDefinition[] evolutionDefinitions =
+            Array.Empty<EvolutionDefinition>();
         [SerializeField] private DodgeDefinition dodgeDefinition;
         [SerializeField] private ExperienceTableDefinition experienceTableDefinition;
 
@@ -31,6 +33,8 @@ namespace DemonKing.Gameplay.Characters.Configuration
             artDefinitions ?? Array.Empty<ArtDefinition>();
         public IReadOnlyList<SkillDefinition> SkillDefinitions =>
             skillDefinitions ?? Array.Empty<SkillDefinition>();
+        public IReadOnlyList<EvolutionDefinition> EvolutionDefinitions =>
+            evolutionDefinitions ?? Array.Empty<EvolutionDefinition>();
         public DodgeDefinition DodgeDefinition => dodgeDefinition;
         public ExperienceTableDefinition ExperienceTableDefinition => experienceTableDefinition;
 
@@ -91,6 +95,24 @@ namespace DemonKing.Gameplay.Characters.Configuration
                         if (definition == null ||
                             !definition.IsConfigured ||
                             !skillIds.Add(definition.SkillId))
+                        {
+                            return false;
+                        }
+                    }
+                }
+
+                var evolutionIds = new HashSet<string>(StringComparer.Ordinal);
+                if (evolutionDefinitions != null)
+                {
+                    foreach (EvolutionDefinition definition in evolutionDefinitions)
+                    {
+                        if (definition == null ||
+                            !definition.IsConfigured ||
+                            !string.Equals(
+                                definition.CharacterDefinitionId,
+                                characterId,
+                                StringComparison.Ordinal) ||
+                            !evolutionIds.Add(definition.EvolutionNodeId))
                         {
                             return false;
                         }
