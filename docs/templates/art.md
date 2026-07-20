@@ -8,9 +8,7 @@ relatedContentIds: []
 
 # Art名
 
-- Status: Draft
-- Art ID: `art.category.name`
-- Unity Definition: `Assets/...`
+Unity Definition: `Assets/...`
 
 ## 概要
 
@@ -20,21 +18,14 @@ relatedContentIds: []
 
 - 主な習得経路:
 - 条件の意味:
-- 関連する訓練・報酬・アイテム・Evolution:
 
-## Ability解放
+## Ability
 
-| 解放段階 | Ability ID | 役割 |
-| --- | --- | --- |
-| 習得時 | `ability.category.action` | 初期行動の意味 |
-| 熟練後 | `ability.category.derived-action` | 派生行動の意味 |
+| Ability ID | 役割 |
+| --- | --- |
+| `ability.category.action` | 行動の意味 |
 
-具体的なランク閾値、熟練ポイント、威力、クールダウン、コストはUnity側のDefinitionを正とし、このページへ複製しない。
-
-## Skillとの関係
-
-- 習得条件となるSkill:
-- 性能や成長へ作用するSkill:
+ランク閾値やRuntimeルールを再掲せず、[Art仕様](../specifications/art.md) を参照する。
 
 ## 世界観
 
@@ -42,8 +33,10 @@ relatedContentIds: []
 
 ## 関連リンク
 
-- Abilities:
+- Monsters:
 - Skills:
 - Evolution:
 - Items:
 - Quests:
+
+frontmatterのメタデータ規則は [ドキュメント規約](../development/documentation-rules.md) を参照する。
