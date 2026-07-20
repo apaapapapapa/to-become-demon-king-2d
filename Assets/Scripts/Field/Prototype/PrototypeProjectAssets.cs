@@ -1,6 +1,10 @@
+using System;
+using System.Linq;
 using DemonKing.Field.Prototype.Configuration;
 using DemonKing.Gameplay.Characters.Configuration;
+using DemonKing.Gameplay.Dialogue.Configuration;
 using DemonKing.Gameplay.Progression.Configuration;
+using DemonKing.Gameplay.Quests.Configuration;
 using DemonKing.Gameplay.Rewards.Configuration;
 using UnityEngine;
 
@@ -18,6 +22,10 @@ namespace DemonKing.Field.Prototype
 
         [Header("Characters")]
         [SerializeField] private CharacterDefinition playerCharacter;
+
+        [Header("Content")]
+        [SerializeField] private DialogueDefinition apprenticeMageDialogue;
+        [SerializeField] private QuestDefinition[] questDefinitions = Array.Empty<QuestDefinition>();
 
         [Header("Rewards")]
         [SerializeField] private RewardDefinition trainingDummyReward;
@@ -42,6 +50,8 @@ namespace DemonKing.Field.Prototype
 
         public PrototypeApplicationSettings ApplicationSettings => applicationSettings;
         public CharacterDefinition PlayerCharacter => playerCharacter;
+        public DialogueDefinition ApprenticeMageDialogue => apprenticeMageDialogue;
+        public QuestDefinition[] QuestDefinitions => questDefinitions ?? Array.Empty<QuestDefinition>();
         public RewardDefinition TrainingDummyReward => trainingDummyReward;
         public ProgressionGrantDefinition FireMagicTrainingGrant => fireMagicTrainingGrant;
         public Font UiFont => uiFont;
@@ -63,6 +73,11 @@ namespace DemonKing.Field.Prototype
             applicationSettings != null &&
             playerCharacter != null &&
             playerCharacter.IsConfigured &&
+            apprenticeMageDialogue != null &&
+            apprenticeMageDialogue.IsConfigured &&
+            questDefinitions != null &&
+            questDefinitions.Length > 0 &&
+            questDefinitions.All(definition => definition != null && definition.IsConfigured) &&
             trainingDummyReward != null &&
             trainingDummyReward.IsConfigured &&
             fireMagicTrainingGrant != null &&
