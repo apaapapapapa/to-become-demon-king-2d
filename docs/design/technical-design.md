@@ -1,5 +1,9 @@
 # 技術設計
 
+## 目的
+
+この文書はUnity固有の基準環境と実装方式を定義します。レイヤー責務は [アーキテクチャ](./architecture.md)、Feature間の接続は [Feature間の責務境界](./feature-boundaries.md)、ゲーム上の振る舞いは各 [仕様書](../specifications/) を参照してください。
+
 ## 基準環境
 
 - Unity Editor: `6000.5.4f1`
@@ -10,8 +14,8 @@
 - Canvas（uGUI）
 - Rigidbody2D / TilemapCollider2D
 - Unity Test Framework
-- `DemonKing.Domain`: Unity非依存
-- `DemonKing.Runtime`: Unity Runtime
+- `DemonKing.Domain`: Unity非依存Assembly
+- `DemonKing.Runtime`: Unity Runtime Assembly
 
 ## 起動フロー
 
@@ -29,6 +33,8 @@ PrototypeApplicationInstaller
   └ PrototypeUiInstaller
 ```
 
+`FieldBootstrap` は最小のエントリーポイントに保ち、具体的な構築とFeature間配線を下位のInstaller / Builder / Coordinatorへ委譲します。
+
 ## Scene / Tilemap
 
 ```text
@@ -41,141 +47,33 @@ Grid
 
 表示データと衝突データを分離します。
 
-## Input
+## Input実装
 
-`PlayerControls.inputactions` にGameplayとUIのAction Mapを分離します。`PlayerInputReader` がGameplay / UI / Disabledを排他的に切り替えます。
+`PlayerControls.inputactions` にGameplayとUIのAction Mapを分離し、`PlayerInputReader` がInput Contextを切り替えます。
 
-詳細は [入力仕様](../specifications/input.md) を参照してください。
+Action / BindingとContextの振る舞いは [入力仕様](../specifications/input.md) を参照してください。
 
-## Character Definition
+## 移動と物理
 
-```text
-CharacterDefinition
-  ├ characterId
-  ├ prefab
-  ├ statsDefinition
-  ├ abilityDefinitions[]
-  ├ artDefinitions[]
-  ├ skillDefinitions[]
-  ├ evolutionDefinitions[]
-  ├ dodgeDefinition
-  └ experienceTableDefinition
-```
+通常移動は `CharacterMotor2D`、Dodge移動は `CharacterDodge2D` が担当し、Rigidbody2D経由で移動します。
 
-Character IDはSaveや将来のArt、Skill、Evolutionから参照できる安定IDです。
+Dodgeの入力と将来のCombat連携は [入力仕様](../specifications/input.md) を参照してください。
 
-## Runtime State / Experience
+## UI
 
-`CharacterProgressionState` がLevel、累積経験値、Art進捗、Skill解放ID、Evolution Node解放IDを保持します。キャラクター単位の `ArtProgressState` はArt IDと累積Mastery Pointだけを保持します。
+本番UI基盤はCanvas（uGUI）です。
 
-`ExperienceTable` は累積必要経験値をUnity非依存で評価し、`LevelUpResult` が1回の経験値加算結果を表します。
+Viewは表示を担当し、ゲーム状態の変更主体にしません。モーダルUIのInput ContextとTime Scaleの振る舞いは [入力仕様](../specifications/input.md) を参照してください。
 
-Unity側の `ExperienceTableDefinition` がDomainのExperienceTableを構築します。
+## ScriptableObject
 
-## Ability / Art / Combat / Reward
+静的コンテンツ定義、バランス値、Asset参照はScriptableObject Definitionとして管理します。Definition / Runtime State / Save DTOの責務分離は [アーキテクチャ](./architecture.md) を参照してください。
 
-```text
-PlayerAbilityInput / AI
-  ↓
-AbilityController
-  ↓
-IAbilityExecutor
-  ↓
-DamageRequest
-  ↓
-IDamageable / Health
-  ↓
-DamageResult
-  ↓
-DefeatContext
-  ↓
-RewardService
-  ↓
-CharacterProgressionState.GainExperience
-```
-
-`RewardDefinition` が報酬IDと静的報酬内容を持ちます。同一Defeatへの重複報酬を防ぎます。
-
-`AbilityDefinition` は共通の静的情報、`AbilityRuntimeState` は個体ごとのクールダウン・使用回数・実行中状態を保持します。近接攻撃は `MeleeAttackExecutor`、火炎弾などの飛翔体は `ProjectileAttackExecutor` が担当します。
-
-`ArtDefinition` は `art.*` ID、熟練ランク閾値、複数のAbility解放定義を保持します。`ArtProgressState` はArt IDと累積Mastery Pointだけを保持し、ランクと解放AbilityをDefinitionから導出します。
-
-Art習得・ランクアップ時は解放済みAbilityを `AbilityController` へ冪等に付与します。Ability効果の成立後は、Execution IDを含む共通通知をArt成長処理が購読し、同じ使用者とExecutionに1回だけMastery Pointを加算します。
-
-`ProgressionGrantDefinition` は訓練や報酬が付与するArt・Skillだけを保持し、`ProgressionAcquisitionService` が既存Controllerへ共通の取得要求を送ります。取得条件や消費は取得元側に残します。
-
-`SkillDefinition` は受動補正を保持し、`SkillProgressionService` が取得済みIDから `NumericModifier` を集約します。`SkillProgressionController` は与ダメージ、Abilityクールダウン、Art熟練ポイントの汎用Modifier SourceとしてGameplayへ接続します。
-
-`EvolutionDefinition` はNode ID、対象Character、排他グループ、レベル・Skill・Artランク・前提Node条件、永続補正、外見プロファイルを保持します。`EvolutionProgressionService` が全条件を評価して成功時だけNode IDをRuntime Stateへ追加し、`EvolutionProgressionController` が選択済みNodeの補正を汎用Modifier Sourceへ公開します。
-
-`EvolutionSelectionController` はGameplayの選択状態とInput Contextを管理し、`EvolutionMenuView` が評価結果をuGUIへ表示します。`PrototypeSlimeEvolutionPresenter` は成功通知またはSave復元済みNodeを外見プロファイルへ変換し、専用2フレームSprite Sheetと形態別エフェクトを適用します。
-
-詳細は [Ability仕様](../specifications/ability.md)、[Art仕様](../specifications/art.md)、[Skill仕様](../specifications/skill.md)、[Evolution仕様](../specifications/evolution.md)、[戦闘仕様](../specifications/combat.md)、[成長仕様](../specifications/progression.md) を参照してください。
-
-## Save
-
-```text
-CharacterProgressionState
-  ↕ CharacterProgressionSaveMapper
-PlayerSaveData
-  ↓
-GameSaveData
-  ↓
-ISaveService
-```
-
-具体的な保存先は `ISaveService` の外側で実装します。
-
-Save DTO Version 2はArt IDと累積Mastery Pointだけを保持します。現在ランク、解放Ability、装備Artは保存しません。既存のSave Version 1は空のArt進捗へMigrationします。
-
-## 移動 / Dodge
-
-通常移動は `CharacterMotor2D`、Dodgeは `CharacterDodge2D` が担当し、いずれもRigidbody2D経由で移動します。
-
-## Interaction
-
-`PlayerInteractor` は `IInteractable` のみに依存し、NPC、扉、宝箱などの固有処理を知りません。
-
-Prototype NPCが複数発言の進行位置を保持し、`DialogueLog` は現在表示する1件だけを管理します。`DialogueLogView` は表示中の発言をuGUIへ反映し、会話終了時は非表示にします。Interactionは発言内容や表示階層へ依存しません。
-
-Prototype NPCのInteraction通知はCompositionで `PrototypeCombatDummyRespawner` へ接続します。再生成担当は現在の訓練用スライムだけを追跡し、撃破済みなら新規生成、生存中ならHP全回復を行います。NPCはCombatや報酬処理へ直接依存しません。
-
-## Pause / UI
-
-`GamePauseController` がPauseのTimeScaleとInput Contextを管理し、`PauseMenuView` は表示だけを担当します。Evolutionメニューは `EvolutionSelectionController` が同じ排他的Input Context規則でモーダル状態を管理します。別のモーダルがUI Contextを所有している間はPauseを重ねません。本番UI基盤はCanvas（uGUI）です。
-
-## ScriptableObject Definition
-
-主なDefinition:
-
-- `CharacterDefinition`
-- `CharacterStatsDefinition`
-- `AbilityDefinition`
-- `ArtDefinition`
-- `SkillDefinition`
-- `EvolutionDefinition`
-- `ProgressionGrantDefinition`
-- `MeleeAttackDefinition`
-- `ProjectileAttackDefinition`
-- `DodgeDefinition`
-- `ExperienceTableDefinition`
-- `RewardDefinition`
-- `PrototypeApplicationSettings`
-- `PrototypeProjectAssets`
-
-静的値はDefinition、プレイ中に変化する値はRuntime Stateを正とします。
+具体的な値のSource of Truth規則は [ドキュメント規約](../development/documentation-rules.md) を参照してください。
 
 ## Resources
 
 Resourcesは少数の起動入口や互換用途に限定します。コンテンツ量や非同期ロード要件が必要性を示した段階でAddressablesを検討します。
-
-## テスト
-
-- Domain: ExperienceTable、CharacterProgressionState、ArtMasteryTable、ArtProgressState、Skill取得状態、Evolution Node選択状態、Reward関連、Save Mapper等
-- EditMode: Definitionや描画順など
-- PlayMode: Input Context、移動、Dodge、Pause、Evolution選択・外見、Camera等
-
-Unity依存が不要なルールはDomain側の高速なテストを優先します。
 
 ## Editorツール
 
@@ -185,6 +83,15 @@ Unity依存が不要なルールはDomain側の高速なテストを優先しま
 
 Runtimeの通常動作をEditor保守ツールへ依存させません。
 
-## Platform移植性
+## テスト
 
-Save、実績、クラウド、ユーザー識別などのPlatform依存機能は専用境界の外側へ置き、GameplayからPlatform SDKを直接呼び出しません。
+- Unity非依存ルールはDomain側の高速なテストを優先する。
+- Unity Objectが必要なDefinition等はEditModeで検証する。
+- Scene、Input Context、移動、UI等のRuntime統合はPlayModeで検証する。
+- 単一クラスが主対象なら原則 `<ClassName>Tests` とする。
+- Unity実行モードを名前で明示する必要がある場合は `<ClassName>PlayModeTests` 等を使用できる。
+- 統合テストはFeatureとFlowが分かる名前を使用し、無関係な責務を1クラスへ追加し続けない。
+
+## Platform実装
+
+Platform固有SDKの隔離方針は [アーキテクチャ](./architecture.md#platform境界) を参照してください。
