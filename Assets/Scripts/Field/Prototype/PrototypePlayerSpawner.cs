@@ -126,12 +126,20 @@ namespace DemonKing.Field.Prototype
                 abilityController = root.AddComponent<AbilityController>();
             }
 
+            abilityController.Configure(characterDefinition.AbilityDefinitions);
+
+            AbilityLoadoutController loadoutController = root.GetComponent<AbilityLoadoutController>();
+            if (loadoutController == null)
+            {
+                loadoutController = root.AddComponent<AbilityLoadoutController>();
+            }
+
+            loadoutController.Initialize(characterDefinition);
+
             if (root.GetComponent<PlayerAbilityInput>() == null)
             {
                 root.AddComponent<PlayerAbilityInput>();
             }
-
-            abilityController.Configure(characterDefinition.AbilityDefinitions);
 
             SkillProgressionController skillProgressionController =
                 root.GetComponent<SkillProgressionController>();
