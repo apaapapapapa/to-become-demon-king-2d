@@ -1,20 +1,9 @@
 # モンスター一覧
 
-モンスターごとの役割、特徴、進化関係、関連アセットを管理します。
+モンスターごとのゲームプレイ上・世界観上の役割と関連コンテンツを管理します。
 
-1モンスター1ファイルを原則とし、Stable Content IDを記載します。
-
-```text
-monsters/
-  slime.md
-  goblin.md
-  slime-king.md
-```
-
-Runtime数値はUnity側のDefinitionを正とします。
+コンテンツページの共通メタデータ規則は [ドキュメント規約](../../development/documentation-rules.md) を参照してください。
 
 ## 登録ページ
 
 <ContentCatalog content-type="monster" />
-
-完成版の敵モンスターは未登録です。Prototype用コンテンツはStatusと実装境界を各ページで明記します。
