@@ -1,17 +1,18 @@
 using DemonKing.Core.Input;
-using DemonKing.Core.Math;
 using DemonKing.Gameplay.Characters.Configuration;
 using UnityEngine;
 
 namespace DemonKing.Gameplay.Characters
 {
     /// <summary>
-    /// Dodge入力を受け取り、3D Rigidbody上のX/Y平面で短時間の回避移動を行います。
+    /// Dodge入力を受け取り、3D Physics上のX/Y平面で短時間の回避移動を行います。
     /// Elevation（Z）は変更せず、通常移動とはCharacterPlanarMotorのロックで排他制御します。
+    /// 最終的な3軸移動の合成はCharacterPhysicsBody3Dへ委譲します。
     /// </summary>
     [DisallowMultipleComponent]
     [RequireComponent(typeof(PlayerInputReader))]
     [RequireComponent(typeof(MoveInputReader))]
+    [RequireComponent(typeof(CharacterPhysicsBody3D))]
     public class CharacterDodge : MonoBehaviour
     {
         private static readonly Vector2 DefaultDirection = Vector2.down;
@@ -22,7 +23,6 @@ namespace DemonKing.Gameplay.Characters
         private MoveInputReader moveInput;
         private CharacterPlanarMotor motor;
         private CharacterPhysicsBody3D physicsBody;
-        private Rigidbody body;
 
         private Vector2 lastMoveDirection = DefaultDirection;
         private Vector2 dodgeDirection;
@@ -43,13 +43,7 @@ namespace DemonKing.Gameplay.Characters
             }
 
             physicsBody = GetComponent<CharacterPhysicsBody3D>();
-            if (physicsBody == null)
-            {
-                physicsBody = gameObject.AddComponent<CharacterPhysicsBody3D>();
-            }
-
             physicsBody.EnsureConfigured();
-            body = physicsBody.Body;
         }
 
         protected virtual void OnEnable()
@@ -86,16 +80,13 @@ namespace DemonKing.Gameplay.Characters
 
         protected virtual void FixedUpdate()
         {
-            if (!IsDodging || body == null || dodgeDefinition == null)
+            if (!IsDodging || physicsBody == null || dodgeDefinition == null)
             {
                 return;
             }
 
-            Vector3 next = body.position +
-                           FieldSpace3D.PlanarDelta(dodgeDirection) *
-                           (dodgeDefinition.DodgeSpeed * Time.fixedDeltaTime);
-            next.z = body.position.z;
-            body.MovePosition(next);
+            physicsBody.QueuePlanarDelta(
+                dodgeDirection * (dodgeDefinition.DodgeSpeed * Time.fixedDeltaTime));
 
             dodgeTimeRemaining -= Time.fixedDeltaTime;
             if (dodgeTimeRemaining <= 0f)
