@@ -1,17 +1,8 @@
 ---
-title: 覇王捕食スライム
-contentId: evolution.slime.apex_predator
-contentType: evolution
-status: Runtime Implemented
-relatedContentIds:
-  - character.player.slime
-  - evolution.slime.lineage
-  - skill.combat.predatory_instinct
+runtimeSource: Assets/Resources/Settings/Gameplay/ApexPredatorSlimeEvolution.asset
 ---
 
-# 覇王捕食スライム
-
-Unity Definition: `Assets/Resources/Settings/Gameplay/ApexPredatorSlimeEvolution.asset`
+<RuntimeContentHeader />
 
 ## 概要
 
@@ -23,6 +14,6 @@ Unity Definition: `Assets/Resources/Settings/Gameplay/ApexPredatorSlimeEvolution
 
 条件、補正、排他ルールは [Evolution仕様](../../specifications/evolution.md) を参照してください。
 
-## Stable Content IDでの関連
+## 関連コンテンツ
 
-<ContentRelations content-id="evolution.slime.apex_predator" />
+<ContentRelations />
