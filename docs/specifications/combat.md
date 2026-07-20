@@ -22,6 +22,14 @@ DefeatContext
 
 経験値、ドロップ、Art / Skill取得、Evolution処理はCombatへ埋め込みません。RewardやProgressionへの接続方向は [Feature間の責務境界](../design/feature-boundaries.md#ability--combat--reward--progression) を参照してください。
 
+## 空間判定
+
+攻撃の命中判定は3D Physics空間で行います。X/Y平面上の距離だけでなくElevation方向のCollider重なりも必要です。
+
+そのため、同じX/Y位置に存在していても高さ方向で物理体積が重ならない対象には近接攻撃・Projectileは命中しません。飛行Actorや屋上Actorを含む高さ方向の戦闘も同じ物理ルールで扱います。
+
+具体的な軸規約とUnity Physics実装は [技術設計](../design/technical-design.md#3dフィールド座標) を参照してください。
+
 ## 戦闘演出
 
 演出コンポーネントはCombatの通知を購読するだけとし、ダメージ量、死亡判定、報酬付与を変更しません。
