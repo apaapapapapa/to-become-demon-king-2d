@@ -1,5 +1,6 @@
 using System;
 using DemonKing.Domain;
+using DemonKing.Gameplay.Content;
 using UnityEngine;
 
 namespace DemonKing.Gameplay.Abilities.Configuration
@@ -39,7 +40,7 @@ namespace DemonKing.Gameplay.Abilities.Configuration
     /// すべてのAbilityに共通する不変なコンテンツ定義です。
     /// 実行時に変化するクールダウンや使用回数はAbilityRuntimeStateへ分離します。
     /// </summary>
-    public abstract class AbilityDefinition : ScriptableObject
+    public abstract class AbilityDefinition : ScriptableObject, IGameContentDefinition
     {
         private const string AbilityIdPrefix = "ability.";
 
@@ -47,17 +48,22 @@ namespace DemonKing.Gameplay.Abilities.Configuration
         [SerializeField] private string abilityId = string.Empty;
         [SerializeField] private string displayName = string.Empty;
         [SerializeField, TextArea] private string description = string.Empty;
+        [SerializeField, TextArea] private string encyclopediaDescription = string.Empty;
         [SerializeField] private Sprite icon;
+        [SerializeField] private bool visibleInEncyclopedia = true;
 
         [Header("Execution")]
         [SerializeField] private AbilityExecutionMode executionMode = AbilityExecutionMode.Instant;
         [SerializeField, Min(0f)] private float cooldownSeconds;
         [SerializeField] private AbilityCost cost = new();
 
+        public string ContentId => abilityId;
         public string AbilityId => abilityId;
         public string DisplayName => displayName;
         public string Description => description;
+        public string EncyclopediaDescription => encyclopediaDescription;
         public Sprite Icon => icon;
+        public bool VisibleInEncyclopedia => visibleInEncyclopedia;
         public AbilityExecutionMode ExecutionMode => executionMode;
         public float CooldownSeconds => cooldownSeconds;
         public AbilityCost Cost => cost;
@@ -78,6 +84,7 @@ namespace DemonKing.Gameplay.Abilities.Configuration
             abilityId = StableContentId.Normalize(abilityId);
             displayName = displayName?.Trim() ?? string.Empty;
             description = description?.Trim() ?? string.Empty;
+            encyclopediaDescription = encyclopediaDescription?.Trim() ?? string.Empty;
             cooldownSeconds = Mathf.Max(0f, cooldownSeconds);
             cost ??= new AbilityCost();
             cost.Normalize();
