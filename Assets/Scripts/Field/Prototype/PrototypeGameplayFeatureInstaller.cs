@@ -4,6 +4,7 @@ using DemonKing.Gameplay.AI.Configuration;
 using DemonKing.Gameplay.Dialogue;
 using DemonKing.Gameplay.Dialogue.Configuration;
 using DemonKing.Gameplay.Progression.Configuration;
+using DemonKing.Gameplay.Quests.Configuration;
 using DemonKing.Gameplay.Rewards;
 using DemonKing.Gameplay.Rewards.Configuration;
 using DemonKing.Gameplay.Spawning;
@@ -26,6 +27,7 @@ namespace DemonKing.Field.Prototype
             RewardDefinition trainingDummyReward,
             ProgressionGrantDefinition fireMagicTrainingGrant,
             DialogueDefinition apprenticeMageDialogue,
+            QuestDefinition trainingQuestDefinition,
             DialogueLog dialogueLog)
         {
             if (player == null)
@@ -64,6 +66,13 @@ namespace DemonKing.Field.Prototype
                     nameof(apprenticeMageDialogue));
             }
 
+            if (trainingQuestDefinition == null || !trainingQuestDefinition.IsConfigured)
+            {
+                throw new ArgumentException(
+                    "訓練Quest定義が正しく設定されていません。",
+                    nameof(trainingQuestDefinition));
+            }
+
             if (fireMagicTrainingGrant == null || !fireMagicTrainingGrant.IsConfigured)
             {
                 throw new ArgumentException(
@@ -98,7 +107,8 @@ namespace DemonKing.Field.Prototype
                 dialogueLog,
                 gameplayServices.RewardService,
                 gameplayServices.GameplayEventHub,
-                gameplayServices.QuestProgressionService);
+                gameplayServices.QuestProgressionService,
+                trainingQuestDefinition);
 
             dummyLifecycle.SpawnOrRestore();
         }
