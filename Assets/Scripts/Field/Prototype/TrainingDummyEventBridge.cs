@@ -1,3 +1,4 @@
+using DemonKing.Domain.Quests;
 using DemonKing.Gameplay.Combat;
 using DemonKing.Gameplay.Events;
 using DemonKing.Gameplay.Spawning;
