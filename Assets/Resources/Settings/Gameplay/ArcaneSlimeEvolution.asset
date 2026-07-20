@@ -15,7 +15,9 @@ MonoBehaviour:
   evolutionNodeId: evolution.slime.arcane
   displayName: 魔導スライム
   description: Artの習得と熟練へ成長を集中する、スライムの第一進化。
+  encyclopediaDescription: 外部へ魔力を放つArtの習得と熟練を重ね、術者としての器を形成した進化形態。魔法Abilityを軸にした戦闘へ特化し、より高度な魔力制御を持つ上位進化へつながる。
   icon: {fileID: 0}
+  visibleInEncyclopedia: 1
   characterDefinitionId: character.player.slime
   exclusiveGroupId: evolution-group.slime.tier1
   requiredLevel: 2
