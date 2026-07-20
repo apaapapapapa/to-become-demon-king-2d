@@ -1,3 +1,9 @@
+## [1.3.0](https://github.com/apaapapapapa/to-become-demon-king-2d/compare/v1.2.1...v1.3.0) (2026-07-20)
+
+### Features
+
+* respawn slime through NPC interaction ([05277d7](https://github.com/apaapapapapa/to-become-demon-king-2d/commit/05277d7fd16b89e7fbe95a02166d695c36bb7472))
+
 ## [1.2.1](https://github.com/apaapapapapa/to-become-demon-king-2d/compare/v1.2.0...v1.2.1) (2026-07-20)
 
 ### Bug Fixes
