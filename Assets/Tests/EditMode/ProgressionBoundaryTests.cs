@@ -2,6 +2,7 @@ using DemonKing.Core.Application;
 using DemonKing.Domain.Progression;
 using DemonKing.Domain.Save;
 using DemonKing.Field.Prototype;
+using DemonKing.Gameplay.Combat.Configuration;
 using NUnit.Framework;
 using UnityEngine;
 
@@ -144,6 +145,13 @@ namespace DemonKing.Tests.EditMode
             Assert.That(projectAssets.PlayerCharacter, Is.Not.Null);
             Assert.That(projectAssets.PlayerCharacter.IsConfigured, Is.True);
             Assert.That(projectAssets.PlayerCharacter.CharacterId, Is.EqualTo("character.player.slime"));
+            Assert.That(projectAssets.PlayerCharacter.AbilityDefinitions.Count, Is.EqualTo(1));
+            var basicMelee = projectAssets.PlayerCharacter.AbilityDefinitions[0] as MeleeAttackDefinition;
+            Assert.That(basicMelee, Is.Not.Null);
+            Assert.That(basicMelee.IsConfigured, Is.True);
+            Assert.That(basicMelee.AbilityId, Is.EqualTo("ability.basic_melee"));
+            Assert.That(basicMelee.DisplayName, Is.Not.Empty);
+            Assert.That(basicMelee.CooldownSeconds, Is.GreaterThanOrEqualTo(0f));
             Assert.That(projectAssets.PlayerCharacter.ExperienceTableDefinition, Is.Not.Null);
             Assert.That(projectAssets.PlayerCharacter.ExperienceTableDefinition.IsConfigured, Is.True);
             Assert.That(projectAssets.TrainingDummyReward, Is.Not.Null);

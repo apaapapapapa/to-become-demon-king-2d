@@ -13,6 +13,14 @@ MonoBehaviour:
   m_Name: PlayerMeleeAttack
   m_EditorClassIdentifier:
   abilityId: ability.basic_melee
+  displayName: 基本近接攻撃
+  description: 正面の近距離にいる対象を攻撃する基本Ability。
+  icon: {fileID: 0}
+  executionMode: 0
+  cooldownSeconds: 0.35
+  cost:
+    resourceId:
+    amount: 0
   damage: 1
   attackRadius: 0.65
   attackDistance: 0.65

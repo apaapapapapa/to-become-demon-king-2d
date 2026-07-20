@@ -1,6 +1,7 @@
 using System.Linq;
 using DemonKing.Field.Prototype;
 using DemonKing.Field.Prototype.Configuration;
+using DemonKing.Gameplay.Abilities.Configuration;
 using DemonKing.Gameplay.Characters.Configuration;
 using DemonKing.Gameplay.Combat.Configuration;
 using DemonKing.Gameplay.Progression.Configuration;
@@ -124,7 +125,10 @@ namespace DemonKing.EditorTools
             bool changed = false;
             changed |= AssignIfDifferent(serializedObject, "prefab", Load<GameObject>(PlayerPrefabPath));
             changed |= AssignIfDifferent(serializedObject, "statsDefinition", Load<CharacterStatsDefinition>(PlayerCharacterStatsPath));
-            changed |= AssignIfDifferent(serializedObject, "basicMeleeAttackDefinition", Load<MeleeAttackDefinition>(PlayerMeleeAttackPath));
+            changed |= AssignArrayIfDifferent(
+                serializedObject,
+                "abilityDefinitions",
+                Load<MeleeAttackDefinition>(PlayerMeleeAttackPath));
             changed |= AssignIfDifferent(serializedObject, "dodgeDefinition", Load<DodgeDefinition>(PlayerDodgePath));
             changed |= AssignIfDifferent(serializedObject, "experienceTableDefinition", Load<ExperienceTableDefinition>(PlayerExperienceTablePath));
 
@@ -223,6 +227,39 @@ namespace DemonKing.EditorTools
             }
 
             property.objectReferenceValue = value;
+            return true;
+        }
+
+        private static bool AssignArrayIfDifferent(
+            SerializedObject serializedObject,
+            string propertyName,
+            params AbilityDefinition[] values)
+        {
+            SerializedProperty property = serializedObject.FindProperty(propertyName);
+            if (property == null || !property.isArray)
+            {
+                Debug.LogError($"対象アセットに配列SerializedProperty '{propertyName}' が見つかりません。");
+                return false;
+            }
+
+            AbilityDefinition[] validValues = values.Where(value => value != null).ToArray();
+            bool isSame = property.arraySize == validValues.Length;
+            for (int index = 0; isSame && index < validValues.Length; index++)
+            {
+                isSame = property.GetArrayElementAtIndex(index).objectReferenceValue == validValues[index];
+            }
+
+            if (isSame)
+            {
+                return false;
+            }
+
+            property.arraySize = validValues.Length;
+            for (int index = 0; index < validValues.Length; index++)
+            {
+                property.GetArrayElementAtIndex(index).objectReferenceValue = validValues[index];
+            }
+
             return true;
         }
     }

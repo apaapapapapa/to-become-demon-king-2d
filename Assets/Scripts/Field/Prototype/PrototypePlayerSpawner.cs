@@ -1,4 +1,5 @@
 using DemonKing.Domain.Progression;
+using DemonKing.Gameplay.Abilities;
 using DemonKing.Gameplay.Characters;
 using DemonKing.Gameplay.Characters.Configuration;
 using DemonKing.Gameplay.Combat;
@@ -78,9 +79,26 @@ namespace DemonKing.Field.Prototype
             health.ConfigureMaxHealth(characterDefinition.StatsDefinition.MaxHealth);
             health.ConfigureCombatIdentity(characterDefinition.CharacterId);
 
-            PlayerMeleeAttack meleeAttack = root.GetComponent<PlayerMeleeAttack>();
-            meleeAttack?.Configure(characterDefinition.BasicMeleeAttackDefinition);
-            if (meleeAttack != null && root.GetComponent<PrototypeMeleeAttackEffect>() == null)
+            MeleeAttackExecutor meleeAttackExecutor = root.GetComponent<MeleeAttackExecutor>();
+            if (meleeAttackExecutor == null)
+            {
+                meleeAttackExecutor = root.AddComponent<MeleeAttackExecutor>();
+            }
+
+            AbilityController abilityController = root.GetComponent<AbilityController>();
+            if (abilityController == null)
+            {
+                abilityController = root.AddComponent<AbilityController>();
+            }
+
+            if (root.GetComponent<PlayerAbilityInput>() == null)
+            {
+                root.AddComponent<PlayerAbilityInput>();
+            }
+
+            abilityController.Configure(characterDefinition.AbilityDefinitions);
+
+            if (root.GetComponent<PrototypeMeleeAttackEffect>() == null)
             {
                 root.AddComponent<PrototypeMeleeAttackEffect>();
             }

@@ -1,8 +1,10 @@
 using System.Collections;
 using DemonKing.Domain.Progression;
 using DemonKing.Field.Prototype;
+using DemonKing.Gameplay.Abilities;
 using DemonKing.Gameplay.Characters;
 using DemonKing.Gameplay.Combat;
+using DemonKing.Gameplay.Combat.Configuration;
 using DemonKing.Gameplay.Rewards;
 using DemonKing.Presentation.CameraSystem;
 using NUnit.Framework;
@@ -57,26 +59,54 @@ namespace DemonKing.Tests.PlayMode
         }
 
         [UnityTest]
-        public IEnumerator PlayerMeleeAttack_攻撃実行時に斬撃エフェクトを生成して自動破棄する()
+        public IEnumerator AbilityController_入力へ依存せず近接攻撃を実行してクールダウンを管理する()
         {
             GameObject attacker = new("Attack Effect Test Player");
-            PlayerMeleeAttack meleeAttack = attacker.AddComponent<PlayerMeleeAttack>();
+            MeleeAttackExecutor meleeAttackExecutor = attacker.AddComponent<MeleeAttackExecutor>();
+            AbilityController abilityController = attacker.AddComponent<AbilityController>();
             PrototypeMeleeAttackEffect effect = attacker.AddComponent<PrototypeMeleeAttackEffect>();
+            PrototypeProjectAssets projectAssets =
+                Resources.Load<PrototypeProjectAssets>("Settings/PrototypeProjectAssets");
+            var definition = (MeleeAttackDefinition)projectAssets.PlayerCharacter.AbilityDefinitions[0];
+            abilityController.Configure(projectAssets.PlayerCharacter.AbilityDefinitions);
+
+            GameObject target = new("Attack Effect Test Target");
+            target.transform.position = Vector2.down * definition.AttackDistance;
+            target.AddComponent<CircleCollider2D>().radius = 0.2f;
+            Health targetHealth = target.AddComponent<Health>();
+            DamageResult receivedDamage = default;
+            targetHealth.Damaged += result => receivedDamage = result;
+
             int performedCount = 0;
             MeleeAttackEvent performedEvent = default;
-            meleeAttack.AttackPerformed += attackEvent =>
+            meleeAttackExecutor.AttackPerformed += attackEvent =>
             {
                 performedCount++;
                 performedEvent = attackEvent;
             };
 
             yield return null;
+            Physics2D.SyncTransforms();
 
-            meleeAttack.PerformAttack();
+            AbilityUseResult useResult = abilityController.TryUse(
+                definition.AbilityId,
+                attacker,
+                new AbilityExecutionInput(Vector2.down));
+            AbilityUseResult cooldownResult = abilityController.TryUse(
+                definition.AbilityId,
+                attacker,
+                new AbilityExecutionInput(Vector2.down));
             GameObject spawnedEffect = effect.LastSpawnedEffect;
 
+            Assert.That(useResult.Succeeded, Is.True);
+            Assert.That(useResult.UseCount, Is.EqualTo(1));
+            Assert.That(useResult.CooldownRemaining, Is.GreaterThan(0f));
+            Assert.That(cooldownResult.Status, Is.EqualTo(AbilityUseStatus.CooldownActive));
             Assert.That(performedCount, Is.EqualTo(1));
             Assert.That(performedEvent.FacingDirection, Is.EqualTo(Vector2.down));
+            Assert.That(performedEvent.HitCount, Is.EqualTo(1));
+            Assert.That(receivedDamage.Request.Source, Is.SameAs(attacker));
+            Assert.That(receivedDamage.Request.AbilityId, Is.EqualTo("ability.basic_melee"));
             Assert.That(spawnedEffect, Is.Not.Null);
             Assert.That(
                 spawnedEffect.GetComponentsInChildren<SpriteRenderer>().Length,
@@ -86,6 +116,7 @@ namespace DemonKing.Tests.PlayMode
 
             Assert.That(spawnedEffect == null, Is.True);
             Object.Destroy(attacker);
+            Object.Destroy(target);
         }
 
         [UnityTest]
@@ -140,7 +171,7 @@ namespace DemonKing.Tests.PlayMode
             DamageResult damageResult = health.ApplyDamage(new DamageRequest(
                 99,
                 sourceActorId: projectAssets.PlayerCharacter.CharacterId,
-                abilityId: "ability.basic_attack",
+                abilityId: "ability.basic_melee",
                 tags: DamageTags.BasicAttack));
 
             Assert.That(damageResult.WasDefeated, Is.True);

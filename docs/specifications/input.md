@@ -28,3 +28,5 @@
 GameplayとUIを同時に有効化しません。Pause開始時はUI、Resume時はGameplayへ戻します。
 
 将来の会話・メニュー・カットシーンでも、個別コンポーネントの場当たり的なEnable/DisableではなくInput Contextで制御します。
+
+Attack入力は `PlayerAbilityInput` が `ability.basic_melee` の実行要求へ変換します。入力コンポーネントは使用可否やダメージ処理を行いません。

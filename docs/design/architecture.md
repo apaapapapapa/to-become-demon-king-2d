@@ -53,6 +53,10 @@ Unity上で動くゲームルールとキャラクター挙動を置きます。
 
 ```text
 Gameplay/
+  Abilities/
+    AbilityController
+    AbilityRuntimeState
+    IAbilityExecutor
   Characters/
   Combat/
     DamageRequest
@@ -83,6 +87,7 @@ Prototypeシーンを組み立てるComposition層です。恒久的なDomain/Ga
 
 ```text
 Definition
+  AbilityDefinition
   CharacterDefinition
   CharacterStatsDefinition
   MeleeAttackDefinition
@@ -91,6 +96,7 @@ Definition
   RewardDefinition
        ↓
 Runtime State
+  AbilityRuntimeState
   CharacterProgressionState
        ↓ Mapper
 Save DTO
@@ -134,14 +140,20 @@ CharacterDefinition
   ├ characterId
   ├ prefab
   ├ statsDefinition
-  ├ basicMeleeAttackDefinition
+  ├ abilityDefinitions[]
   ├ dodgeDefinition
   └ experienceTableDefinition
 ```
 
-## Combat / Reward境界
+## Ability / Combat / Reward境界
 
 ```text
+Player Input / AI
+  ↓
+AbilityController
+  ↓
+IAbilityExecutor
+  ↓
 DamageRequest
   ↓
 IDamageable / Health
@@ -156,6 +168,8 @@ CharacterProgressionState.GainExperience
 ```
 
 経験値・ドロップ・進化処理をHealthや攻撃コンポーネントへ直接埋め込みません。RewardServiceは同一Defeatに対する重複付与を防ぐ境界を持ちます。
+
+Abilityは実行可能な行動、SkillはAbility等を獲得・強化する成長要素、Evolutionは形態・成長経路を変える不可逆または排他的な選択として分離します。AbilityControllerとExecutorはSkill取得状態やEvolution条件を知りません。
 
 ## Save境界
 
@@ -195,11 +209,13 @@ ISaveService
 - Save DTO / ISaveService境界
 - DamageResult / DefeatContext
 - RewardServiceから経験値加算への接続
+- Ability Definition / Runtime State / Controller / Executor
+- プレイヤー入力とAIで共有できる基本近接攻撃
 - EditMode / PlayModeテスト
 
 ## 直近の拡張方針
 
-1. Ability / Skill
+1. Skill
 2. Evolution
 3. NPC会話
 4. 敵AI

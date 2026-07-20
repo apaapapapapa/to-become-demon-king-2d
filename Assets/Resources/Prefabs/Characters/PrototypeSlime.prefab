@@ -17,6 +17,8 @@ GameObject:
   - component: {fileID: 11400001}
   - component: {fileID: 11400008}
   - component: {fileID: 11400009}
+  - component: {fileID: 11400010}
+  - component: {fileID: 11400011}
   - component: {fileID: 11400002}
   - component: {fileID: 11400003}
   - component: {fileID: 11400005}
@@ -189,10 +191,35 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e5f60718293a4b5c6d7e8f901a2b3c4d, type: 3}
   m_Name:
   m_EditorClassIdentifier:
-  attackDefinition: {fileID: 0}
   attackLayers:
     serializedVersion: 2
     m_Bits: 4294967295
+--- !u!114 &11400010
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 100000}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6a6fd8c4469e4bbb8f71f1d0df2c8b10, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:
+  initialAbilities: []
+--- !u!114 &11400011
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 100000}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1c720bac7e7f40d39ddc8bd8310fffa2, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:
+  basicAttackAbilityId: ability.basic_melee
 --- !u!114 &11400002
 MonoBehaviour:
   m_ObjectHideFlags: 0

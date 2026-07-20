@@ -1,31 +1,27 @@
-using DemonKing.Domain;
+using DemonKing.Gameplay.Abilities.Configuration;
 using UnityEngine;
 
 namespace DemonKing.Gameplay.Combat.Configuration
 {
     /// <summary>
-    /// 近接攻撃のゲームバランス値を定義するScriptableObjectです。
-    /// 攻撃コンポーネントからダメージ量や当たり判定サイズを分離します。
+    /// 近接攻撃Ability固有のゲームバランス値を定義します。
+    /// Ability共通情報は基底のAbilityDefinitionが保持します。
     /// </summary>
-    [CreateAssetMenu(fileName = "MeleeAttack", menuName = "Demon King/Gameplay/Melee Attack")]
-    public sealed class MeleeAttackDefinition : ScriptableObject
+    [CreateAssetMenu(fileName = "MeleeAttack", menuName = "Demon King/Gameplay/Abilities/Melee Attack")]
+    public sealed class MeleeAttackDefinition : AbilityDefinition
     {
-        [SerializeField] private string abilityId = string.Empty;
         [SerializeField, Min(1)] private int damage = 1;
         [SerializeField, Min(0.1f)] private float attackRadius = 0.65f;
         [SerializeField, Min(0f)] private float attackDistance = 0.65f;
         [SerializeField] private DamageType damageType = DamageType.Physical;
 
-        public string AbilityId => abilityId;
         public int Damage => damage;
         public float AttackRadius => attackRadius;
         public float AttackDistance => attackDistance;
         public DamageType DamageType => damageType;
-        public bool IsConfigured => StableContentId.IsValid(abilityId);
-
-        private void OnValidate()
-        {
-            abilityId = StableContentId.Normalize(abilityId);
-        }
+        protected override bool IsAbilitySpecificConfigurationValid =>
+            damage > 0 &&
+            attackRadius > 0f &&
+            attackDistance >= 0f;
     }
 }

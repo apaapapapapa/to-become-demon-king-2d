@@ -1,7 +1,7 @@
 ﻿<Solution>
-  <Project Path="DemonKing.Runtime.csproj" />
-  <Project Path="Assembly-CSharp-Editor.csproj" />
-  <Project Path="DemonKing.PlayMode.Tests.csproj" />
-  <Project Path="DemonKing.EditMode.Tests.csproj" />
   <Project Path="DemonKing.Domain.csproj" />
+  <Project Path="DemonKing.Runtime.csproj" />
+  <Project Path="DemonKing.PlayMode.Tests.csproj" />
+  <Project Path="Assembly-CSharp-Editor.csproj" />
+  <Project Path="DemonKing.EditMode.Tests.csproj" />
 </Solution>

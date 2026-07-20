@@ -17,18 +17,19 @@
 - Save DTO / ISaveService境界
 - DamageResult / DefeatContext
 - RewardServiceから経験値加算への接続
+- Ability Definition / Runtime State / Controller / Executor
+- `ability.basic_melee` の共通実行化
 - EditMode / PlayModeテスト
 - VitePress Knowledge Base基盤
 
 ## 直近の開発フェーズ
 
-1. Ability基盤
-2. Skill
-3. Evolution
-4. NPC会話
-5. 敵AI
-6. クエスト・目的管理
-7. 縦切りゲームループ完成
+1. Skill
+2. Evolution
+3. NPC会話
+4. 敵AI
+5. クエスト・目的管理
+6. 縦切りゲームループ完成
 
 ## P3候補
 
