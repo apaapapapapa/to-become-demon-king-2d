@@ -17,7 +17,7 @@ namespace DemonKing.Tests.PlayMode
         public IEnumerator EnemyAi_Targetを索敵すると追跡する()
         {
             EnemyAiDefinition definition = LoadDefinition();
-            GameObject target = CreateDamageableTarget("Chase Target", new Vector3(1.5f, 0f, 0f));
+            GameObject target = CreateDamageableTarget("Chase Target", new Vector3(1.3f, 0f, 0f));
             GameObject enemy = CreateEnemy("Chasing Enemy", Vector3.zero, definition, target);
             Rigidbody body = enemy.GetComponent<Rigidbody>();
             EnemyAiController ai = enemy.GetComponent<EnemyAiController>();
