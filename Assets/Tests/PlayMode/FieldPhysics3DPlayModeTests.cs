@@ -37,6 +37,84 @@ namespace DemonKing.Tests.PlayMode
         }
 
         [UnityTest]
+        public IEnumerator CharacterElevationMotor_Jumpで上昇して地面へ着地する()
+        {
+            GameObject actor = new("Jump Actor");
+            CharacterElevationMotor elevationMotor = actor.AddComponent<CharacterElevationMotor>();
+            yield return null;
+
+            Assert.That(elevationMotor.IsGrounded, Is.True);
+            Assert.That(elevationMotor.TryJump(), Is.True);
+
+            for (int frame = 0; frame < 5; frame++)
+            {
+                yield return new WaitForFixedUpdate();
+            }
+
+            Assert.That(elevationMotor.Elevation, Is.GreaterThan(0f));
+            Assert.That(elevationMotor.Mode, Is.EqualTo(CharacterElevationMode.Airborne));
+
+            for (int frame = 0; frame < 180 && !elevationMotor.IsGrounded; frame++)
+            {
+                yield return new WaitForFixedUpdate();
+            }
+
+            Assert.That(elevationMotor.IsGrounded, Is.True);
+            Assert.That(elevationMotor.Elevation, Is.EqualTo(0f).Within(0.001f));
+            Assert.That(elevationMotor.VerticalVelocity, Is.Zero.Within(0.001f));
+
+            Object.Destroy(actor);
+        }
+
+        [UnityTest]
+        public IEnumerator Flight_建物上端を超えた高度で有限高さColliderを横断できる()
+        {
+            GameObject building = new("Height Aware Building");
+            BoxCollider buildingCollider = building.AddComponent<BoxCollider>();
+            buildingCollider.center = new Vector3(0f, 0f, 2f);
+            buildingCollider.size = new Vector3(2f, 2f, 4f);
+
+            GameObject actor = new("Flying Actor");
+            actor.transform.position = new Vector3(-2f, 0f, 0f);
+            CharacterElevationMotor elevationMotor = actor.AddComponent<CharacterElevationMotor>();
+            Rigidbody body = actor.GetComponent<Rigidbody>();
+            yield return null;
+
+            elevationMotor.SetFlightMode(true);
+            elevationMotor.SetFlightVerticalInput(1f);
+            for (int frame = 0; frame < 120 && elevationMotor.Elevation < 4.25f; frame++)
+            {
+                yield return new WaitForFixedUpdate();
+            }
+
+            elevationMotor.SetFlightVerticalInput(0f);
+            Assert.That(elevationMotor.IsFlying, Is.True);
+            Assert.That(elevationMotor.Elevation, Is.GreaterThan(4f));
+
+            Physics.SyncTransforms();
+            Collider[] aerialHits = Physics.OverlapSphere(
+                new Vector3(0f, 0f, elevationMotor.Elevation + 0.36f),
+                0.3f,
+                ~0,
+                QueryTriggerInteraction.Collide);
+            Assert.That(aerialHits.Contains(buildingCollider), Is.False);
+
+            for (int frame = 0; frame < 45; frame++)
+            {
+                Vector3 next = body.position;
+                next.x += 0.1f;
+                body.MovePosition(next);
+                yield return new WaitForFixedUpdate();
+            }
+
+            Assert.That(body.position.x, Is.GreaterThan(1.5f));
+            Assert.That(elevationMotor.Elevation, Is.GreaterThan(4f));
+
+            Object.Destroy(actor);
+            Object.Destroy(building);
+        }
+
+        [UnityTest]
         public IEnumerator FiniteHeightObstacle_IsNotDetectedAboveItsTop()
         {
             GameObject building = new("Height Aware Building");
