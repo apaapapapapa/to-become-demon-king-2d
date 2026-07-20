@@ -6,6 +6,14 @@ on:
       - main
     paths:
       - "docs/**"
+      - "Assets/Resources/Settings/Gameplay/**"
+      - "Assets/Scripts/Field/Prototype/PrototypeCombatDummy.cs"
+      - ".github/workflows/deploy-vitepress.yml"
+  pull_request:
+    paths:
+      - "docs/**"
+      - "Assets/Resources/Settings/Gameplay/**"
+      - "Assets/Scripts/Field/Prototype/PrototypeCombatDummy.cs"
       - ".github/workflows/deploy-vitepress.yml"
   workflow_dispatch:
 
@@ -15,7 +23,7 @@ permissions:
   id-token: write
 
 concurrency:
-  group: github-pages
+  group: github-pages-${{ github.event_name }}-${{ github.ref }}
   cancel-in-progress: false
 
 jobs:
@@ -37,6 +45,7 @@ jobs:
           cache-dependency-path: docs/package-lock.json
 
       - name: GitHub Pagesを設定
+        if: github.event_name != 'pull_request'
         uses: actions/configure-pages@v5
 
       - name: 依存関係を復元
@@ -48,12 +57,14 @@ jobs:
         run: npm run build
 
       - name: Pages成果物をアップロード
+        if: github.event_name != 'pull_request'
         uses: actions/upload-pages-artifact@v4
         with:
           path: docs/.vitepress/dist
 
   deploy:
     name: Deploy GitHub Pages
+    if: github.event_name != 'pull_request'
     needs: build
     runs-on: ubuntu-latest
     timeout-minutes: 10
