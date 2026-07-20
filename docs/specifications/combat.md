@@ -28,6 +28,15 @@ RewardService
 
 経験値、ドロップ、進化処理をHealthや攻撃コンポーネントへ直接埋め込みません。
 
+## 戦闘演出
+
+- `PlayerMeleeAttack.AttackPerformed` が攻撃位置、向き、範囲、命中数を通知し、`PrototypeMeleeAttackEffect` が斬撃を表示する
+- `Health.Died` を `PrototypeMonsterDefeatEffect` が購読し、撃破位置へ破裂・消滅表現を表示する
+- 撃破エフェクトは対象の子にせず独立したGameObjectとして生成し、対象が同じフレームで破棄されても最後まで再生する
+- 現在の図形生成エフェクトはPrototype境界とし、本番アート確定後はPrefab、Animator、Particle Systemなどへ差し替える
+
+演出コンポーネントはCombatの通知を購読するだけとし、ダメージ量、死亡判定、報酬付与を変更しません。
+
 ## Definition
 
 `MeleeAttackDefinition` がStable Ability ID、Damage Type、ダメージ、攻撃半径、攻撃距離などの静的定義を持ちます。

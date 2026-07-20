@@ -31,6 +31,7 @@ namespace DemonKing.Field.Prototype
             CreateNpc(parent);
             PrototypeCombatDummy dummy = CreateCombatDummy(parent);
             dummy.ConfigureReward(trainingDummyReward);
+            dummy.gameObject.AddComponent<PrototypeMonsterDefeatEffect>();
             dummy.Defeated += context =>
             {
                 RewardGrantResult result = rewardService.GrantDefeatReward(

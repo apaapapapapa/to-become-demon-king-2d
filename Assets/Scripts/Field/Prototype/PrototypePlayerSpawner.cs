@@ -80,6 +80,10 @@ namespace DemonKing.Field.Prototype
 
             PlayerMeleeAttack meleeAttack = root.GetComponent<PlayerMeleeAttack>();
             meleeAttack?.Configure(characterDefinition.BasicMeleeAttackDefinition);
+            if (meleeAttack != null && root.GetComponent<PrototypeMeleeAttackEffect>() == null)
+            {
+                root.AddComponent<PrototypeMeleeAttackEffect>();
+            }
 
             CharacterDodge2D dodge = root.GetComponent<CharacterDodge2D>();
             if (dodge == null)
