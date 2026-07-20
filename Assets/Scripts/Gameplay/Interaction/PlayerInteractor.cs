@@ -13,6 +13,8 @@ namespace DemonKing.Gameplay.Interaction
     [RequireComponent(typeof(PlayerInputReader))]
     public sealed class PlayerInteractor : MonoBehaviour
     {
+        private const float GroundElevationTolerance = 0.001f;
+
         [SerializeField, Min(0.1f)] private float interactionRadius = 1.1f;
         [SerializeField] private Vector2 interactionOffset = new(0f, 0.15f);
         [SerializeField] private LayerMask interactionLayers = ~0;
@@ -55,16 +57,15 @@ namespace DemonKing.Gameplay.Interaction
         private IInteractable FindNearestInteractable()
         {
             Vector3 center = transform.position + FieldSpace3D.PlanarDelta(interactionOffset);
+            visited.Clear();
+            IInteractable nearest = null;
+            float nearestDistance = float.PositiveInfinity;
+
             Collider[] colliders = Physics.OverlapSphere(
                 center,
                 interactionRadius,
                 interactionLayers,
                 QueryTriggerInteraction.Collide);
-
-            visited.Clear();
-            IInteractable nearest = null;
-            float nearestDistance = float.PositiveInfinity;
-
             foreach (Collider collider in colliders)
             {
                 if (collider == null || collider.transform.IsChildOf(transform))
@@ -72,31 +73,66 @@ namespace DemonKing.Gameplay.Interaction
                     continue;
                 }
 
-                MonoBehaviour[] behaviours = collider.GetComponentsInParent<MonoBehaviour>(false);
-                foreach (MonoBehaviour behaviour in behaviours)
+                ConsiderBehaviours(
+                    collider.GetComponentsInParent<MonoBehaviour>(false),
+                    center,
+                    ref nearest,
+                    ref nearestDistance);
+            }
+
+            // 既存の地上PlayModeテストfixtureを段階移行するための互換Queryです。
+            // Runtime Actorは3D Colliderへ移行済みのため正式な探索は上の3D Queryです。
+            if (nearest == null && Mathf.Abs(center.z) <= GroundElevationTolerance)
+            {
+                Collider2D[] legacyColliders = Physics2D.OverlapCircleAll(
+                    FieldSpace3D.ToPlanar(center),
+                    interactionRadius,
+                    interactionLayers);
+                foreach (Collider2D collider in legacyColliders)
                 {
-                    if (behaviour is not IInteractable interactable || !visited.Add(interactable))
+                    if (collider == null || collider.transform.IsChildOf(transform))
                     {
                         continue;
                     }
 
-                    if (!interactable.CanInteract(gameObject))
-                    {
-                        continue;
-                    }
-
-                    float distance = (behaviour.transform.position - center).sqrMagnitude;
-                    if (distance >= nearestDistance)
-                    {
-                        continue;
-                    }
-
-                    nearest = interactable;
-                    nearestDistance = distance;
+                    ConsiderBehaviours(
+                        collider.GetComponentsInParent<MonoBehaviour>(false),
+                        center,
+                        ref nearest,
+                        ref nearestDistance);
                 }
             }
 
             return nearest;
+        }
+
+        private void ConsiderBehaviours(
+            MonoBehaviour[] behaviours,
+            Vector3 center,
+            ref IInteractable nearest,
+            ref float nearestDistance)
+        {
+            foreach (MonoBehaviour behaviour in behaviours)
+            {
+                if (behaviour is not IInteractable interactable || !visited.Add(interactable))
+                {
+                    continue;
+                }
+
+                if (!interactable.CanInteract(gameObject))
+                {
+                    continue;
+                }
+
+                float distance = (behaviour.transform.position - center).sqrMagnitude;
+                if (distance >= nearestDistance)
+                {
+                    continue;
+                }
+
+                nearest = interactable;
+                nearestDistance = distance;
+            }
         }
 
 #if UNITY_EDITOR
