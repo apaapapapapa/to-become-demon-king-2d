@@ -2,6 +2,7 @@ using System;
 using DemonKing.Field.Prototype.Configuration;
 using DemonKing.Gameplay.AI;
 using DemonKing.Gameplay.Dialogue;
+using DemonKing.Gameplay.Dialogue.Configuration;
 using DemonKing.Gameplay.Rewards;
 using DemonKing.Gameplay.Spawning;
 using UnityEngine;
@@ -83,7 +84,7 @@ namespace DemonKing.Field.Prototype
         private static PrototypeNpcInteractable CreateNpc(
             Transform parent,
             DialogueLog dialogueLog,
-            Gameplay.Dialogue.Configuration.DialogueDefinition dialogueDefinition)
+            DialogueDefinition dialogueDefinition)
         {
             GameObject npc = new("見習い魔術師");
             npc.transform.SetParent(parent, false);
