@@ -1,3 +1,9 @@
+## [1.2.0](https://github.com/apaapapapapa/to-become-demon-king-2d/compare/v1.1.0...v1.2.0) (2026-07-20)
+
+### Features
+
+* show NPC dialogue log in game ([03cc1b6](https://github.com/apaapapapapa/to-become-demon-king-2d/commit/03cc1b6a3deb96bc7a229c3deb637fb5daa83884))
+
 ## [1.1.0](https://github.com/apaapapapapa/to-become-demon-king-2d/compare/v1.0.0...v1.1.0) (2026-07-20)
 
 ### Features
