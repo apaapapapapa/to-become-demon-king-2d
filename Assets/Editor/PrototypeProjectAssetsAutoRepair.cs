@@ -32,6 +32,9 @@ namespace DemonKing.EditorTools
         private const string FireMagicArtPath = "Assets/Resources/Settings/Gameplay/FireMagicArt.asset";
         private const string FireMagicTrainingGrantPath = "Assets/Resources/Settings/Gameplay/FireMagicTrainingGrant.asset";
         private const string ApprenticeMageDialoguePath = "Assets/Resources/Settings/Gameplay/ApprenticeMageDialogue.asset";
+        private const string ApprenticeMageActiveDialoguePath = "Assets/Resources/Settings/Gameplay/ApprenticeMageActiveDialogue.asset";
+        private const string ApprenticeMageTurnInDialoguePath = "Assets/Resources/Settings/Gameplay/ApprenticeMageTurnInDialogue.asset";
+        private const string ApprenticeMageCompletedDialoguePath = "Assets/Resources/Settings/Gameplay/ApprenticeMageCompletedDialogue.asset";
         private const string FirstTrainingQuestPath = "Assets/Resources/Settings/Gameplay/FirstTrainingQuest.asset";
         private const string PredatoryInstinctSkillPath = "Assets/Resources/Settings/Gameplay/PredatoryInstinctSkill.asset";
         private const string PredatorSlimeEvolutionPath = "Assets/Resources/Settings/Gameplay/PredatorSlimeEvolution.asset";
@@ -101,6 +104,9 @@ namespace DemonKing.EditorTools
             changed |= AssignIfDifferent(serializedObject, "playerCharacter", playerCharacter);
             changed |= AssignIfDifferent(serializedObject, "trainingSlimeAi", Load<EnemyAiDefinition>(TrainingSlimeAiPath));
             changed |= AssignIfDifferent(serializedObject, "apprenticeMageDialogue", Load<DialogueDefinition>(ApprenticeMageDialoguePath));
+            changed |= AssignIfDifferent(serializedObject, "apprenticeMageActiveDialogue", Load<DialogueDefinition>(ApprenticeMageActiveDialoguePath));
+            changed |= AssignIfDifferent(serializedObject, "apprenticeMageTurnInDialogue", Load<DialogueDefinition>(ApprenticeMageTurnInDialoguePath));
+            changed |= AssignIfDifferent(serializedObject, "apprenticeMageCompletedDialogue", Load<DialogueDefinition>(ApprenticeMageCompletedDialoguePath));
             changed |= AssignArrayIfDifferent(serializedObject, "questDefinitions", Load<QuestDefinition>(FirstTrainingQuestPath));
             changed |= AssignIfDifferent(serializedObject, "trainingDummyReward", Load<RewardDefinition>(TrainingDummyRewardPath));
             changed |= AssignIfDifferent(serializedObject, "fireMagicTrainingGrant", Load<ProgressionGrantDefinition>(FireMagicTrainingGrantPath));

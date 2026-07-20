@@ -1,6 +1,7 @@
 using DemonKing.Domain.Quests;
 using DemonKing.Gameplay.Combat;
 using DemonKing.Gameplay.Dialogue;
+using DemonKing.Gameplay.Dialogue.Configuration;
 using DemonKing.Gameplay.Events;
 using DemonKing.Gameplay.Progression;
 using DemonKing.Gameplay.Progression.Configuration;
@@ -28,6 +29,10 @@ namespace DemonKing.Field.Prototype
         private GameplayEventHub gameplayEventHub;
         private QuestProgressionService questProgressionService;
         private QuestDefinition trainingQuestDefinition;
+        private DialogueDefinition offerDialogue;
+        private DialogueDefinition activeDialogue;
+        private DialogueDefinition turnInDialogue;
+        private DialogueDefinition completedDialogue;
         private bool initialized;
 
         public void Initialize(
@@ -39,7 +44,11 @@ namespace DemonKing.Field.Prototype
             RewardService rewardService,
             GameplayEventHub gameplayEventHub,
             QuestProgressionService questProgressionService,
-            QuestDefinition trainingQuestDefinition)
+            QuestDefinition trainingQuestDefinition,
+            DialogueDefinition offerDialogue,
+            DialogueDefinition activeDialogue,
+            DialogueDefinition turnInDialogue,
+            DialogueDefinition completedDialogue)
         {
             if (initialized)
             {
@@ -56,8 +65,13 @@ namespace DemonKing.Field.Prototype
             this.gameplayEventHub = gameplayEventHub;
             this.questProgressionService = questProgressionService;
             this.trainingQuestDefinition = trainingQuestDefinition;
+            this.offerDialogue = offerDialogue;
+            this.activeDialogue = activeDialogue;
+            this.turnInDialogue = turnInDialogue;
+            this.completedDialogue = completedDialogue;
 
             npc.Interacted += HandleNpcInteracted;
+            npc.ConversationStarted += HandleConversationStarted;
             npc.DialogueCompleted += HandleDialogueCompleted;
             dummyLifecycle.Spawned += HandleDummySpawned;
             rewardService.RewardGranted += HandleRewardGranted;
@@ -76,6 +90,7 @@ namespace DemonKing.Field.Prototype
             if (npc != null)
             {
                 npc.Interacted -= HandleNpcInteracted;
+                npc.ConversationStarted -= HandleConversationStarted;
                 npc.DialogueCompleted -= HandleDialogueCompleted;
             }
 
@@ -107,25 +122,58 @@ namespace DemonKing.Field.Prototype
 
         private void HandleNpcInteracted()
         {
-            if (trainingQuestDefinition != null)
+            dummyLifecycle.SpawnOrRestore();
+        }
+
+        private void HandleConversationStarted()
+        {
+            if (trainingQuestDefinition == null ||
+                !questProgressionService.TryGetState(trainingQuestDefinition.QuestId, out QuestProgressState state))
             {
-                questProgressionService.AcceptQuest(trainingQuestDefinition.QuestId);
+                return;
             }
 
-            dummyLifecycle.SpawnOrRestore();
+            DialogueDefinition dialogueDefinition = state.Status switch
+            {
+                QuestProgressStatus.Available => offerDialogue,
+                QuestProgressStatus.Active => activeDialogue,
+                QuestProgressStatus.ReadyToTurnIn => turnInDialogue,
+                QuestProgressStatus.Completed => completedDialogue,
+                _ => offerDialogue,
+            };
+            npc.ConfigureDialogue(dialogueDefinition);
         }
 
         private void HandleDialogueCompleted(GameObject interactor)
         {
+            string completedDialogueId = npc.DialogueId;
+            gameplayEventHub.Publish(new GameplayEvent(
+                GameplayEventIds.DialogueCompleted,
+                completedDialogueId));
+
+            if (trainingQuestDefinition == null ||
+                !questProgressionService.TryGetState(trainingQuestDefinition.QuestId, out QuestProgressState state))
+            {
+                return;
+            }
+
+            if (state.Status == QuestProgressStatus.Available)
+            {
+                questProgressionService.AcceptQuest(trainingQuestDefinition.QuestId);
+                return;
+            }
+
+            if (!state.IsReadyToTurnIn || !questProgressionService.CompleteQuest(trainingQuestDefinition.QuestId))
+            {
+                return;
+            }
+
             ProgressionGrantResult result = acquisitionService.Grant(trainingGrant);
             dialogueLog.ShowLine(
                 "見習い魔術師",
                 result.WasGranted
                     ? "火炎魔法を習得した！ Kキー／ゲームパッドYで火炎弾を放てる。"
                     : "火炎魔法はもう身についている。実戦で熟練を重ねよう。");
-            gameplayEventHub.Publish(new GameplayEvent(
-                GameplayEventIds.DialogueCompleted,
-                npc.DialogueId));
         }
 
         private void HandleDummySpawned(PrototypeCombatDummy dummy)
@@ -162,7 +210,7 @@ namespace DemonKing.Field.Prototype
 
         private static void HandleQuestCompleted(QuestProgressState state)
         {
-            Debug.Log($"クエスト達成: {state.QuestId}");
+            Debug.Log($"クエスト報告完了: {state.QuestId}");
         }
     }
 }

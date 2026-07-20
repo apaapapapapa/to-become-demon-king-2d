@@ -26,7 +26,10 @@ namespace DemonKing.Field.Prototype
             EnemyAiDefinition trainingSlimeAi,
             RewardDefinition trainingDummyReward,
             ProgressionGrantDefinition fireMagicTrainingGrant,
-            DialogueDefinition apprenticeMageDialogue,
+            DialogueDefinition apprenticeMageOfferDialogue,
+            DialogueDefinition apprenticeMageActiveDialogue,
+            DialogueDefinition apprenticeMageTurnInDialogue,
+            DialogueDefinition apprenticeMageCompletedDialogue,
             QuestDefinition trainingQuestDefinition,
             DialogueLog dialogueLog)
         {
@@ -59,12 +62,10 @@ namespace DemonKing.Field.Prototype
                 throw new ArgumentNullException(nameof(dialogueLog));
             }
 
-            if (apprenticeMageDialogue == null || !apprenticeMageDialogue.IsConfigured)
-            {
-                throw new ArgumentException(
-                    "見習い魔術師の会話定義が正しく設定されていません。",
-                    nameof(apprenticeMageDialogue));
-            }
+            ValidateDialogue(apprenticeMageOfferDialogue, nameof(apprenticeMageOfferDialogue));
+            ValidateDialogue(apprenticeMageActiveDialogue, nameof(apprenticeMageActiveDialogue));
+            ValidateDialogue(apprenticeMageTurnInDialogue, nameof(apprenticeMageTurnInDialogue));
+            ValidateDialogue(apprenticeMageCompletedDialogue, nameof(apprenticeMageCompletedDialogue));
 
             if (trainingQuestDefinition == null || !trainingQuestDefinition.IsConfigured)
             {
@@ -80,7 +81,7 @@ namespace DemonKing.Field.Prototype
                     nameof(fireMagicTrainingGrant));
             }
 
-            PrototypeNpcInteractable npc = CreateNpc(parent, dialogueLog, apprenticeMageDialogue);
+            PrototypeNpcInteractable npc = CreateNpc(parent, dialogueLog, apprenticeMageOfferDialogue);
             var dummyFactory = new PrototypeCombatDummyFactory(
                 parent,
                 new Vector3(1.45f, -0.45f, 0f),
@@ -108,9 +109,23 @@ namespace DemonKing.Field.Prototype
                 gameplayServices.RewardService,
                 gameplayServices.GameplayEventHub,
                 gameplayServices.QuestProgressionService,
-                trainingQuestDefinition);
+                trainingQuestDefinition,
+                apprenticeMageOfferDialogue,
+                apprenticeMageActiveDialogue,
+                apprenticeMageTurnInDialogue,
+                apprenticeMageCompletedDialogue);
 
             dummyLifecycle.SpawnOrRestore();
+        }
+
+        private static void ValidateDialogue(DialogueDefinition dialogueDefinition, string parameterName)
+        {
+            if (dialogueDefinition == null || !dialogueDefinition.IsConfigured)
+            {
+                throw new ArgumentException(
+                    "見習い魔術師の会話定義が正しく設定されていません。",
+                    parameterName);
+            }
         }
 
         private static PrototypeNpcInteractable CreateNpc(

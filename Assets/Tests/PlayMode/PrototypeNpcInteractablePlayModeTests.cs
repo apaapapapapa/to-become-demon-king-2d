@@ -27,29 +27,69 @@ namespace DemonKing.Tests.PlayMode
             npc.ConfigureDialogueLog(dialogueLog);
             npc.ConfigureDialogue(definition);
             GameObject interactor = new("Dialogue Test Interactor");
+            int conversationStartedCount = 0;
+            npc.ConversationStarted += () => conversationStartedCount++;
 
             yield return null;
 
             npc.Interact(interactor);
 
+            Assert.That(conversationStartedCount, Is.EqualTo(1));
             Assert.That(dialogueLog.CurrentLine?.Speaker, Is.EqualTo("見習い魔術師"));
             Assert.That(dialogueLog.CurrentLine?.Text, Does.Contain("魔王"));
 
             npc.Interact(interactor);
+            Assert.That(conversationStartedCount, Is.EqualTo(1));
             Assert.That(dialogueLog.CurrentLine?.Text, Does.Contain("訓練用スライム"));
 
             npc.Interact(interactor);
+            Assert.That(conversationStartedCount, Is.EqualTo(1));
             Assert.That(dialogueLog.CurrentLine?.Text, Does.Contain("攻撃"));
 
             npc.Interact(interactor);
+            Assert.That(conversationStartedCount, Is.EqualTo(1));
             Assert.That(dialogueLog.HasCurrentLine, Is.False);
 
             npc.Interact(interactor);
+            Assert.That(conversationStartedCount, Is.EqualTo(2));
             Assert.That(dialogueLog.CurrentLine?.Text, Does.Contain("魔王"));
 
             Object.Destroy(npcObject);
             Object.Destroy(interactor);
             Object.Destroy(definition);
+        }
+
+        [UnityTest]
+        public IEnumerator PrototypeNpcInteractable_会話開始時にDefinitionを切り替えられる()
+        {
+            DialogueDefinition initialDefinition = DialogueDefinition.CreateRuntime(
+                "dialogue.test.initial",
+                "見習い魔術師",
+                "最初の会話");
+            DialogueDefinition routedDefinition = DialogueDefinition.CreateRuntime(
+                "dialogue.test.routed",
+                "見習い魔術師",
+                "Quest状態に応じた会話");
+            var dialogueLog = new DialogueLog();
+            GameObject npcObject = new("Dialogue Routing NPC");
+            PrototypeNpcInteractable npc = npcObject.AddComponent<PrototypeNpcInteractable>();
+            npc.ConfigureDialogueLog(dialogueLog);
+            npc.ConfigureDialogue(initialDefinition);
+            npc.ConversationStarted += () => npc.ConfigureDialogue(routedDefinition);
+            GameObject interactor = new("Dialogue Routing Interactor");
+
+            yield return null;
+
+            npc.Interact(interactor);
+
+            Assert.That(npc.DialogueId, Is.EqualTo("dialogue.test.routed"));
+            Assert.That(dialogueLog.CurrentLine?.Text, Is.EqualTo("Quest状態に応じた会話"));
+
+            Object.Destroy(npcObject);
+            Object.Destroy(interactor);
+            Object.Destroy(initialDefinition);
+            Object.Destroy(routedDefinition);
+            yield return null;
         }
 
         [UnityTest]

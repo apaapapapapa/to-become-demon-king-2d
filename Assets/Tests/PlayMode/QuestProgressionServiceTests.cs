@@ -10,7 +10,7 @@ namespace DemonKing.Tests.PlayMode
     public sealed class QuestProgressionServiceTests
     {
         [Test]
-        public void QuestProgressionService_受注前は進捗せず受注後にObjectiveとQuestを完了する()
+        public void QuestProgressionService_受注後にObjective達成し報告完了でQuestを完了する()
         {
             QuestDefinition quest = QuestDefinition.CreateRuntime(
                 "quest.test.defeat",
@@ -25,8 +25,10 @@ namespace DemonKing.Tests.PlayMode
             var service = new QuestProgressionService(new[] { quest });
             eventHub.Published += service.Handle;
             int acceptedCount = 0;
+            int readyCount = 0;
             int completedCount = 0;
             service.QuestAccepted += _ => acceptedCount++;
+            service.QuestReadyToTurnIn += _ => readyCount++;
             service.QuestCompleted += _ => completedCount++;
 
             service.TryGetState("quest.test.defeat", out QuestProgressState state);
@@ -52,19 +54,26 @@ namespace DemonKing.Tests.PlayMode
                 GameplayEventIds.EnemyDefeated,
                 "character.training_dummy"));
             Assert.That(objective.CurrentCount, Is.EqualTo(1));
-            Assert.That(state.IsCompleted, Is.False);
+            Assert.That(state.IsActive, Is.True);
 
             eventHub.Publish(new GameplayEvent(
                 GameplayEventIds.EnemyDefeated,
                 "character.training_dummy"));
             Assert.That(objective.CurrentCount, Is.EqualTo(2));
-            Assert.That(state.IsCompleted, Is.True);
-            Assert.That(state.Status, Is.EqualTo(QuestProgressStatus.Completed));
-            Assert.That(completedCount, Is.EqualTo(1));
+            Assert.That(state.IsReadyToTurnIn, Is.True);
+            Assert.That(state.IsCompleted, Is.False);
+            Assert.That(readyCount, Is.EqualTo(1));
+            Assert.That(completedCount, Is.EqualTo(0));
 
             eventHub.Publish(new GameplayEvent(
                 GameplayEventIds.EnemyDefeated,
                 "character.training_dummy"));
+            Assert.That(readyCount, Is.EqualTo(1));
+            Assert.That(objective.CurrentCount, Is.EqualTo(2));
+
+            Assert.That(service.CompleteQuest("quest.test.defeat"), Is.True);
+            Assert.That(service.CompleteQuest("quest.test.defeat"), Is.False);
+            Assert.That(state.Status, Is.EqualTo(QuestProgressStatus.Completed));
             Assert.That(completedCount, Is.EqualTo(1));
 
             Object.DestroyImmediate(quest);

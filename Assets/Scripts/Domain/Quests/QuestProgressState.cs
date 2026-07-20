@@ -60,11 +60,13 @@ namespace DemonKing.Domain.Quests
     {
         Available = 0,
         Active = 1,
-        Completed = 2,
+        ReadyToTurnIn = 2,
+        Completed = 3,
     }
 
     /// <summary>
-    /// Quest単位のRuntime Stateです。受注状態とObjective進捗を保持し、完了状態を明示的に遷移させます。
+    /// Quest単位のRuntime Stateです。
+    /// Objective達成とQuest報告完了を分離し、Available -> Active -> ReadyToTurnIn -> Completedを管理します。
     /// </summary>
     public sealed class QuestProgressState
     {
@@ -90,7 +92,9 @@ namespace DemonKing.Domain.Quests
         public QuestProgressStatus Status { get; private set; } = QuestProgressStatus.Available;
         public bool IsAccepted => Status != QuestProgressStatus.Available;
         public bool IsActive => Status == QuestProgressStatus.Active;
+        public bool IsReadyToTurnIn => Status == QuestProgressStatus.ReadyToTurnIn;
         public bool IsCompleted => Status == QuestProgressStatus.Completed;
+        public bool AreObjectivesCompleted => objectives.Values.All(objective => objective.IsCompleted);
 
         public bool Accept()
         {
@@ -103,10 +107,20 @@ namespace DemonKing.Domain.Quests
             return true;
         }
 
-        public bool TryComplete()
+        public bool TryMarkReadyToTurnIn()
         {
-            if (Status != QuestProgressStatus.Active ||
-                !objectives.Values.All(objective => objective.IsCompleted))
+            if (Status != QuestProgressStatus.Active || !AreObjectivesCompleted)
+            {
+                return false;
+            }
+
+            Status = QuestProgressStatus.ReadyToTurnIn;
+            return true;
+        }
+
+        public bool Complete()
+        {
+            if (Status != QuestProgressStatus.ReadyToTurnIn)
             {
                 return false;
             }
