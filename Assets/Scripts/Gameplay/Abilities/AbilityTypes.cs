@@ -1,3 +1,4 @@
+using System;
 using DemonKing.Gameplay.Abilities.Configuration;
 using UnityEngine;
 
@@ -23,19 +24,76 @@ namespace DemonKing.Gameplay.Abilities
     /// </summary>
     public readonly struct AbilityExecutionRequest
     {
-        public AbilityExecutionRequest(
+        private readonly Action<AbilityEffectResolved> effectReporter;
+
+        internal AbilityExecutionRequest(
+            Guid executionId,
             GameObject user,
             AbilityDefinition definition,
-            AbilityExecutionInput input)
+            AbilityExecutionInput input,
+            Action<AbilityEffectResolved> effectReporter)
         {
+            ExecutionId = executionId;
             User = user;
             Definition = definition;
             Input = input;
+            this.effectReporter = effectReporter;
         }
 
+        public Guid ExecutionId { get; }
         public GameObject User { get; }
         public AbilityDefinition Definition { get; }
         public AbilityExecutionInput Input { get; }
+
+        public void ReportEffect(AbilityEffectKind effectKind, bool wasApplied)
+        {
+            if (ExecutionId == Guid.Empty || Definition == null || effectReporter == null)
+            {
+                return;
+            }
+
+            effectReporter.Invoke(new AbilityEffectResolved(
+                ExecutionId,
+                User,
+                Definition.AbilityId,
+                effectKind,
+                wasApplied));
+        }
+    }
+
+    public enum AbilityEffectKind
+    {
+        Damage = 0,
+        Healing = 1,
+        Buff = 2,
+        Debuff = 3,
+        Other = 4
+    }
+
+    /// <summary>
+    /// Abilityの実効果が成立したかを、成長や演出へ通知する共通結果です。
+    /// </summary>
+    public readonly struct AbilityEffectResolved
+    {
+        internal AbilityEffectResolved(
+            Guid executionId,
+            GameObject user,
+            string abilityId,
+            AbilityEffectKind effectKind,
+            bool wasApplied)
+        {
+            ExecutionId = executionId;
+            User = user;
+            AbilityId = abilityId ?? string.Empty;
+            EffectKind = effectKind;
+            WasApplied = wasApplied;
+        }
+
+        public Guid ExecutionId { get; }
+        public GameObject User { get; }
+        public string AbilityId { get; }
+        public AbilityEffectKind EffectKind { get; }
+        public bool WasApplied { get; }
     }
 
     /// <summary>
@@ -76,10 +134,12 @@ namespace DemonKing.Gameplay.Abilities
         internal AbilityUseResult(
             AbilityUseStatus status,
             string abilityId,
-            AbilityRuntimeState runtimeState)
+            AbilityRuntimeState runtimeState,
+            Guid executionId = default)
         {
             Status = status;
             AbilityId = abilityId ?? string.Empty;
+            ExecutionId = executionId;
             CooldownRemaining = runtimeState?.CooldownRemaining ?? 0f;
             UseCount = runtimeState?.UseCount ?? 0;
             IsExecuting = runtimeState?.IsExecuting ?? false;
@@ -87,6 +147,7 @@ namespace DemonKing.Gameplay.Abilities
 
         public AbilityUseStatus Status { get; }
         public string AbilityId { get; }
+        public Guid ExecutionId { get; }
         public float CooldownRemaining { get; }
         public int UseCount { get; }
         public bool IsExecuting { get; }

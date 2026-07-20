@@ -20,6 +20,7 @@ namespace DemonKing.Gameplay.Abilities
         private readonly List<IAbilityExecutor> executors = new();
 
         public event Action<AbilityUseResult> AbilityUseResolved;
+        public event Action<AbilityEffectResolved> EffectResolved;
 
         private void Awake()
         {
@@ -51,26 +52,43 @@ namespace DemonKing.Gameplay.Abilities
 
             foreach (AbilityDefinition definition in abilityDefinitions)
             {
-                if (definition == null || !definition.IsConfigured)
-                {
-                    throw new ArgumentException(
-                        "正しく設定されたAbilityDefinitionだけを登録できます。",
-                        nameof(abilityDefinitions));
-                }
-
-                if (!definitions.TryAdd(definition.AbilityId, definition))
+                if (!TryAddDefinition(definition))
                 {
                     throw new ArgumentException(
                         $"Ability IDが重複しています: {definition.AbilityId}",
                         nameof(abilityDefinitions));
                 }
-
-                runtimeStates.Add(
-                    definition.AbilityId,
-                    new AbilityRuntimeState(definition.AbilityId));
             }
 
             RefreshExecutors();
+        }
+
+        public bool GrantAbility(AbilityDefinition definition)
+        {
+            ValidateDefinition(definition, nameof(definition));
+
+            if (definitions.TryGetValue(definition.AbilityId, out AbilityDefinition existing))
+            {
+                if (ReferenceEquals(existing, definition))
+                {
+                    return false;
+                }
+
+                throw new InvalidOperationException(
+                    $"同じAbility IDへ異なるDefinitionを付与できません: {definition.AbilityId}");
+            }
+
+            definitions.Add(definition.AbilityId, definition);
+            runtimeStates.Add(
+                definition.AbilityId,
+                new AbilityRuntimeState(definition.AbilityId));
+            return true;
+        }
+
+        public bool HasAbility(string abilityId)
+        {
+            string normalizedId = StableContentId.Normalize(abilityId);
+            return definitions.ContainsKey(normalizedId);
         }
 
         public void RefreshExecutors()
@@ -96,6 +114,7 @@ namespace DemonKing.Gameplay.Abilities
                 abilityId,
                 user,
                 input,
+                Guid.Empty,
                 out AbilityExecutionRequest request,
                 out AbilityRuntimeState state,
                 out IAbilityExecutor executor,
@@ -109,10 +128,12 @@ namespace DemonKing.Gameplay.Abilities
             GameObject user,
             AbilityExecutionInput input)
         {
+            Guid executionId = Guid.NewGuid();
             AbilityUseStatus status = EvaluateUse(
                 abilityId,
                 user,
                 input,
+                executionId,
                 out AbilityExecutionRequest request,
                 out AbilityRuntimeState state,
                 out IAbilityExecutor executor,
@@ -123,7 +144,8 @@ namespace DemonKing.Gameplay.Abilities
                 return Notify(new AbilityUseResult(
                     status,
                     request.Definition?.AbilityId ?? abilityId,
-                    state));
+                    state,
+                    executionId));
             }
 
             AbilityCost cost = request.Definition.Cost;
@@ -132,7 +154,8 @@ namespace DemonKing.Gameplay.Abilities
                 return Notify(new AbilityUseResult(
                     AbilityUseStatus.CostUnavailable,
                     request.Definition.AbilityId,
-                    state));
+                    state,
+                    executionId));
             }
 
             state.BeginExecution();
@@ -151,7 +174,8 @@ namespace DemonKing.Gameplay.Abilities
             return Notify(new AbilityUseResult(
                 AbilityUseStatus.Succeeded,
                 request.Definition.AbilityId,
-                state));
+                state,
+                executionId));
         }
 
         public bool TryGetRuntimeState(string abilityId, out AbilityRuntimeState state)
@@ -175,6 +199,7 @@ namespace DemonKing.Gameplay.Abilities
             string abilityId,
             GameObject user,
             AbilityExecutionInput input,
+            Guid executionId,
             out AbilityExecutionRequest request,
             out AbilityRuntimeState state,
             out IAbilityExecutor executor,
@@ -208,7 +233,12 @@ namespace DemonKing.Gameplay.Abilities
                 return AbilityUseStatus.AbilityNotGranted;
             }
 
-            request = new AbilityExecutionRequest(user, definition, input);
+            request = new AbilityExecutionRequest(
+                executionId,
+                user,
+                definition,
+                input,
+                ReportEffect);
 
             if (state.IsExecuting)
             {
@@ -283,6 +313,35 @@ namespace DemonKing.Gameplay.Abilities
         {
             AbilityUseResolved?.Invoke(result);
             return result;
+        }
+
+        private bool TryAddDefinition(AbilityDefinition definition)
+        {
+            ValidateDefinition(definition, nameof(definition));
+            if (!definitions.TryAdd(definition.AbilityId, definition))
+            {
+                return false;
+            }
+
+            runtimeStates.Add(
+                definition.AbilityId,
+                new AbilityRuntimeState(definition.AbilityId));
+            return true;
+        }
+
+        private static void ValidateDefinition(AbilityDefinition definition, string parameterName)
+        {
+            if (definition == null || !definition.IsConfigured)
+            {
+                throw new ArgumentException(
+                    "正しく設定されたAbilityDefinitionだけを登録できます。",
+                    parameterName);
+            }
+        }
+
+        private void ReportEffect(AbilityEffectResolved result)
+        {
+            EffectResolved?.Invoke(result);
         }
     }
 }

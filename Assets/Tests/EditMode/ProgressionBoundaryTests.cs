@@ -3,7 +3,9 @@ using DemonKing.Domain.Progression;
 using DemonKing.Domain.Save;
 using DemonKing.Field.Prototype;
 using DemonKing.Gameplay.Combat.Configuration;
+using DemonKing.Gameplay.Progression.Configuration;
 using NUnit.Framework;
+using UnityEditor;
 using UnityEngine;
 
 namespace DemonKing.Tests.EditMode
@@ -21,7 +23,11 @@ namespace DemonKing.Tests.EditMode
                 level: 3,
                 currentExperience: 240,
                 unlockedSkillIds: new[] { "skill.fire", "skill.fire", "skill.guard" },
-                unlockedEvolutionNodeIds: new[] { "evolution.red" });
+                unlockedEvolutionNodeIds: new[] { "evolution.red" },
+                artProgressStates: new[]
+                {
+                    ArtProgressState.Restore("art.magic.fire", 12)
+                });
 
             PlayerSaveData saveData = CharacterProgressionSaveMapper.ToSaveData(state);
             CharacterProgressionState restored = CharacterProgressionSaveMapper.FromSaveData(saveData);
@@ -29,6 +35,12 @@ namespace DemonKing.Tests.EditMode
             Assert.That(saveData.characterDefinitionId, Is.EqualTo("character.player.slime"));
             Assert.That(restored.Level, Is.EqualTo(3));
             Assert.That(restored.CurrentExperience, Is.EqualTo(240));
+            Assert.That(saveData.artProgress, Has.Count.EqualTo(1));
+            Assert.That(saveData.artProgress[0].artId, Is.EqualTo("art.magic.fire"));
+            Assert.That(saveData.artProgress[0].masteryPoints, Is.EqualTo(12));
+            Assert.That(restored.ArtProgressStates, Has.Count.EqualTo(1));
+            Assert.That(restored.ArtProgressStates[0].ArtId, Is.EqualTo("art.magic.fire"));
+            Assert.That(restored.ArtProgressStates[0].MasteryPoints, Is.EqualTo(12));
             Assert.That(restored.UnlockedSkillIds, Is.EqualTo(new[] { "skill.fire", "skill.guard" }));
             Assert.That(restored.UnlockedEvolutionNodeIds, Is.EqualTo(new[] { "evolution.red" }));
         }
@@ -40,6 +52,97 @@ namespace DemonKing.Tests.EditMode
 
             Assert.That(saveData.version, Is.EqualTo(GameSaveData.CurrentVersion));
             Assert.That(saveData.player, Is.Not.Null);
+            Assert.That(saveData.player.artProgress, Is.Empty);
+        }
+
+        [Test]
+        public void GameSaveData_Version1を空のArt進捗を持つVersion2へ移行する()
+        {
+            var saveData = new GameSaveData
+            {
+                version = 1,
+                player = new PlayerSaveData
+                {
+                    characterDefinitionId = "character.player.slime",
+                    artProgress = null
+                }
+            };
+
+            GameSaveData migrated = GameSaveDataMigrator.MigrateToCurrent(saveData);
+
+            Assert.That(migrated, Is.SameAs(saveData));
+            Assert.That(migrated.version, Is.EqualTo(2));
+            Assert.That(migrated.player.artProgress, Is.Not.Null.And.Empty);
+        }
+
+        [Test]
+        public void GameSaveData_未来のVersionを拒否する()
+        {
+            var saveData = new GameSaveData
+            {
+                version = GameSaveData.CurrentVersion + 1
+            };
+
+            Assert.That(
+                () => GameSaveDataMigrator.MigrateToCurrent(saveData),
+                Throws.TypeOf<System.NotSupportedException>());
+        }
+
+        [Test]
+        public void ArtMasteryTable_累積熟練度からランクを解決する()
+        {
+            var table = new ArtMasteryTable(new long[] { 0, 2, 5 });
+
+            Assert.That(table.GetRankForTotalMasteryPoints(0), Is.EqualTo(1));
+            Assert.That(table.GetRankForTotalMasteryPoints(1), Is.EqualTo(1));
+            Assert.That(table.GetRankForTotalMasteryPoints(2), Is.EqualTo(2));
+            Assert.That(table.GetRankForTotalMasteryPoints(5), Is.EqualTo(3));
+            Assert.That(table.GetRankForTotalMasteryPoints(999), Is.EqualTo(3));
+        }
+
+        [Test]
+        public void ArtProgressState_熟練度を加算してオーバーフローを防ぐ()
+        {
+            ArtProgressState state = ArtProgressState.Restore(
+                "art.sword.test",
+                long.MaxValue - 1);
+
+            long applied = state.GainMastery(10);
+
+            Assert.That(applied, Is.EqualTo(1));
+            Assert.That(state.MasteryPoints, Is.EqualTo(long.MaxValue));
+        }
+
+        [Test]
+        public void ArtDefinition_ランク1Abilityと熟練閾値があれば有効になる()
+        {
+            PrototypeProjectAssets projectAssets =
+                Resources.Load<PrototypeProjectAssets>("Settings/PrototypeProjectAssets");
+            var basicMelee = (MeleeAttackDefinition)
+                projectAssets.PlayerCharacter.AbilityDefinitions[0];
+            ArtDefinition definition = ScriptableObject.CreateInstance<ArtDefinition>();
+            var serializedObject = new SerializedObject(definition);
+            serializedObject.FindProperty("artId").stringValue = "art.test.training";
+            serializedObject.FindProperty("displayName").stringValue = "訓練Art";
+
+            SerializedProperty thresholds = serializedObject.FindProperty(
+                "cumulativeMasteryPointsByRank");
+            thresholds.arraySize = 2;
+            thresholds.GetArrayElementAtIndex(0).longValue = 0;
+            thresholds.GetArrayElementAtIndex(1).longValue = 2;
+
+            SerializedProperty unlocks = serializedObject.FindProperty("abilityUnlocks");
+            unlocks.arraySize = 1;
+            SerializedProperty entry = unlocks.GetArrayElementAtIndex(0);
+            entry.FindPropertyRelative("abilityDefinition").objectReferenceValue = basicMelee;
+            entry.FindPropertyRelative("requiredRank").intValue = 1;
+            entry.FindPropertyRelative("masteryPointsPerEffectiveUse").longValue = 1;
+            serializedObject.ApplyModifiedPropertiesWithoutUndo();
+
+            Assert.That(definition.IsConfigured, Is.True);
+            Assert.That(definition.CreateMasteryTable().MaxRank, Is.EqualTo(2));
+
+            Object.DestroyImmediate(definition);
         }
 
         [Test]

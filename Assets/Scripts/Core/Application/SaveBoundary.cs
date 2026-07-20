@@ -21,6 +21,15 @@ namespace DemonKing.Core.Application
     /// </summary>
     public static class CharacterProgressionSaveMapper
     {
+        public static GameSaveData ToGameSaveData(CharacterProgressionState state)
+        {
+            return new GameSaveData
+            {
+                version = GameSaveData.CurrentVersion,
+                player = ToSaveData(state)
+            };
+        }
+
         public static PlayerSaveData ToSaveData(CharacterProgressionState state)
         {
             if (state == null)
@@ -28,11 +37,22 @@ namespace DemonKing.Core.Application
                 throw new ArgumentNullException(nameof(state));
             }
 
+            var artProgress = new List<ArtProgressSaveData>();
+            foreach (ArtProgressState progressState in state.ArtProgressStates)
+            {
+                artProgress.Add(new ArtProgressSaveData
+                {
+                    artId = progressState.ArtId,
+                    masteryPoints = progressState.MasteryPoints
+                });
+            }
+
             return new PlayerSaveData
             {
                 characterDefinitionId = state.CharacterDefinitionId,
                 level = state.Level,
                 currentExperience = state.CurrentExperience,
+                artProgress = artProgress,
                 unlockedSkillIds = new List<string>(state.UnlockedSkillIds),
                 unlockedEvolutionNodeIds = new List<string>(state.UnlockedEvolutionNodeIds)
             };
@@ -45,12 +65,79 @@ namespace DemonKing.Core.Application
                 throw new ArgumentNullException(nameof(saveData));
             }
 
+            var artProgress = new List<ArtProgressState>();
+            if (saveData.artProgress != null)
+            {
+                foreach (ArtProgressSaveData progressSaveData in saveData.artProgress)
+                {
+                    if (progressSaveData == null)
+                    {
+                        throw new ArgumentException(
+                            "保存されたArt進捗にnullを含めることはできません。",
+                            nameof(saveData));
+                    }
+
+                    artProgress.Add(ArtProgressState.Restore(
+                        progressSaveData.artId,
+                        progressSaveData.masteryPoints));
+                }
+            }
+
             return CharacterProgressionState.Restore(
                 saveData.characterDefinitionId,
                 saveData.level,
                 saveData.currentExperience,
                 saveData.unlockedSkillIds,
-                saveData.unlockedEvolutionNodeIds);
+                saveData.unlockedEvolutionNodeIds,
+                artProgress);
+        }
+
+        public static CharacterProgressionState FromSaveData(GameSaveData saveData)
+        {
+            GameSaveData migrated = GameSaveDataMigrator.MigrateToCurrent(saveData);
+            return FromSaveData(migrated.player);
+        }
+    }
+
+    /// <summary>
+    /// Save DTOのVersion差分だけを扱い、Runtime Stateへの変換と分離します。
+    /// </summary>
+    public static class GameSaveDataMigrator
+    {
+        private const int FirstSupportedVersion = 1;
+
+        public static GameSaveData MigrateToCurrent(GameSaveData saveData)
+        {
+            if (saveData == null)
+            {
+                throw new ArgumentNullException(nameof(saveData));
+            }
+
+            if (saveData.version < FirstSupportedVersion ||
+                saveData.version > GameSaveData.CurrentVersion)
+            {
+                throw new NotSupportedException(
+                    $"対応していないSave Versionです: {saveData.version}");
+            }
+
+            saveData.player ??= new PlayerSaveData();
+
+            if (saveData.version == 1)
+            {
+                // Version 1にはArt進捗フィールドが存在しないため、混在値を引き継ぎません。
+                saveData.player.artProgress = new List<ArtProgressSaveData>();
+                saveData.version = 2;
+            }
+
+            NormalizeCollections(saveData.player);
+            return saveData;
+        }
+
+        private static void NormalizeCollections(PlayerSaveData player)
+        {
+            player.artProgress ??= new List<ArtProgressSaveData>();
+            player.unlockedSkillIds ??= new List<string>();
+            player.unlockedEvolutionNodeIds ??= new List<string>();
         }
     }
 }

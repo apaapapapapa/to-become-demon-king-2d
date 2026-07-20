@@ -2,7 +2,7 @@
 
 ## 現在の状態
 
-経験値加算、レベル更新、Ability基盤まで実装済みです。Artは設計済み・未実装、SkillとEvolutionは未実装です。
+経験値加算、レベル更新、Ability基盤、Artの習得・熟練・Ability付与・Save境界まで実装済みです。SkillとEvolutionは未実装です。
 
 Abilityは実行可能な行動、Artは複数Abilityを習得・熟練する能動技能、Skillは受動的な成長要素、Evolutionは形態・成長経路を変える不可逆または排他的な選択です。Art、Skill、Evolutionの判定をAbility実行処理へ埋め込みません。
 
@@ -16,17 +16,12 @@ Level
 CurrentExperience
 UnlockedSkillIds
 UnlockedEvolutionNodeIds
-```
-
-ScriptableObject Definitionをプレイ中に書き換えません。
-
-Art実装後は、キャラクター単位のArt進捗を追加します。
-
-```text
-ArtProgress[]
+ArtProgressStates
   ArtId
   MasteryPoints
 ```
+
+ScriptableObject Definitionをプレイ中に書き換えません。
 
 Art進捗レコードの存在が習得済みを表します。現在ランクと解放済みAbilityは `ArtDefinition` から導出し、Runtime StateやSave DTOへ重複保存しません。
 
@@ -74,9 +69,7 @@ CharacterProgressionState.GainExperience
 
 ## 今後
 
-1. Art Definition、Art進捗、Save DTOとVersion Migration
-2. 汎用Art習得、熟練ランクによるAbility付与
-3. 効果成立通知とExecution単位の熟練度加算
-4. 受動Skill Definitionと補正接続
-5. Evolution Node / Treeと条件・実行処理
-6. 成長UI
+1. 受動Skill Definitionと補正接続
+2. Evolution Node / Treeと条件・実行処理
+3. Art習得・熟練度・Ability選択のUI
+4. 回復、バフ、デバフなどの効果成立通知

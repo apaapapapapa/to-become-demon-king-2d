@@ -21,7 +21,9 @@ namespace DemonKing.Gameplay.Combat
     {
         None = 0,
         BasicAttack = 1 << 0,
-        Skill = 1 << 1,
+        Art = 1 << 1,
+        [Obsolete("能動技能にはDamageTags.Artを使用してください。")]
+        Skill = Art,
         Critical = 1 << 2,
         Environmental = 1 << 3
     }
@@ -37,7 +39,8 @@ namespace DemonKing.Gameplay.Combat
             string sourceActorId = "",
             string abilityId = "",
             DamageType damageType = DamageType.Physical,
-            DamageTags tags = DamageTags.None)
+            DamageTags tags = DamageTags.None,
+            Guid executionId = default)
         {
             Amount = amount;
             Source = source;
@@ -45,6 +48,7 @@ namespace DemonKing.Gameplay.Combat
             AbilityId = abilityId ?? string.Empty;
             DamageType = damageType;
             Tags = tags;
+            ExecutionId = executionId;
         }
 
         public int Amount { get; }
@@ -53,6 +57,7 @@ namespace DemonKing.Gameplay.Combat
         public string AbilityId { get; }
         public DamageType DamageType { get; }
         public DamageTags Tags { get; }
+        public Guid ExecutionId { get; }
         public bool IsValid => Amount > 0;
     }
 

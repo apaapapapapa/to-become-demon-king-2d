@@ -55,11 +55,11 @@ Runtime数値はScriptableObjectを正とし、Markdownへ複製しません。
 
 ## Art熟練度との接続
 
-将来、命中、回復、バフ・デバフ付与などの実効果が成立したとき、共通の `AbilityEffectResolved` を通知します。通知にはExecution ID、使用者、Ability ID、効果種別、成立結果を含めます。
+命中などの実効果が成立したとき、共通の `AbilityEffectResolved` を通知します。通知にはExecution ID、使用者、Ability ID、効果種別、成立結果を含めます。現在は `MeleeAttackExecutor` のダメージ適用結果まで接続済みです。
 
 Art成長側がAbility IDから所属Artを逆引きし、同じ使用者とExecution IDへ1回だけ熟練ポイントを加算します。範囲攻撃、多段攻撃、継続効果が複数の結果を生成しても、CombatやExecutorは熟練度を直接変更しません。
 
-現在の `DamageTags.Skill` は能動攻撃を表す旧名称です。Art実装時は既存のビット値を維持したまま `DamageTags.Art` へ移行し、保存・通信・既存テストとの互換性を壊さない方針とします。受動Skillによる補正は攻撃の発生元を意味しないため、Skillタグとして付与しません。
+`DamageTags.Art` は従来の `DamageTags.Skill` と同じビット値を維持します。`Skill` はObsoleteな互換Aliasとし、新規実装では使用しません。受動Skillによる補正は攻撃の発生元を意味しないため、Skillタグとして付与しません。
 
 ## Reward接続
 
@@ -73,7 +73,7 @@ Art成長側がAbility IDから所属Artを逆引きし、同じ使用者とExec
 - 無敵時間
 - ノックバック
 - 攻撃アニメーション同期
-- ArtからのAbility付与と効果成立通知
+- 回復、バフ、デバフなど非ダメージ効果の成立通知
 - 受動Skillによる戦闘補正
 - ドロップ
 - 属性・耐性

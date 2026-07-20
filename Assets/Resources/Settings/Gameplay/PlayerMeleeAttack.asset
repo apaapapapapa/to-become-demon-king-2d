@@ -25,3 +25,4 @@ MonoBehaviour:
   attackRadius: 0.65
   attackDistance: 0.65
   damageType: 0
+  damageTags: 1

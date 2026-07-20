@@ -22,7 +22,8 @@
 
 ```text
 Progression/
-  ArtProgressState（将来）
+  ArtMasteryTable
+  ArtProgressState
   CharacterProgressionState
   ExperienceTable
   LevelUpResult
@@ -65,7 +66,8 @@ Gameplay/
     DefeatContext
   Interaction/
   Progression/
-    ArtProgressionService（将来）
+    ArtProgressionController
+    ArtProgressionService
   Rewards/
 ```
 
@@ -90,7 +92,7 @@ Prototypeシーンを組み立てるComposition層です。恒久的なDomain/Ga
 ```text
 Definition
   AbilityDefinition
-  ArtDefinition（将来）
+  ArtDefinition
   CharacterDefinition
   CharacterStatsDefinition
   MeleeAttackDefinition
@@ -100,7 +102,7 @@ Definition
        ↓
 Runtime State
   AbilityRuntimeState
-  ArtProgressState（将来）
+  ArtProgressState
   CharacterProgressionState
        ↓ Mapper
 Save DTO
@@ -146,6 +148,7 @@ CharacterDefinition
   ├ prefab
   ├ statsDefinition
   ├ abilityDefinitions[]
+  ├ artDefinitions[]
   ├ dodgeDefinition
   └ experienceTableDefinition
 ```
@@ -232,18 +235,20 @@ ISaveService
 - RewardServiceから経験値加算への接続
 - Ability Definition / Runtime State / Controller / Executor
 - プレイヤー入力とAIで共有できる基本近接攻撃
+- Art Definition / Runtime State / 習得 / 熟練度 / Ability付与
+- Ability Execution ID / 効果成立通知
+- Save DTO Version 2 / Version 1 Migration
 - EditMode / PlayModeテスト
 
 ## 直近の拡張方針
 
-1. Art Definition、進捗、Save Migration
-2. Art習得、Ability付与、熟練度加算
-3. 受動Skill
-4. Evolution
-5. NPC会話
-6. 敵AI
-7. クエスト・目的管理
-8. 実際のセーブ保存実装
+1. 受動Skill
+2. Evolution
+3. NPC会話
+4. 敵AI
+5. クエスト・目的管理
+6. Art入力・UIと正式コンテンツ
+7. 実際のセーブ保存実装
 
 ## リアーキテクチャ判断基準
 

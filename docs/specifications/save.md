@@ -24,9 +24,9 @@ Local / Cloud / Platform Storage
 - 保存先は `ISaveService` の外側へ置く。
 - Save Dataからコンテンツを参照するときはStable Content IDを使用する。
 
-## Art進捗の将来形式
+## Art進捗
 
-Art実装後は、`PlayerSaveData` にキャラクター単位のArt進捗を追加します。
+Save Version 2から、`PlayerSaveData` にキャラクター単位のArt進捗を保持します。
 
 ```text
 artProgress[]
@@ -36,14 +36,14 @@ artProgress[]
 
 Art進捗レコードの存在を習得済みの意味とします。現在ランクと解放済みAbilityは `ArtDefinition` から導出するため保存しません。Art装備枠は設けないため、装備Artも保存しません。
 
-Art進捗追加時はSave Versionを更新し、Version 1のデータには空の `artProgress` を補います。未知のArt IDをどう扱うかなど、一般的な欠損コンテンツ方針はVersion Migration実装時に確定します。
+`GameSaveDataMigrator` がVersion 1のデータへ空の `artProgress` を補い、Version 2へ更新します。現在より新しいVersionやVersion 1より古いデータは拒否します。
 
 ## 今後
 
 - ローカル保存実装
 - 自動保存タイミング
 - Save Slot
-- Art進捗DTOとVersion 1からのMigration
 - 一般的なVersion Migration基盤
+- 未知・削除済みコンテンツIDの扱い
 - Steam Cloud
 - コンソール向け保存

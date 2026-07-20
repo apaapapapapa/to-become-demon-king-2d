@@ -10,7 +10,7 @@ namespace DemonKing.Domain.Save
     [Serializable]
     public sealed class GameSaveData
     {
-        public const int CurrentVersion = 1;
+        public const int CurrentVersion = 2;
 
         public int version = CurrentVersion;
         public PlayerSaveData player = new PlayerSaveData();
@@ -26,7 +26,19 @@ namespace DemonKing.Domain.Save
         public string characterDefinitionId = string.Empty;
         public int level = 1;
         public long currentExperience;
+        public List<ArtProgressSaveData> artProgress = new List<ArtProgressSaveData>();
         public List<string> unlockedSkillIds = new List<string>();
         public List<string> unlockedEvolutionNodeIds = new List<string>();
+    }
+
+    /// <summary>
+    /// Artの習得状態と累積熟練ポイントだけを永続化するDTOです。
+    /// ランクと解放AbilityはDefinitionから再計算します。
+    /// </summary>
+    [Serializable]
+    public sealed class ArtProgressSaveData
+    {
+        public string artId = string.Empty;
+        public long masteryPoints;
     }
 }

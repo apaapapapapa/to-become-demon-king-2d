@@ -18,6 +18,7 @@ namespace DemonKing.Gameplay.Characters.Configuration
         [SerializeField] private GameObject prefab;
         [SerializeField] private CharacterStatsDefinition statsDefinition;
         [SerializeField] private AbilityDefinition[] abilityDefinitions = Array.Empty<AbilityDefinition>();
+        [SerializeField] private ArtDefinition[] artDefinitions = Array.Empty<ArtDefinition>();
         [SerializeField] private DodgeDefinition dodgeDefinition;
         [SerializeField] private ExperienceTableDefinition experienceTableDefinition;
 
@@ -25,6 +26,8 @@ namespace DemonKing.Gameplay.Characters.Configuration
         public GameObject Prefab => prefab;
         public CharacterStatsDefinition StatsDefinition => statsDefinition;
         public IReadOnlyList<AbilityDefinition> AbilityDefinitions => abilityDefinitions;
+        public IReadOnlyList<ArtDefinition> ArtDefinitions =>
+            artDefinitions ?? Array.Empty<ArtDefinition>();
         public DodgeDefinition DodgeDefinition => dodgeDefinition;
         public ExperienceTableDefinition ExperienceTableDefinition => experienceTableDefinition;
 
@@ -51,6 +54,29 @@ namespace DemonKing.Gameplay.Characters.Configuration
                         !abilityIds.Add(definition.AbilityId))
                     {
                         return false;
+                    }
+                }
+
+                var artIds = new HashSet<string>(StringComparer.Ordinal);
+                var artAbilityIds = new HashSet<string>(StringComparer.Ordinal);
+                if (artDefinitions != null)
+                {
+                    foreach (ArtDefinition definition in artDefinitions)
+                    {
+                        if (definition == null ||
+                            !definition.IsConfigured ||
+                            !artIds.Add(definition.ArtId))
+                        {
+                            return false;
+                        }
+
+                        foreach (ArtAbilityUnlockEntry entry in definition.AbilityUnlocks)
+                        {
+                            if (!artAbilityIds.Add(entry.AbilityDefinition.AbilityId))
+                            {
+                                return false;
+                            }
+                        }
                     }
                 }
 

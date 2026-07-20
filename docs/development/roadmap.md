@@ -19,20 +19,22 @@
 - RewardServiceから経験値加算への接続
 - Ability Definition / Runtime State / Controller / Executor
 - `ability.basic_melee` の共通実行化
+- Art Definition / Art進捗 / Save DTO Version 2
+- Version 1から空のArt進捗へのMigration
+- 汎用Art習得 / 熟練ランクによるAbility付与
+- Ability Execution ID / 効果成立通知 / 1実行1回の熟練度加算
 - EditMode / PlayModeテスト
 - VitePress Knowledge Base基盤
 
 ## 直近の開発フェーズ
 
-1. Art Definition、Art進捗、Save DTOとVersion 1 Migration
-2. 汎用Art習得と熟練ランクによるAbility付与
-3. 効果成立通知とExecution単位の熟練度加算
-4. 受動Skill Definitionと補正接続
-5. Evolution
-6. NPC会話
-7. 敵AI
-8. クエスト・目的管理
-9. 縦切りゲームループ完成
+1. 受動Skill Definitionと補正接続
+2. Evolution
+3. NPC会話
+4. 敵AI
+5. クエスト・目的管理
+6. Art入力・UIと正式コンテンツ
+7. 縦切りゲームループ完成
 
 ## P3候補
 

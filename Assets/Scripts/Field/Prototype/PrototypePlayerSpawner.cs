@@ -3,6 +3,7 @@ using DemonKing.Gameplay.Abilities;
 using DemonKing.Gameplay.Characters;
 using DemonKing.Gameplay.Characters.Configuration;
 using DemonKing.Gameplay.Combat;
+using DemonKing.Gameplay.Progression;
 using DemonKing.Presentation.Characters;
 using UnityEngine;
 
@@ -97,6 +98,15 @@ namespace DemonKing.Field.Prototype
             }
 
             abilityController.Configure(characterDefinition.AbilityDefinitions);
+
+            ArtProgressionController artProgressionController =
+                root.GetComponent<ArtProgressionController>();
+            if (artProgressionController == null)
+            {
+                artProgressionController = root.AddComponent<ArtProgressionController>();
+            }
+
+            artProgressionController.Initialize(state, characterDefinition.ArtDefinitions);
 
             if (root.GetComponent<PrototypeMeleeAttackEffect>() == null)
             {

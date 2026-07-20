@@ -9,6 +9,7 @@ namespace DemonKing.Domain.Progression
     /// </summary>
     public sealed class CharacterProgressionState
     {
+        private readonly List<ArtProgressState> artProgressStates;
         private readonly List<string> unlockedSkillIds;
         private readonly List<string> unlockedEvolutionNodeIds;
 
@@ -16,6 +17,7 @@ namespace DemonKing.Domain.Progression
             string characterDefinitionId,
             int level,
             long currentExperience,
+            IEnumerable<ArtProgressState> artProgressStates,
             IEnumerable<string> unlockedSkillIds,
             IEnumerable<string> unlockedEvolutionNodeIds)
         {
@@ -37,6 +39,9 @@ namespace DemonKing.Domain.Progression
 
             Level = level;
             CurrentExperience = currentExperience;
+            this.artProgressStates = CopyArtProgressStates(
+                artProgressStates,
+                nameof(artProgressStates));
             this.unlockedSkillIds = CopyDistinctIds(unlockedSkillIds, nameof(unlockedSkillIds));
             this.unlockedEvolutionNodeIds = CopyDistinctIds(
                 unlockedEvolutionNodeIds,
@@ -46,6 +51,7 @@ namespace DemonKing.Domain.Progression
         public string CharacterDefinitionId { get; }
         public int Level { get; private set; }
         public long CurrentExperience { get; private set; }
+        public IReadOnlyList<ArtProgressState> ArtProgressStates => artProgressStates;
         public IReadOnlyList<string> UnlockedSkillIds => unlockedSkillIds;
         public IReadOnlyList<string> UnlockedEvolutionNodeIds => unlockedEvolutionNodeIds;
 
@@ -55,6 +61,7 @@ namespace DemonKing.Domain.Progression
                 characterDefinitionId,
                 level: 1,
                 currentExperience: 0,
+                artProgressStates: Array.Empty<ArtProgressState>(),
                 unlockedSkillIds: Array.Empty<string>(),
                 unlockedEvolutionNodeIds: Array.Empty<string>());
         }
@@ -66,12 +73,58 @@ namespace DemonKing.Domain.Progression
             IEnumerable<string> unlockedSkillIds,
             IEnumerable<string> unlockedEvolutionNodeIds)
         {
-            return new CharacterProgressionState(
+            return Restore(
                 characterDefinitionId,
                 level,
                 currentExperience,
                 unlockedSkillIds,
+                unlockedEvolutionNodeIds,
+                Array.Empty<ArtProgressState>());
+        }
+
+        public static CharacterProgressionState Restore(
+            string characterDefinitionId,
+            int level,
+            long currentExperience,
+            IEnumerable<string> unlockedSkillIds,
+            IEnumerable<string> unlockedEvolutionNodeIds,
+            IEnumerable<ArtProgressState> artProgressStates)
+        {
+            return new CharacterProgressionState(
+                characterDefinitionId,
+                level,
+                currentExperience,
+                artProgressStates,
+                unlockedSkillIds,
                 unlockedEvolutionNodeIds);
+        }
+
+        public bool TryLearnArt(string artId, out ArtProgressState progressState)
+        {
+            if (TryGetArtProgress(artId, out progressState))
+            {
+                return false;
+            }
+
+            progressState = ArtProgressState.CreateLearned(artId);
+            artProgressStates.Add(progressState);
+            return true;
+        }
+
+        public bool TryGetArtProgress(string artId, out ArtProgressState progressState)
+        {
+            string normalizedId = StableContentId.Normalize(artId);
+            foreach (ArtProgressState candidate in artProgressStates)
+            {
+                if (string.Equals(candidate.ArtId, normalizedId, StringComparison.Ordinal))
+                {
+                    progressState = candidate;
+                    return true;
+                }
+            }
+
+            progressState = null;
+            return false;
         }
 
         /// <summary>
@@ -138,6 +191,40 @@ namespace DemonKing.Domain.Progression
                 {
                     result.Add(id);
                 }
+            }
+
+            return result;
+        }
+
+        private static List<ArtProgressState> CopyArtProgressStates(
+            IEnumerable<ArtProgressState> source,
+            string parameterName)
+        {
+            var result = new List<ArtProgressState>();
+            var knownIds = new HashSet<string>(StringComparer.Ordinal);
+
+            if (source == null)
+            {
+                return result;
+            }
+
+            foreach (ArtProgressState value in source)
+            {
+                if (value == null)
+                {
+                    throw new ArgumentException(
+                        "Art進捗にnullを含めることはできません。",
+                        parameterName);
+                }
+
+                if (!knownIds.Add(value.ArtId))
+                {
+                    throw new ArgumentException(
+                        $"Art進捗IDが重複しています: {value.ArtId}",
+                        parameterName);
+                }
+
+                result.Add(ArtProgressState.Restore(value.ArtId, value.MasteryPoints));
             }
 
             return result;

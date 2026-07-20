@@ -14,11 +14,13 @@ namespace DemonKing.Gameplay.Combat.Configuration
         [SerializeField, Min(0.1f)] private float attackRadius = 0.65f;
         [SerializeField, Min(0f)] private float attackDistance = 0.65f;
         [SerializeField] private DamageType damageType = DamageType.Physical;
+        [SerializeField] private DamageTags damageTags = DamageTags.BasicAttack;
 
         public int Damage => damage;
         public float AttackRadius => attackRadius;
         public float AttackDistance => attackDistance;
         public DamageType DamageType => damageType;
+        public DamageTags DamageTags => damageTags;
         protected override bool IsAbilitySpecificConfigurationValid =>
             damage > 0 &&
             attackRadius > 0f &&

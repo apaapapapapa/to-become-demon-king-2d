@@ -1,6 +1,6 @@
 # Art仕様
 
-- Status: Designed / Not Implemented
+- Status: Foundation Implemented / No Content Registered
 
 ## 用語と責務
 
@@ -92,7 +92,7 @@ SkillはArt習得の条件や補正として参照できますが、能動行動
 
 Abilityの実行要求が受理されただけではMastery Pointを加算しません。命中、回復、バフ・デバフ付与など、少なくとも1つの実効果が成立した場合に加算します。
 
-将来の共通効果解決通知 `AbilityEffectResolved` は少なくとも次を含みます。
+共通効果解決通知 `AbilityEffectResolved` は次を含みます。
 
 ```text
 ExecutionId
@@ -108,7 +108,7 @@ WasApplied
 
 ## Save方針
 
-将来の `PlayerSaveData` にはArt進捗の一覧を追加します。
+`PlayerSaveData` はArt進捗の一覧を保持します。
 
 ```text
 artProgress[]
@@ -118,13 +118,20 @@ artProgress[]
 
 Artはキャラクター単位で保存し、アカウント共通状態にはしません。装備Art、現在ランク、解放Ability IDは保存しません。
 
-既存のSave Version 1を読み込む場合は、Art進捗を空一覧として補うVersion Migrationを行います。具体的なSave DTO変更とMigration実装は後続タスクです。
+Save Version 2でArt進捗を追加しました。既存のSave Version 1は `GameSaveDataMigrator` がArt進捗を空一覧として補います。
 
 ## 現在の実装範囲
 
-Artの用語、責務境界、将来のデータ構造まで設計済みです。`ArtDefinition`、`ArtProgressState`、習得サービス、効果解決通知、熟練度加算、動的Ability付与、Save Migrationは未実装です。
+- `ArtDefinition` / `ArtAbilityUnlockEntry` / `ArtMasteryTable`
+- `ArtProgressState` と `CharacterProgressionState` のArt進捗
+- `ArtProgressionService` / `ArtProgressionController` による汎用習得
+- 習得時・ランクアップ時・Save復元時の冪等なAbility付与
+- Execution ID付き `AbilityEffectResolved`
+- 近接ダメージの効果成立通知と、1 Executionにつき1回の熟練度加算
+- Save DTO Version 2とVersion 1からのMigration
+- `DamageTags.Art` と旧 `DamageTags.Skill` の互換Alias
 
-正式なArtコンテンツ、入力割当、UI、具体的な熟練閾値も未登録です。
+正式なArtコンテンツ、Art固有の入力割当・UI、訓練や報酬など具体的な習得元は未実装です。回復、バフ、デバフなども通知型は利用できますが、各Executorからの効果成立通知は今後接続します。
 
 ## 関連仕様
 

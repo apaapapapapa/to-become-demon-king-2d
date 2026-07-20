@@ -9,7 +9,7 @@ namespace DemonKing.Gameplay.Combat
 {
     /// <summary>
     /// MeleeAttackDefinitionの効果だけを発生させるExecutorです。
-    /// 入力元、Skill取得状態、Evolution条件、クールダウン管理には依存しません。
+    /// 入力元、Art進捗、Skill取得状態、Evolution条件、クールダウン管理には依存しません。
     /// </summary>
     [DisallowMultipleComponent]
     public sealed class MeleeAttackExecutor : MonoBehaviour, IAbilityExecutor
@@ -55,7 +55,8 @@ namespace DemonKing.Gameplay.Combat
                 sourceHealth == null ? string.Empty : sourceHealth.ActorId,
                 definition.AbilityId,
                 definition.DamageType,
-                DamageTags.BasicAttack);
+                definition.DamageTags,
+                request.ExecutionId);
 
             damagedTargets.Clear();
             int hitCount = 0;
@@ -78,6 +79,7 @@ namespace DemonKing.Gameplay.Combat
                     }
 
                     DamageResult result = damageable.ApplyDamage(damageRequest);
+                    request.ReportEffect(AbilityEffectKind.Damage, result.WasApplied);
                     if (result.WasApplied)
                     {
                         hitCount++;
