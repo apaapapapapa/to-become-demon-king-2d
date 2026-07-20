@@ -10,32 +10,33 @@ using UnityEngine.TestTools;
 namespace DemonKing.Tests.PlayMode
 {
     /// <summary>
-    /// P2で追加したDodge実挙動とPause状態管理の最小回帰テストです。
+    /// Dodge実挙動とPause状態管理の最小回帰テストです。
     /// </summary>
     public sealed class DodgeAndPausePlayModeTests
     {
         [UnityTest]
-        public IEnumerator CharacterDodge2D_右方向へ回避するとRigidbody2Dが移動する()
+        public IEnumerator CharacterDodge_右方向へ回避すると3DRigidbodyが平面移動する()
         {
             Time.timeScale = 1f;
 
             GameObject player = new("Dodge Test Player");
-            Rigidbody2D body = player.AddComponent<Rigidbody2D>();
-            body.gravityScale = 0f;
             player.AddComponent<PlayerInputReader>();
             player.AddComponent<MoveInputReader>();
-            player.AddComponent<CharacterMotor2D>();
-            CharacterDodge2D dodge = player.AddComponent<CharacterDodge2D>();
+            player.AddComponent<CharacterPlanarMotor>();
+            CharacterDodge dodge = player.AddComponent<CharacterDodge>();
+            Rigidbody body = player.GetComponent<Rigidbody>();
 
             DodgeDefinition definition = ScriptableObject.CreateInstance<DodgeDefinition>();
             dodge.Configure(definition);
 
             float beforeX = body.position.x;
+            float beforeElevation = body.position.z;
             bool started = dodge.TryDodge(Vector2.right);
             yield return new WaitForFixedUpdate();
 
             Assert.That(started, Is.True);
             Assert.That(body.position.x, Is.GreaterThan(beforeX));
+            Assert.That(body.position.z, Is.EqualTo(beforeElevation).Within(0.001f));
             Assert.That(dodge.IsDodging, Is.True);
 
             Object.Destroy(player);
