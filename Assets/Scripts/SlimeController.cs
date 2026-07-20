@@ -21,6 +21,7 @@ namespace DemonKing.Field
     [RequireComponent(typeof(PlayerElevationInput))]
     [RequireComponent(typeof(PlayerInteractor))]
     [RequireComponent(typeof(AbilityController))]
+    [RequireComponent(typeof(AbilityLoadoutController))]
     [RequireComponent(typeof(PlayerAbilityInput))]
     [RequireComponent(typeof(MeleeAttackExecutor))]
     [RequireComponent(typeof(CharacterSquashAnimator))]
