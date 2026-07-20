@@ -33,7 +33,9 @@
 - 最新1件だけを表示するDialogue UI
 - Gameplay Event Hub
 - Quest / Objective Runtime Stateと進捗サービス
-- 最初の訓練Quest
+- QuestのAvailable / Active / Completedライフサイクルと明示的な受注
+- Questの受注・進捗・完了を表示する常設トラッカーと非モーダル通知
+- 最初の訓練Questと見習い魔術師Interactionからの受注経路
 - 汎用 `SpawnLifecycle<T>` と訓練対象の再生成・復元
 
 ### Knowledge Base / Delivery
@@ -45,11 +47,10 @@
 
 ## 次の開発フェーズ
 
-1. Questの受注・進捗・完了をプレイヤーへ提示するUI / UX
-2. NPC会話とQuestを使った縦切りゲームループの拡張
-3. 複数Art / Skillの選択UIと入力割当
-4. 追加の正式Runtimeコンテンツと取得経路
-5. 実際のローカルSave実装
+1. NPC会話とQuestを使った縦切りゲームループの拡張
+2. 複数Art / Skillの選択UIと入力割当
+3. 追加の正式Runtimeコンテンツと取得経路
+4. 実際のローカルSave実装
 
 ## 将来候補
 
