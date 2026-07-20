@@ -4,24 +4,24 @@ using UnityEngine;
 namespace DemonKing.Presentation.Characters
 {
     /// <summary>
-    /// Physics上のElevation（Z）を2Dアイソメトリック表示の画面上高さへ変換します。
+    /// Gameplay上の論理Elevationを2Dアイソメトリック表示の画面上高さへ変換します。
     /// 物理RootのX/YとSorting基準は変更せず、VisualだけをY方向へ持ち上げます。
     /// </summary>
     [DisallowMultipleComponent]
-    [RequireComponent(typeof(CharacterPhysicsBody3D))]
+    [RequireComponent(typeof(CharacterElevationMotor))]
     [RequireComponent(typeof(PrototypeSlimeSpriteAnimator))]
     public sealed class CharacterElevationPresenter : MonoBehaviour
     {
         [SerializeField, Min(0f)] private float screenOffsetPerElevation = 0.32f;
 
-        private CharacterPhysicsBody3D physicsBody;
+        private CharacterElevationMotor elevationMotor;
         private PrototypeSlimeSpriteAnimator spriteAnimator;
         private Transform visual;
         private Vector3 baseLocalPosition;
 
         private void Awake()
         {
-            physicsBody = GetComponent<CharacterPhysicsBody3D>();
+            elevationMotor = GetComponent<CharacterElevationMotor>();
             spriteAnimator = GetComponent<PrototypeSlimeSpriteAnimator>();
         }
 
@@ -37,13 +37,13 @@ namespace DemonKing.Presentation.Characters
                 ResolveVisual();
             }
 
-            if (visual == null || physicsBody == null)
+            if (visual == null || elevationMotor == null)
             {
                 return;
             }
 
             Vector3 position = baseLocalPosition;
-            position.y += physicsBody.Elevation * screenOffsetPerElevation;
+            position.y += elevationMotor.Elevation * screenOffsetPerElevation;
             visual.localPosition = position;
         }
 
