@@ -90,6 +90,12 @@ Action / BindingとContextの振る舞いは [入力仕様](../specifications/in
 
 Interaction、近接攻撃、Projectile命中判定は3D Physics Queryのみを使用し、X/Y距離だけでなくZ方向のCollider重なりも判定対象にします。これにより地上Actorと高空Actorを同一平面座標に配置しても、物理体積が重ならなければ相互作用・攻撃対象になりません。
 
+## 敵AI実装
+
+敵AIは `Gameplay/AI` に配置し、AI自身へ移動物理やダメージ処理を重複実装しません。追跡移動は `CharacterPhysicsBody3D` へ移動要求を渡し、攻撃はプレイヤーと共通の `AbilityController` を実行入口として使用します。Prototype側はTargetとDefinitionの注入だけを担当します。
+
+具体的な状態遷移、索敵・離脱、高度差の振る舞いは [敵AI仕様](../specifications/enemy-ai.md) を参照してください。
+
 ## UI
 
 本番UI基盤はCanvas（uGUI）です。
@@ -121,6 +127,7 @@ Runtimeの通常動作をEditor保守ツールへ依存させません。
 - Scene、Input Context、3D Physics、移動、UI等のRuntime統合はPlayModeで検証する。
 - Jump / Fall / Flightと有限高さ障害物の上空通過は3D PhysicsのPlayModeテストで検証する。
 - Combat / Interactionの空間回帰テストも3D Collider / `Physics` APIで構築し、Physics2Dのテストfixtureを作らない。
+- Enemy AIは追跡、Ability経由の攻撃、高度差による非交戦をPlayModeで検証する。
 - 単一クラスが主対象なら原則 `<ClassName>Tests` とする。
 - Unity実行モードを名前で明示する必要がある場合は `<ClassName>PlayModeTests` 等を使用できる。
 - 統合テストはFeatureとFlowが分かる名前を使用し、無関係な責務を1クラスへ追加し続けない。
