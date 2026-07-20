@@ -10,7 +10,7 @@ namespace DemonKing.Tests.PlayMode
     public sealed class QuestProgressionServiceTests
     {
         [Test]
-        public void QuestProgressionService_GameplayEventを条件照合してObjectiveとQuestを完了する()
+        public void QuestProgressionService_受注前は進捗せず受注後にObjectiveとQuestを完了する()
         {
             QuestDefinition quest = QuestDefinition.CreateRuntime(
                 "quest.test.defeat",
@@ -19,18 +19,33 @@ namespace DemonKing.Tests.PlayMode
                     "objective.test.defeat",
                     GameplayEventIds.EnemyDefeated,
                     "character.training_dummy",
-                    2));
+                    2,
+                    "訓練対象を倒す"));
             var eventHub = new GameplayEventHub();
             var service = new QuestProgressionService(new[] { quest });
             eventHub.Published += service.Handle;
+            int acceptedCount = 0;
             int completedCount = 0;
+            service.QuestAccepted += _ => acceptedCount++;
             service.QuestCompleted += _ => completedCount++;
+
+            service.TryGetState("quest.test.defeat", out QuestProgressState state);
+            state.TryGetObjective("objective.test.defeat", out ObjectiveProgressState objective);
+
+            eventHub.Publish(new GameplayEvent(
+                GameplayEventIds.EnemyDefeated,
+                "character.training_dummy"));
+            Assert.That(objective.CurrentCount, Is.EqualTo(0));
+            Assert.That(state.Status, Is.EqualTo(QuestProgressStatus.Available));
+
+            Assert.That(service.AcceptQuest("quest.test.defeat"), Is.True);
+            Assert.That(service.AcceptQuest("quest.test.defeat"), Is.False);
+            Assert.That(acceptedCount, Is.EqualTo(1));
+            Assert.That(state.Status, Is.EqualTo(QuestProgressStatus.Active));
 
             eventHub.Publish(new GameplayEvent(
                 GameplayEventIds.EnemyDefeated,
                 "character.other"));
-            service.TryGetState("quest.test.defeat", out QuestProgressState state);
-            state.TryGetObjective("objective.test.defeat", out ObjectiveProgressState objective);
             Assert.That(objective.CurrentCount, Is.EqualTo(0));
 
             eventHub.Publish(new GameplayEvent(
@@ -44,6 +59,7 @@ namespace DemonKing.Tests.PlayMode
                 "character.training_dummy"));
             Assert.That(objective.CurrentCount, Is.EqualTo(2));
             Assert.That(state.IsCompleted, Is.True);
+            Assert.That(state.Status, Is.EqualTo(QuestProgressStatus.Completed));
             Assert.That(completedCount, Is.EqualTo(1));
 
             eventHub.Publish(new GameplayEvent(
