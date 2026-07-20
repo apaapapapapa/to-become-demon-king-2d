@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cfd843e97ed649dcbdd1c934b5ec26e6, type: 3}
+  m_Name: TrainingScenario
+  m_EditorClassIdentifier:
+  questDefinition: {fileID: 11400000, guid: e240532d38964405895ec5747543a001, type: 2}
+  offerDialogue: {fileID: 11400000, guid: d140532d38964405895ec5747543a001, type: 2}
+  activeDialogue: {fileID: 11400000, guid: a240532d38964405895ec5747543a101, type: 2}
+  turnInDialogue: {fileID: 11400000, guid: b351643e49a75516960fd6858654b212, type: 2}
+  completedDialogue: {fileID: 11400000, guid: c462754f5ab86627a710e7969765c323, type: 2}
+  enemyAiDefinition: {fileID: 11400000, guid: 71b1f104a2d54815a09f6c3b1e8d9005, type: 2}
+  defeatReward: {fileID: 11400000, guid: e91e5cdb86114094aefa2a8a0a483030, type: 2}
+  completionGrant: {fileID: 11400000, guid: bf40532d38964405895ec5747543f003, type: 2}
