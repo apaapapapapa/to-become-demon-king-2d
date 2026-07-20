@@ -13,24 +13,24 @@ namespace DemonKing.Gameplay.Quests
             string objectiveId,
             int previousCount,
             int currentCount,
-            bool questCompleted)
+            bool questReadyToTurnIn)
         {
             QuestId = questId;
             ObjectiveId = objectiveId;
             PreviousCount = previousCount;
             CurrentCount = currentCount;
-            QuestCompleted = questCompleted;
+            QuestReadyToTurnIn = questReadyToTurnIn;
         }
 
         public string QuestId { get; }
         public string ObjectiveId { get; }
         public int PreviousCount { get; }
         public int CurrentCount { get; }
-        public bool QuestCompleted { get; }
+        public bool QuestReadyToTurnIn { get; }
     }
 
     /// <summary>
-    /// Questの受注と、GameplayEventによるObjective進捗を管理します。
+    /// Questの受注、GameplayEventによるObjective進捗、報告完了を管理します。
     /// Combat、Dialogue、NPCなどイベント発生元の実装には依存しません。
     /// </summary>
     public sealed class QuestProgressionService
@@ -55,6 +55,7 @@ namespace DemonKing.Gameplay.Quests
 
         public event Action<QuestProgressState> QuestAccepted;
         public event Action<QuestProgressUpdate> ProgressChanged;
+        public event Action<QuestProgressState> QuestReadyToTurnIn;
         public event Action<QuestProgressState> QuestCompleted;
 
         public IReadOnlyCollection<QuestDefinition> Definitions => definitions.Values;
@@ -78,6 +79,17 @@ namespace DemonKing.Gameplay.Quests
             }
 
             QuestAccepted?.Invoke(state);
+            return true;
+        }
+
+        public bool CompleteQuest(string questId)
+        {
+            if (!TryGetState(questId, out QuestProgressState state) || !state.Complete())
+            {
+                return false;
+            }
+
+            QuestCompleted?.Invoke(state);
             return true;
         }
 
@@ -105,17 +117,17 @@ namespace DemonKing.Gameplay.Quests
                         continue;
                     }
 
-                    bool questCompletedNow = state.TryComplete();
+                    bool becameReadyToTurnIn = state.TryMarkReadyToTurnIn();
                     ProgressChanged?.Invoke(new QuestProgressUpdate(
                         definition.QuestId,
                         objectiveDefinition.ObjectiveId,
                         previousCount,
                         objectiveState.CurrentCount,
-                        questCompletedNow));
+                        becameReadyToTurnIn));
 
-                    if (questCompletedNow)
+                    if (becameReadyToTurnIn)
                     {
-                        QuestCompleted?.Invoke(state);
+                        QuestReadyToTurnIn?.Invoke(state);
                     }
                 }
             }
