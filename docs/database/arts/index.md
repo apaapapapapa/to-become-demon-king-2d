@@ -1,9 +1,9 @@
-# Art一覧
+# Art図鑑
 
-Artごとのゲームプレイ上・世界観上の役割、習得経路、関連Abilityと関連コンテンツを管理します。
+図鑑公開対象の `ArtDefinition` をVitePressビルド時に自動列挙します。
 
-ArtのRuntimeルールは [Art仕様](../../specifications/art.md)、コンテンツページの共通メタデータ規則は [ドキュメント規約](../../development/documentation-rules.md) を参照してください。
+名称、概要、図鑑解説、Stable Content ID、関連AbilityはUnity側をSource of Truthとします。ArtのRuntimeルールは [Art仕様](../../specifications/art.md)、図鑑データの所有ルールは [ドキュメント規約](../../development/documentation-rules.md) を参照してください。
 
-## 登録ページ
+## 登録Art
 
 <ContentCatalog content-type="art" />
