@@ -3,6 +3,7 @@ using DemonKing.Core.Input;
 using DemonKing.Domain.Progression;
 using DemonKing.Field.Prototype;
 using DemonKing.Gameplay.Abilities;
+using DemonKing.Gameplay.Characters;
 using DemonKing.Gameplay.Combat;
 using DemonKing.Gameplay.Progression;
 using DemonKing.Gameplay.Rewards;
