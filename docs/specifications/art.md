@@ -131,7 +131,7 @@ Save Version 2でArt進捗を追加しました。既存のSave Version 1は `Ga
 - Save DTO Version 2とVersion 1からのMigration
 - `DamageTags.Art` と旧 `DamageTags.Skill` の互換Alias
 
-`IArtMasteryModifierSource` による受動Skillの熟練ポイント補正まで接続済みです。正式Runtime Artコンテンツ、Art固有の入力割当・UI、訓練や報酬など具体的な習得元は未実装です。火炎魔法はKnowledge Base上の計画ページだけを登録しています。回復、バフ、デバフなども通知型は利用できますが、各Executorからの効果成立通知は今後接続します。
+`IArtMasteryModifierSource` によるSkillとEvolutionの熟練ポイント補正まで接続済みです。正式Runtime Artコンテンツ、Art固有の入力割当・UI、訓練や報酬など具体的な習得元は未実装です。火炎魔法はKnowledge Base上の計画ページだけを登録しています。回復、バフ、デバフなども通知型は利用できますが、各Executorからの効果成立通知は今後接続します。
 
 ## 関連仕様
 

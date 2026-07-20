@@ -108,6 +108,18 @@ namespace DemonKing.Field.Prototype
 
             skillProgressionController.Initialize(state, characterDefinition.SkillDefinitions);
 
+            EvolutionProgressionController evolutionProgressionController =
+                root.GetComponent<EvolutionProgressionController>();
+            if (evolutionProgressionController == null)
+            {
+                evolutionProgressionController =
+                    root.AddComponent<EvolutionProgressionController>();
+            }
+
+            evolutionProgressionController.Initialize(
+                state,
+                characterDefinition.EvolutionDefinitions);
+
             ArtProgressionController artProgressionController =
                 root.GetComponent<ArtProgressionController>();
             if (artProgressionController == null)

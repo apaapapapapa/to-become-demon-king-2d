@@ -34,6 +34,7 @@ export default defineConfig({
         { text: 'Ability', link: '/specifications/ability' },
         { text: 'Art', link: '/specifications/art' },
         { text: 'Skill', link: '/specifications/skill' },
+        { text: 'Evolution', link: '/specifications/evolution' },
         { text: '戦闘', link: '/specifications/combat' },
         { text: 'インタラクション', link: '/specifications/interaction' },
         { text: '成長', link: '/specifications/progression' },
@@ -69,7 +70,8 @@ export default defineConfig({
       '/decisions/': [{ text: 'Architecture Decision Records', items: [
         { text: 'ADR一覧', link: '/decisions/' },
         { text: 'ADR-0001 Knowledge Baseを同一リポジトリで管理', link: '/decisions/ADR-0001-monorepo-knowledge-base' },
-        { text: 'ADR-0002 Ability・Art・Skillの責務分離', link: '/decisions/ADR-0002-ability-art-skill-boundaries' }
+        { text: 'ADR-0002 Ability・Art・Skillの責務分離', link: '/decisions/ADR-0002-ability-art-skill-boundaries' },
+        { text: 'ADR-0003 Evolution Nodeと排他経路', link: '/decisions/ADR-0003-evolution-nodes-and-exclusive-paths' }
       ] }]
     },
     socialLinks: [

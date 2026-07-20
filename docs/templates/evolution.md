@@ -41,11 +41,17 @@ Base Monster
 
 ## 排他・再進化ルール
 
-- 
+- Evolution Node ID:
+- 排他グループID:
+- 前提Node:
+- 取り消し可否:
 
 ## Runtimeデータ
 
 具体的な閾値や数値はUnity側のDefinitionを正とし、このページには意味と制約を記載する。
+
+- Evolution Definition:
+- 視覚形態の実装状態:
 
 ## 関連リンク
 

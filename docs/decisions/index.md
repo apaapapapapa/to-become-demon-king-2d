@@ -13,3 +13,4 @@
 | --- | --- | --- |
 | [ADR-0001](./ADR-0001-monorepo-knowledge-base.md) | Accepted | Unity実装とKnowledge Baseを同一リポジトリで管理する |
 | [ADR-0002](./ADR-0002-ability-art-skill-boundaries.md) | Accepted | Ability・Art・Skillの責務を分離する |
+| [ADR-0003](./ADR-0003-evolution-nodes-and-exclusive-paths.md) | Accepted | Evolutionを不可逆・排他的なNode選択として管理する |

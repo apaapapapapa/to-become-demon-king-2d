@@ -5,6 +5,8 @@ using DemonKing.Field.Prototype;
 using DemonKing.Gameplay.Combat.Configuration;
 using DemonKing.Gameplay.Progression.Configuration;
 using DemonKing.Gameplay.Modifiers;
+using DemonKing.Gameplay.Modifiers.Configuration;
+using DemonKing.Gameplay.Progression;
 using NUnit.Framework;
 using UnityEditor;
 using UnityEngine;
@@ -128,6 +130,89 @@ namespace DemonKing.Tests.EditMode
                 CharacterProgressionSaveMapper.ToSaveData(state));
 
             Assert.That(restored.UnlockedSkillIds, Is.EqualTo(new[] { "skill.combat.test" }));
+        }
+
+        [Test]
+        public void Evolution_条件成立後に排他的なNodeを不可逆に取得して保存できる()
+        {
+            PrototypeProjectAssets projectAssets =
+                Resources.Load<PrototypeProjectAssets>("Settings/PrototypeProjectAssets");
+            CharacterProgressionState state = CharacterProgressionState.CreateInitial(
+                projectAssets.PlayerCharacter.CharacterId);
+            var service = new EvolutionProgressionService(
+                state,
+                projectAssets.PlayerCharacter.EvolutionDefinitions,
+                (string artId, out int rank) =>
+                {
+                    rank = artId == "art.magic.fire" ? 2 : 0;
+                    return rank > 0;
+                });
+
+            EvolutionEvaluationResult initial = service.Evaluate(
+                "evolution.slime.predator");
+
+            Assert.That(initial.Status, Is.EqualTo(EvolutionEvaluationStatus.RequirementsNotMet));
+            Assert.That(
+                HasFailure(initial, EvolutionRequirementKind.Level),
+                Is.True);
+            Assert.That(
+                HasFailure(initial, EvolutionRequirementKind.Skill),
+                Is.True);
+
+            state.GainExperience(
+                5,
+                projectAssets.PlayerCharacter.ExperienceTableDefinition.CreateRuntimeTable());
+            state.TryUnlockSkill("skill.combat.predatory_instinct");
+
+            EvolutionApplyResult applied = service.Evolve("evolution.slime.predator");
+
+            Assert.That(applied.Succeeded, Is.True);
+            Assert.That(state.IsEvolutionNodeUnlocked("evolution.slime.predator"), Is.True);
+            Assert.That(
+                service.GetModifier(
+                        GameplayModifierTarget.OutgoingDamage,
+                        "ability.basic_melee")
+                    .Apply(1),
+                Is.EqualTo(2));
+            Assert.That(
+                service.Evaluate("evolution.slime.predator").Status,
+                Is.EqualTo(EvolutionEvaluationStatus.AlreadyUnlocked));
+
+            EvolutionEvaluationResult exclusive = service.Evaluate(
+                "evolution.slime.arcane");
+            Assert.That(exclusive.Status, Is.EqualTo(EvolutionEvaluationStatus.RequirementsNotMet));
+            Assert.That(
+                HasFailure(exclusive, EvolutionRequirementKind.ExclusiveChoice),
+                Is.True);
+
+            CharacterProgressionState restored = CharacterProgressionSaveMapper.FromSaveData(
+                CharacterProgressionSaveMapper.ToSaveData(state));
+            Assert.That(
+                restored.UnlockedEvolutionNodeIds,
+                Is.EqualTo(new[] { "evolution.slime.predator" }));
+        }
+
+        [Test]
+        public void Evolution_Save復元時の排他Node重複を拒否する()
+        {
+            PrototypeProjectAssets projectAssets =
+                Resources.Load<PrototypeProjectAssets>("Settings/PrototypeProjectAssets");
+            CharacterProgressionState state = CharacterProgressionState.Restore(
+                "character.player.slime",
+                level: 2,
+                currentExperience: 5,
+                unlockedSkillIds: null,
+                unlockedEvolutionNodeIds: new[]
+                {
+                    "evolution.slime.predator",
+                    "evolution.slime.arcane"
+                });
+
+            Assert.That(
+                () => new EvolutionProgressionService(
+                    state,
+                    projectAssets.PlayerCharacter.EvolutionDefinitions),
+                Throws.TypeOf<System.InvalidOperationException>());
         }
 
         [Test]
@@ -288,12 +373,34 @@ namespace DemonKing.Tests.EditMode
             Assert.That(skillDefinition, Is.Not.Null);
             Assert.That(skillDefinition.IsConfigured, Is.True);
             Assert.That(skillDefinition.SkillId, Is.EqualTo("skill.combat.predatory_instinct"));
+            Assert.That(projectAssets.PlayerCharacter.EvolutionDefinitions.Count, Is.EqualTo(2));
+            Assert.That(
+                projectAssets.PlayerCharacter.EvolutionDefinitions[0].IsConfigured,
+                Is.True);
+            Assert.That(
+                projectAssets.PlayerCharacter.EvolutionDefinitions[1].IsConfigured,
+                Is.True);
             Assert.That(projectAssets.PlayerCharacter.ExperienceTableDefinition, Is.Not.Null);
             Assert.That(projectAssets.PlayerCharacter.ExperienceTableDefinition.IsConfigured, Is.True);
             Assert.That(projectAssets.TrainingDummyReward, Is.Not.Null);
             Assert.That(projectAssets.TrainingDummyReward.IsConfigured, Is.True);
             Assert.That(projectAssets.TrainingDummyReward.RewardId, Is.EqualTo("reward.training_dummy"));
             Assert.That(projectAssets.TrainingDummyReward.Experience, Is.EqualTo(5));
+        }
+
+        private static bool HasFailure(
+            EvolutionEvaluationResult result,
+            EvolutionRequirementKind kind)
+        {
+            foreach (EvolutionRequirementFailure failure in result.Failures)
+            {
+                if (failure.Kind == kind)
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
     }
 }

@@ -14,4 +14,4 @@
 
 <ContentCatalog content-type="evolution" />
 
-Evolutionシステム自体は未実装です。各ページのStatusで計画と実装を区別します。
+Evolution Node Definition、条件評価、排他選択、Save、永続補正の基盤は実装済みです。専用の見た目、演出、選択UIは未実装のため、各ページのStatusで区別します。
