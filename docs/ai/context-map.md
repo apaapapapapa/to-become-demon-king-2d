@@ -17,6 +17,14 @@ AIエージェントが変更対象に必要な仕様・コード・テストへ
 - **Tests:** `Assets/Tests/PlayMode/`
 - **Related:** Ability, Interaction, Pause, Dodge, Evolution
 
+## Field Physics / Movement
+
+- **Design:** `docs/design/technical-design.md#3dフィールド座標`, `docs/design/technical-design.md#移動と物理`
+- **Code:** `Assets/Scripts/Gameplay/Characters/CharacterPhysicsBody3D.cs`, `Assets/Scripts/Gameplay/Characters/CharacterPlanarMotor.cs`, `Assets/Scripts/Gameplay/Characters/CharacterDodge.cs`, `Assets/Scripts/Core/Math/FieldSpace3D.cs`
+- **Integration:** `Assets/Scripts/Field/Prototype/CollisionMapBuilder.cs`, `Assets/Scripts/Field/Prototype/PrototypePlayerSpawner.cs`, `Assets/Scripts/Field/Prototype/PrototypeTilemapContext.cs`
+- **Tests:** `Assets/Tests/PlayMode/FieldPhysics3DPlayModeTests.cs`
+- **Related:** Input, Dodge, Combat, Interaction, Enemy AI
+
 ## Interaction
 
 - **Spec:** `docs/specifications/interaction.md`
@@ -42,7 +50,7 @@ AIエージェントが変更対象に必要な仕様・コード・テストへ
 - **Code:** `Assets/Scripts/Gameplay/Combat/`
 - **Integration:** `Assets/Scripts/Field/Prototype/PrototypeCombatDummy.cs`, `Assets/Scripts/Field/Prototype/PrototypeTrainingAreaCoordinator.cs`
 - **Tests:** `Assets/Tests/EditMode/`, `Assets/Tests/PlayMode/`
-- **Related:** Ability, Reward, Modifiers, Quest
+- **Related:** Ability, Reward, Modifiers, Quest, Field Physics / Movement
 
 ## Content / Encyclopedia
 
@@ -124,7 +132,7 @@ AIエージェントが変更対象に必要な仕様・コード・テストへ
 - **Code:** `Assets/Scripts/Gameplay/Characters/`
 - **Integration:** `Assets/Scripts/Core/Input/`
 - **Tests:** `Assets/Tests/PlayMode/`
-- **Related:** Input, Combat
+- **Related:** Input, Combat, Field Physics / Movement
 
 ## Quest
 
@@ -147,4 +155,4 @@ AIエージェントが変更対象に必要な仕様・コード・テストへ
 ## Enemy AI
 
 - **Planning:** `docs/development/roadmap.md`
-- **Related:** Ability, Combat, Characters
+- **Related:** Ability, Combat, Characters, Field Physics / Movement
