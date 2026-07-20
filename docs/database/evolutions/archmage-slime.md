@@ -11,17 +11,17 @@ relatedContentIds:
 
 # 大魔導スライム
 
-- Status: Runtime Implemented
-- Evolution Node ID: `evolution.slime.archmage`
-- Unity Definition: `Assets/Resources/Settings/Gameplay/ArchmageSlimeEvolution.asset`
+Unity Definition: `Assets/Resources/Settings/Gameplay/ArchmageSlimeEvolution.asset`
 
 ## 概要
 
-魔術系Tier 1と火炎魔法の高い熟練を前提とする上位Evolutionです。火炎弾を含む魔法Abilityの与ダメージとクールダウンへ作用します。
+魔術系Tier 1と高いArt熟練を前提とする上位Evolutionです。魔法Abilityを中心とした戦闘スタイルを強化する経路として位置づけます。
 
 ## 形態
 
-三日月と魔力炎の意匠を持つ専用2フレームSprite Sheetを使用します。具体的な条件値、補正値、表示倍率はUnity DefinitionをSource of Truthとします。
+三日月と魔力炎の意匠を持つ専用2フレームSprite Sheetを使用します。
+
+条件、補正、排他ルールは [Evolution仕様](../../specifications/evolution.md) を参照してください。
 
 ## Stable Content IDでの関連
 
