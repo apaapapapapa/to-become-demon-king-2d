@@ -1,4 +1,6 @@
+using System;
 using System.Collections;
+using System.Reflection;
 using DemonKing.Field.Prototype;
 using DemonKing.Field.Prototype.Configuration;
 using DemonKing.Gameplay.Combat;
@@ -31,8 +33,8 @@ namespace DemonKing.Tests.PlayMode
             int publishedCount = 0;
             eventHub.Published += _ => publishedCount++;
 
-            TrainingDummyEventBridge bridge = world.AddComponent<TrainingDummyEventBridge>();
-            bridge.Initialize(lifecycle, eventHub);
+            MonoBehaviour bridge = AddInternalComponent(world, "DemonKing.Field.Prototype.TrainingDummyEventBridge");
+            InvokeInitialize(bridge, lifecycle, eventHub);
             PrototypeCombatDummy dummy = lifecycle.SpawnOrRestore();
 
             yield return null;
@@ -76,11 +78,12 @@ namespace DemonKing.Tests.PlayMode
             var eventHub = new GameplayEventHub();
             var questService = new QuestProgressionService(new[] { scenario.QuestDefinition });
 
-            TrainingQuestFlowController flow = world.AddComponent<TrainingQuestFlowController>();
-            flow.Initialize(
+            MonoBehaviour flow = AddInternalComponent(world, "DemonKing.Field.Prototype.TrainingQuestFlowController");
+            InvokeInitialize(
+                flow,
                 npc,
                 lifecycle,
-                acquisitionService: null,
+                null,
                 dialogueLog,
                 eventHub,
                 questService,
@@ -110,6 +113,21 @@ namespace DemonKing.Tests.PlayMode
             Object.Destroy(interactor);
             Object.Destroy(world);
             yield return null;
+        }
+
+        private static MonoBehaviour AddInternalComponent(GameObject target, string typeName)
+        {
+            Type type = typeof(PrototypeCombatDummy).Assembly.GetType(typeName, throwOnError: true);
+            return (MonoBehaviour)target.AddComponent(type);
+        }
+
+        private static void InvokeInitialize(MonoBehaviour component, params object[] arguments)
+        {
+            MethodInfo initialize = component.GetType().GetMethod(
+                "Initialize",
+                BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+            Assert.That(initialize, Is.Not.Null);
+            initialize.Invoke(component, arguments);
         }
     }
 }
