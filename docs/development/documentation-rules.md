@@ -2,7 +2,7 @@
 
 ## 原則
 
-同じ情報を複数の文書へ本文として複製しません。情報には必ず1つの所有文書を決め、他の文書から参照したい場合は所有文書へのリンクだけを置きます。
+同じ情報を複数の文書やRuntimeソースへ複製しません。情報には必ず1つの所有場所を決め、他の場所から参照したい場合はリンクまたは自動生成結果を使用します。
 
 例外はADRです。ADRは判断当時のContext / Decision / Consequencesを履歴として固定します。現在の仕様や実装状態はADRではなく、下表の所有文書を正とします。
 
@@ -49,25 +49,46 @@ docs/
 | --- | --- |
 | コンパイルされる処理 | C#コード |
 | Scene / Prefab / Input Actions | Unityアセット |
-| 静的Definition、バランス値、Asset参照 | ScriptableObject Definition |
+| 静的Definition、Stable Content ID、表示名、バランス値、Asset参照 | ScriptableObject Definition |
+| Prototype専用Actor ID等、Definitionを持たないRuntime識別子 | 対応するC#コード |
 | プレイ中の可変状態 | Domain / Runtime State |
 | 保存形式 | Save DTO |
 | ゲームビジョン、物語、世界設定、仕様の意味、設計判断 | 対応するKnowledge Base所有文書 |
 | 自動検証内容 | テストコード |
 
-Runtime数値やUnityアセットの値をMarkdownへ複製しません。Knowledge Baseには意味、制約、責務、安定ID、参照先だけを記載します。
+Runtimeソースに存在するID、表示名、実装有無、数値、参照関係をMarkdownへ複製しません。Knowledge BaseにはRuntimeに存在しない意味、制約、世界観、ゲームプレイ上の役割を記載します。
 
-## コンテンツfrontmatter
+## Runtime-backedコンテンツ
 
-Monster、Art、Skill、Evolution等のコンテンツページでは、次のメタデータはfrontmatterだけを正とします。本文へ同じ値を再掲しません。
+Monster、Art、Skill、EvolutionのうちRuntime実装を持つページは、frontmatterの `runtimeSource` でSource of Truthを指します。
 
-- `title`
-- `contentId`
-- `contentType`
-- `status`
-- `relatedContentIds`
+```yaml
+---
+runtimeSource: Assets/Resources/Settings/Gameplay/FireMagicArt.asset
+---
+```
 
-`relatedContentIds` は相手側にも自分のIDを記載し、双方向にします。VitePress Data LoaderがID重複、存在しない参照、片方向参照を検証します。
+VitePress Data Loaderはビルド時にRuntimeソースを直接読み、次を自動解決します。
+
+- Stable Content ID
+- Content Type（`database/` 配下の配置から判定）
+- `displayName` を持つDefinitionの表示名
+- Runtime Sourceの種別（Unity Definition / Runtime Code）
+- CharacterDefinitionやEvolutionDefinition等から読み取れるRuntime上の関連
+
+Runtimeソースに `displayName` がないMonster等だけ、Knowledge Base表示用の `title` をfrontmatterへ記載できます。これはRuntimeに同じ表示名フィールドが存在しない場合に限ります。
+
+Runtime-backedページへ `contentId`、`contentType`、`status`、Runtimeと同じ `title` を重複記載しません。Sourceの削除、ID不整合、型不整合をData Loaderが検出した場合はVitePressビルドを失敗させます。
+
+Knowledge Baseだけに存在する概念ページは、`runtimeSource` の代わりに `contentId` と `title` を持てます。例として、複数Runtime Nodeをまとめる進化系列ページが該当します。
+
+## コンテンツ間リンク
+
+`relatedContentIds` はRuntimeから導出できない、Knowledge Base上の意味的な関連だけに使用します。
+
+同じ関連を両ページへ重複記載しません。どちらか一方で1回だけ宣言し、VitePress Data Loaderが双方向の関連として生成します。
+
+CharacterDefinitionの参照やEvolutionの前提Skill / Art / Nodeなど、Runtimeソースから取得できる関連はfrontmatterへ書きません。Data LoaderがRuntimeソースから関連グラフを生成し、Knowledge Base上に対応ページが存在する関係だけを表示します。
 
 Stable Content IDは表示名やAsset名から独立させます。一度Save Dataやコンテンツ間参照へ使用したIDは、表示名変更やAsset移動だけを理由に変更しません。
 
@@ -77,7 +98,7 @@ Stable Content IDは表示名やAsset名から独立させます。一度Save Da
 
 仕様書や設計書では、そのFeatureを理解するために必要な現在の振る舞いは記載できますが、「現在の実装範囲」一覧や「今後」一覧を持ちません。必要な場合はロードマップへリンクします。
 
-コンテンツ単位の状態は各ページのfrontmatter `status` を正とします。
+コンテンツ一覧では手入力のRuntime Statusを持たず、Data Loaderが解決したSource種別を表示します。実装状況の詳細はRuntimeソースとロードマップを確認します。
 
 ## リンク
 
@@ -97,6 +118,8 @@ Stable Content IDは表示名やAsset名から独立させます。一度Save Da
 
 ## 変更同期
 
-仕様の意味が変わる実装変更では、その情報を所有する文書だけを更新します。参照元はリンク先が変わらない限り更新しません。
+Runtime-backedコンテンツのID・表示名・参照を変更した場合、VitePress側の機械的メタデータ更新は不要です。ビルド時にRuntimeソースから再取得します。
+
+仕様の意味や世界観などKnowledge Baseが所有する情報を変更した場合は、その情報を所有する文書だけを更新します。参照元はリンク先が変わらない限り更新しません。
 
 長期的な設計判断を変更する場合は、現在の所有文書を更新し、判断理由をADRへ記録します。
