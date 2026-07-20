@@ -62,14 +62,7 @@ namespace DemonKing.Field.Prototype
                     world,
                     player,
                     gameplayServices,
-                    projectAssets.TrainingSlimeAi,
-                    projectAssets.TrainingDummyReward,
-                    projectAssets.FireMagicTrainingGrant,
-                    projectAssets.ApprenticeMageDialogue,
-                    projectAssets.ApprenticeMageActiveDialogue,
-                    projectAssets.ApprenticeMageTurnInDialogue,
-                    projectAssets.ApprenticeMageCompletedDialogue,
-                    projectAssets.TrainingQuestDefinition,
+                    projectAssets.TrainingScenario,
                     dialogueLog);
             }
 
