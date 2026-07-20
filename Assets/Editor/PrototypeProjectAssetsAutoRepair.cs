@@ -4,7 +4,9 @@ using DemonKing.Field.Prototype.Configuration;
 using DemonKing.Gameplay.Abilities.Configuration;
 using DemonKing.Gameplay.Characters.Configuration;
 using DemonKing.Gameplay.Combat.Configuration;
+using DemonKing.Gameplay.Dialogue.Configuration;
 using DemonKing.Gameplay.Progression.Configuration;
+using DemonKing.Gameplay.Quests.Configuration;
 using DemonKing.Gameplay.Rewards.Configuration;
 using UnityEditor;
 using UnityEngine;
@@ -27,6 +29,8 @@ namespace DemonKing.EditorTools
         private const string PlayerMeleeAttackPath = "Assets/Resources/Settings/Gameplay/PlayerMeleeAttack.asset";
         private const string FireMagicArtPath = "Assets/Resources/Settings/Gameplay/FireMagicArt.asset";
         private const string FireMagicTrainingGrantPath = "Assets/Resources/Settings/Gameplay/FireMagicTrainingGrant.asset";
+        private const string ApprenticeMageDialoguePath = "Assets/Resources/Settings/Gameplay/ApprenticeMageDialogue.asset";
+        private const string FirstTrainingQuestPath = "Assets/Resources/Settings/Gameplay/FirstTrainingQuest.asset";
         private const string PredatoryInstinctSkillPath = "Assets/Resources/Settings/Gameplay/PredatoryInstinctSkill.asset";
         private const string PredatorSlimeEvolutionPath = "Assets/Resources/Settings/Gameplay/PredatorSlimeEvolution.asset";
         private const string ArcaneSlimeEvolutionPath = "Assets/Resources/Settings/Gameplay/ArcaneSlimeEvolution.asset";
@@ -93,6 +97,8 @@ namespace DemonKing.EditorTools
 
             changed |= AssignIfDifferent(serializedObject, "applicationSettings", Load<PrototypeApplicationSettings>(ApplicationSettingsPath));
             changed |= AssignIfDifferent(serializedObject, "playerCharacter", playerCharacter);
+            changed |= AssignIfDifferent(serializedObject, "apprenticeMageDialogue", Load<DialogueDefinition>(ApprenticeMageDialoguePath));
+            changed |= AssignArrayIfDifferent(serializedObject, "questDefinitions", Load<QuestDefinition>(FirstTrainingQuestPath));
             changed |= AssignIfDifferent(serializedObject, "trainingDummyReward", Load<RewardDefinition>(TrainingDummyRewardPath));
             changed |= AssignIfDifferent(serializedObject, "fireMagicTrainingGrant", Load<ProgressionGrantDefinition>(FireMagicTrainingGrantPath));
             changed |= AssignIfDifferent(serializedObject, "uiFont", Load<Font>(JapaneseUiFontInstaller.FontAssetPath, logIfMissing: forceLog));
