@@ -10,7 +10,7 @@ namespace DemonKing.Gameplay.AI.Configuration
     [CreateAssetMenu(fileName = "EnemyAi", menuName = "Demon King/AI/Enemy AI Definition")]
     public sealed class EnemyAiDefinition : ScriptableObject
     {
-        [SerializeField, Min(0.1f)] private float detectionRange = 1.75f;
+        [SerializeField, Min(0.1f)] private float detectionRange = 1.4f;
         [SerializeField, Min(0.1f)] private float disengageRange = 4.5f;
         [SerializeField, Min(0.1f)] private float attackRange = 1.05f;
         [SerializeField, Min(0.1f)] private float moveSpeed = 1.8f;
