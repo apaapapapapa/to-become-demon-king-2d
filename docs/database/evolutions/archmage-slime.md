@@ -4,15 +4,9 @@ runtimeSource: Assets/Resources/Settings/Gameplay/ArchmageSlimeEvolution.asset
 
 <RuntimeContentHeader />
 
-## 概要
+## 開発者向け参照
 
-魔術系Tier 1と高いArt熟練を前提とする上位Evolutionです。魔法Abilityを中心とした戦闘スタイルを強化する経路として位置づけます。
-
-## 形態
-
-三日月と魔力炎の意匠を持つ専用2フレームSprite Sheetを使用します。
-
-条件、補正、排他ルールは [Evolution仕様](../../specifications/evolution.md) を参照してください。
+進化条件、補正、排他ルールは [Evolution仕様](../../specifications/evolution.md) を参照してください。外見パラメータとSprite Sheet参照は上記Runtime Sourceを正とします。
 
 ## 関連コンテンツ
 
