@@ -1,4 +1,5 @@
 using DemonKing.Gameplay.Content;
+using DemonKing.Gameplay.Quests;
 using DemonKing.Gameplay.Rewards;
 using UnityEngine;
 
@@ -13,17 +14,20 @@ namespace DemonKing.Field.Prototype
             Transform worldRoot,
             GameObject player,
             RewardService rewardService,
-            GameContentCatalog gameContentCatalog)
+            GameContentCatalog gameContentCatalog,
+            QuestProgressionService questProgressionService)
         {
             WorldRoot = worldRoot;
             Player = player;
             RewardService = rewardService;
             GameContentCatalog = gameContentCatalog;
+            QuestProgressionService = questProgressionService;
         }
 
         public Transform WorldRoot { get; }
         public GameObject Player { get; }
         public RewardService RewardService { get; }
         public GameContentCatalog GameContentCatalog { get; }
+        public QuestProgressionService QuestProgressionService { get; }
     }
 }
