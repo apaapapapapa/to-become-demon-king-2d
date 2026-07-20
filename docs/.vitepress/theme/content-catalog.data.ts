@@ -31,10 +31,21 @@ interface PendingCatalogEntry extends ContentCatalogEntry {
   runtimeRelatedContentIds: string[]
 }
 
-const repositoryRoot = path.resolve(
-  path.dirname(fileURLToPath(import.meta.url)),
-  '../../..'
+const loaderDirectory = path.dirname(fileURLToPath(import.meta.url))
+const repositoryRootCandidates = [
+  process.cwd(),
+  path.resolve(process.cwd(), '..'),
+  path.resolve(loaderDirectory, '../../..')
+]
+const repositoryRoot = repositoryRootCandidates.find(candidate =>
+  fs.existsSync(path.join(candidate, 'Assets')) &&
+  fs.existsSync(path.join(candidate, 'docs'))
 )
+
+if (!repositoryRoot) {
+  throw new Error('Repository root could not be resolved for the VitePress content loader.')
+}
+
 const gameplaySettingsRoot = path.join(
   repositoryRoot,
   'Assets/Resources/Settings/Gameplay'
@@ -71,9 +82,14 @@ function stripQuotes(value: string): string {
   return trimmed
 }
 
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+}
+
 function extractYamlScalar(content: string, fieldName: string): string | undefined {
-  const escapedFieldName = fieldName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-  const match = content.match(new RegExp(`^\\s*${escapedFieldName}:\\s*(.*?)\\s*$`, 'm'))
+  const match = content.match(
+    new RegExp(`^\\s*${escapeRegExp(fieldName)}:\\s*(.*?)\\s*$`, 'm')
+  )
   if (!match) {
     return undefined
   }
@@ -83,9 +99,8 @@ function extractYamlScalar(content: string, fieldName: string): string | undefin
 }
 
 function extractCSharpString(content: string, fieldName: string): string | undefined {
-  const escapedFieldName = fieldName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
   const match = content.match(
-    new RegExp(`\\b${escapedFieldName}\\s*=\\s*"([^"]+)"`)
+    new RegExp(`\\b${escapeRegExp(fieldName)}\\s*=\\s*"([^"]+)"`)
   )
   return match?.[1]
 }
@@ -197,7 +212,12 @@ function resolveRuntimeContent(runtimeSource: string): RuntimeContentRecord {
   }
 
   const absolutePath = path.resolve(repositoryRoot, normalizedSource)
-  if (!absolutePath.startsWith(repositoryRoot) || !fs.existsSync(absolutePath)) {
+  const relativePath = path.relative(repositoryRoot, absolutePath)
+  if (
+    relativePath.startsWith('..') ||
+    path.isAbsolute(relativePath) ||
+    !fs.existsSync(absolutePath)
+  ) {
     throw new Error(`Runtime source does not exist: ${runtimeSource}`)
   }
 
@@ -320,8 +340,8 @@ export default createContentLoader<ContentCatalogEntry[]>('database/**/*.md', {
       entriesById.set(entry.contentId, entry)
     }
 
-    const relations = new Map(
-      pendingEntries.map(entry => [entry.contentId, new Set<string>()])
+    const relations = new Map<string, Set<string>>(
+      pendingEntries.map(entry => [entry.contentId, new Set<string>()] as const)
     )
 
     for (const entry of pendingEntries) {
