@@ -6,9 +6,11 @@
 
 ### 基礎Runtime
 
-- Scene / Build Settings、Rigidbody2D、Collision Tilemap、Isometric描画順
+- Scene / Build Settings、3D Rigidbody / Collider、Collision Tilemapマーカー、Isometric描画順
 - Input Action / Input Context
 - uGUI、Camera、Pause、Dodge
+- X/Y平面移動とZ Elevationを使うJump / Fall / Flight
+- 有限高さ障害物の上空通過
 - Domain / Runtime Assembly境界
 - ScriptableObject Definition、Runtime State、Save DTO境界
 

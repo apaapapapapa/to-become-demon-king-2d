@@ -32,6 +32,7 @@ export default defineConfig({
       '/specifications/': [{ text: '仕様', items: [
         { text: '仕様書一覧', link: '/specifications/' },
         { text: '入力', link: '/specifications/input' },
+        { text: '移動', link: '/specifications/movement' },
         { text: 'Interaction', link: '/specifications/interaction' },
         { text: 'Dialogue', link: '/specifications/dialogue' },
         { text: 'Ability', link: '/specifications/ability' },

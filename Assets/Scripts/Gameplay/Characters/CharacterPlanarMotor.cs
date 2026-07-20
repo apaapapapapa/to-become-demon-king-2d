@@ -7,7 +7,7 @@ namespace DemonKing.Gameplay.Characters
 {
     /// <summary>
     /// 3D Physics上でX/Yフィールド平面の通常移動だけを担当します。
-    /// ZはElevationとしてCharacterPhysicsBody3Dが管理し、通常移動では変更しません。
+    /// ZはCharacterElevationMotorが担当し、最終的な3軸移動の合成はCharacterPhysicsBody3Dへ委譲します。
     /// </summary>
     [DisallowMultipleComponent]
     [RequireComponent(typeof(MoveInputReader))]
@@ -19,7 +19,7 @@ namespace DemonKing.Gameplay.Characters
         [SerializeField] private CharacterStatsDefinition statsDefinition;
 
         private MoveInputReader inputReader;
-        private Rigidbody body;
+        private CharacterPhysicsBody3D physicsBody;
         private Vector2 currentInput;
         private bool clampToBounds;
         private bool movementLocked;
@@ -32,14 +32,8 @@ namespace DemonKing.Gameplay.Characters
         private void Awake()
         {
             inputReader = GetComponent<MoveInputReader>();
-            CharacterPhysicsBody3D physicsBody = GetComponent<CharacterPhysicsBody3D>();
-            if (physicsBody == null)
-            {
-                physicsBody = gameObject.AddComponent<CharacterPhysicsBody3D>();
-            }
-
+            physicsBody = GetComponent<CharacterPhysicsBody3D>();
             physicsBody.EnsureConfigured();
-            body = physicsBody.Body;
         }
 
         private void Update()
@@ -49,23 +43,22 @@ namespace DemonKing.Gameplay.Characters
 
         private void FixedUpdate()
         {
-            if (body == null || movementLocked)
+            if (physicsBody == null || movementLocked)
             {
                 return;
             }
 
-            Vector3 next = body.position +
-                           FieldSpace3D.PlanarDelta(currentInput) *
-                           (MoveSpeed * Time.fixedDeltaTime);
-            next.z = body.position.z;
-
+            Vector2 delta = currentInput * (MoveSpeed * Time.fixedDeltaTime);
             if (clampToBounds)
             {
-                next.x = Mathf.Clamp(next.x, -fieldExtents.x, fieldExtents.x);
-                next.y = Mathf.Clamp(next.y, -fieldExtents.y, fieldExtents.y);
+                Vector2 current = FieldSpace3D.ToPlanar(physicsBody.Body.position);
+                Vector2 target = current + delta;
+                target.x = Mathf.Clamp(target.x, -fieldExtents.x, fieldExtents.x);
+                target.y = Mathf.Clamp(target.y, -fieldExtents.y, fieldExtents.y);
+                delta = target - current;
             }
 
-            body.MovePosition(next);
+            physicsBody.QueuePlanarDelta(delta);
         }
 
         public void Configure(CharacterStatsDefinition definition)

@@ -27,6 +27,9 @@ namespace DemonKing.Core.Input
         private InputAction artAction;
         private InputAction interactAction;
         private InputAction dodgeAction;
+        private InputAction jumpAction;
+        private InputAction flightToggleAction;
+        private InputAction descendAction;
         private InputAction evolutionAction;
         private InputAction gameplayPauseAction;
 
@@ -41,6 +44,8 @@ namespace DemonKing.Core.Input
         public event Action ArtPressed;
         public event Action InteractPressed;
         public event Action DodgePressed;
+        public event Action JumpPressed;
+        public event Action FlightTogglePressed;
         public event Action EvolutionPressed;
         public event Action PausePressed;
         public event Action SubmitPressed;
@@ -53,6 +58,25 @@ namespace DemonKing.Core.Input
             CurrentContext == PlayerInputContext.Gameplay && moveAction != null
                 ? Vector2.ClampMagnitude(moveAction.ReadValue<Vector2>(), 1f)
                 : Vector2.zero;
+
+        /// <summary>
+        /// 飛行時の高さ入力です。Jumpを押している間は+1、Descendを押している間は-1になります。
+        /// 地上ではJumpの押下イベントだけを使用し、この値はCharacterElevationMotorの飛行中だけ参照します。
+        /// </summary>
+        public float FlightElevationInput
+        {
+            get
+            {
+                if (CurrentContext != PlayerInputContext.Gameplay)
+                {
+                    return 0f;
+                }
+
+                float ascend = jumpAction == null ? 0f : jumpAction.ReadValue<float>();
+                float descend = descendAction == null ? 0f : descendAction.ReadValue<float>();
+                return Mathf.Clamp(ascend - descend, -1f, 1f);
+            }
+        }
 
         public Vector2 Navigate =>
             CurrentContext == PlayerInputContext.UI && navigateAction != null
@@ -152,6 +176,9 @@ namespace DemonKing.Core.Input
             artAction = FindAction(gameplayActionMap, "Art");
             interactAction = FindAction(gameplayActionMap, "Interact");
             dodgeAction = FindAction(gameplayActionMap, "Dodge");
+            jumpAction = FindAction(gameplayActionMap, "Jump");
+            flightToggleAction = FindAction(gameplayActionMap, "FlightToggle");
+            descendAction = FindAction(gameplayActionMap, "Descend");
             evolutionAction = FindAction(gameplayActionMap, "Evolution");
             gameplayPauseAction = FindAction(gameplayActionMap, "Pause");
 
@@ -216,6 +243,8 @@ namespace DemonKing.Core.Input
             if (artAction != null) artAction.performed += OnArtPerformed;
             if (interactAction != null) interactAction.performed += OnInteractPerformed;
             if (dodgeAction != null) dodgeAction.performed += OnDodgePerformed;
+            if (jumpAction != null) jumpAction.performed += OnJumpPerformed;
+            if (flightToggleAction != null) flightToggleAction.performed += OnFlightTogglePerformed;
             if (evolutionAction != null) evolutionAction.performed += OnEvolutionPerformed;
             if (gameplayPauseAction != null) gameplayPauseAction.performed += OnPausePerformed;
             if (submitAction != null) submitAction.performed += OnSubmitPerformed;
@@ -229,6 +258,8 @@ namespace DemonKing.Core.Input
             if (artAction != null) artAction.performed -= OnArtPerformed;
             if (interactAction != null) interactAction.performed -= OnInteractPerformed;
             if (dodgeAction != null) dodgeAction.performed -= OnDodgePerformed;
+            if (jumpAction != null) jumpAction.performed -= OnJumpPerformed;
+            if (flightToggleAction != null) flightToggleAction.performed -= OnFlightTogglePerformed;
             if (evolutionAction != null) evolutionAction.performed -= OnEvolutionPerformed;
             if (gameplayPauseAction != null) gameplayPauseAction.performed -= OnPausePerformed;
             if (submitAction != null) submitAction.performed -= OnSubmitPerformed;
@@ -240,6 +271,8 @@ namespace DemonKing.Core.Input
         private void OnArtPerformed(InputAction.CallbackContext context) => ArtPressed?.Invoke();
         private void OnInteractPerformed(InputAction.CallbackContext context) => InteractPressed?.Invoke();
         private void OnDodgePerformed(InputAction.CallbackContext context) => DodgePressed?.Invoke();
+        private void OnJumpPerformed(InputAction.CallbackContext context) => JumpPressed?.Invoke();
+        private void OnFlightTogglePerformed(InputAction.CallbackContext context) => FlightTogglePressed?.Invoke();
         private void OnEvolutionPerformed(InputAction.CallbackContext context) => EvolutionPressed?.Invoke();
         private void OnPausePerformed(InputAction.CallbackContext context) => PausePressed?.Invoke();
         private void OnSubmitPerformed(InputAction.CallbackContext context) => SubmitPressed?.Invoke();
