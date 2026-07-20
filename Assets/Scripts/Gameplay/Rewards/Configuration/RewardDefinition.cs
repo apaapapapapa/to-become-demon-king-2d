@@ -1,4 +1,5 @@
 using DemonKing.Domain;
+using DemonKing.Gameplay.Progression.Configuration;
 using UnityEngine;
 
 namespace DemonKing.Gameplay.Rewards.Configuration
@@ -13,12 +14,15 @@ namespace DemonKing.Gameplay.Rewards.Configuration
     {
         [SerializeField] private string rewardId = string.Empty;
         [SerializeField, Min(0)] private long experience;
+        [SerializeField] private ProgressionGrantDefinition progressionGrant;
 
         public string RewardId => rewardId;
         public long Experience => experience;
+        public ProgressionGrantDefinition ProgressionGrant => progressionGrant;
         public bool IsConfigured =>
             StableContentId.IsValid(rewardId) &&
-            experience >= 0;
+            experience >= 0 &&
+            (progressionGrant == null || progressionGrant.IsConfigured);
 
         private void OnValidate()
         {

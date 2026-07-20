@@ -1,5 +1,6 @@
 using DemonKing.Gameplay.Characters;
 using DemonKing.Gameplay.Dialogue;
+using DemonKing.Gameplay.Progression;
 using DemonKing.Gameplay.Rewards;
 using UnityEngine;
 
@@ -51,13 +52,18 @@ namespace DemonKing.Field.Prototype
                     projectAssets.PlayerCharacter)
                 .Spawn(world);
 
-            RewardService rewardService = CreateRewardService(player);
+            ProgressionAcquisitionService acquisitionService = CreateAcquisitionService(player);
+            RewardService rewardService = acquisitionService == null
+                ? null
+                : CreateRewardService(player, acquisitionService);
             if (rewardService != null)
             {
                 new PrototypeGameplayFeatureInstaller().Install(
                     world,
                     rewardService,
                     projectAssets.TrainingDummyReward,
+                    acquisitionService,
+                    projectAssets.FireMagicTrainingGrant,
                     dialogueLog);
             }
 
@@ -67,7 +73,27 @@ namespace DemonKing.Field.Prototype
             return new PrototypeWorldBuildResult(world, player, rewardService);
         }
 
-        private static RewardService CreateRewardService(GameObject player)
+        private static ProgressionAcquisitionService CreateAcquisitionService(GameObject player)
+        {
+            ArtProgressionController artController = player == null
+                ? null
+                : player.GetComponent<ArtProgressionController>();
+            SkillProgressionController skillController = player == null
+                ? null
+                : player.GetComponent<SkillProgressionController>();
+            if (artController == null || skillController == null ||
+                !artController.IsInitialized || !skillController.IsInitialized)
+            {
+                Debug.LogError("Art・Skill取得サービスを初期化できません。プレイヤーの進行Controllerを確認してください。");
+                return null;
+            }
+
+            return new ProgressionAcquisitionService(artController, skillController);
+        }
+
+        private static RewardService CreateRewardService(
+            GameObject player,
+            ProgressionAcquisitionService acquisitionService)
         {
             CharacterRuntimeContextHost contextHost = player == null
                 ? null
@@ -78,7 +104,7 @@ namespace DemonKing.Field.Prototype
                 return null;
             }
 
-            return new RewardService(contextHost.Context);
+            return new RewardService(contextHost.Context, acquisitionService);
         }
     }
 }

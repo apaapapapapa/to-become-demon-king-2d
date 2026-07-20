@@ -2,16 +2,17 @@
 title: 捕食者の本能
 contentId: skill.combat.predatory_instinct
 contentType: skill
-status: Definition Registered / Acquisition Not Connected
+status: Runtime Acquisition Implemented
 relatedContentIds:
   - character.player.slime
   - art.magic.fire
   - evolution.slime.lineage
+  - evolution.slime.apex_predator
 ---
 
 # 捕食者の本能
 
-- Status: Definition Registered / Acquisition Not Connected
+- Status: Runtime Acquisition Implemented
 - Skill ID: `skill.combat.predatory_instinct`
 - Unity Definition: `Assets/Resources/Settings/Gameplay/PredatoryInstinctSkill.asset`
 
@@ -29,7 +30,7 @@ relatedContentIds:
 
 ## 習得
 
-正式な習得経路と条件は未実装です。将来は捕食行動や撃破実績など、取得元側で条件を判定して汎用 `SkillProgressionService.Unlock` へ要求します。
+Prototypeでは訓練用ダミーの初回撃破報酬から取得します。報酬側の `ProgressionGrantDefinition` が汎用 `ProgressionAcquisitionService` へ要求し、ダミーやCombat処理はSkill状態を直接変更しません。
 
 ## Art / Evolutionとの関係
 
@@ -40,6 +41,7 @@ relatedContentIds:
 
 - [プレイヤースライム](../monsters/player-slime.md)
 - [Skill仕様](../../specifications/skill.md)
+- [覇王捕食スライム](../evolutions/apex-predator-slime.md)
 
 ## Stable Content IDでの関連
 

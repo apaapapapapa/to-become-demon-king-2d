@@ -1,0 +1,41 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a0211111111111111111111111111103, type: 3}
+  m_Name: ApexPredatorSlimeEvolution
+  m_EditorClassIdentifier:
+  evolutionNodeId: evolution.slime.apex_predator
+  displayName: 覇王捕食スライム
+  description: 捕食者の資質を極限まで研ぎ澄ませた、近接戦闘系統の上位進化。
+  icon: {fileID: 0}
+  characterDefinitionId: character.player.slime
+  exclusiveGroupId: evolution-group.slime.tier2
+  requiredLevel: 4
+  requiredSkillIds:
+  - skill.combat.predatory_instinct
+  requiredArtRanks: []
+  requiredEvolutionNodeIds:
+  - evolution.slime.predator
+  modifiers:
+  - target: 0
+    operation: 0
+    value: 2
+    targetContentId:
+  appearance:
+    outlineColor: {r: 0.17, g: 0.025, b: 0.02, a: 1}
+    bodyColor: {r: 0.68, g: 0.08, b: 0.05, a: 1}
+    shadowColor: {r: 0.38, g: 0.025, b: 0.02, a: 1}
+    highlightColor: {r: 1, g: 0.48, b: 0.16, a: 1}
+    eyeColor: {r: 1, g: 0.88, b: 0.35, a: 1}
+    effectColor: {r: 1, g: 0.22, b: 0.06, a: 1}
+    visualScale: {x: 1.28, y: 1.2}
+    visualEffect: 1
+    spriteSheet: {fileID: 2800000, guid: cf40532d38964405895ec5747543f003, type: 3}

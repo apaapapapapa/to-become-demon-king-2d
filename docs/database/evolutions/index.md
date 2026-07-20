@@ -14,4 +14,4 @@
 
 <ContentCatalog content-type="evolution" />
 
-Evolution Node Definition、条件評価、排他選択、Save、永続補正、選択UI、Prototype形態表示の基盤は実装済みです。本番用アートと上位Nodeの状態は各ページのStatusで区別します。
+Evolution Node Definition、条件評価、排他選択、Save、永続補正、選択UI、専用形態表示の基盤は実装済みです。追加Nodeの状態は各ページのStatusで区別します。

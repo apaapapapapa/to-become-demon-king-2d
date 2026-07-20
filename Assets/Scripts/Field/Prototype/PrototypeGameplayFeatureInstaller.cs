@@ -1,5 +1,7 @@
 using System;
 using DemonKing.Gameplay.Dialogue;
+using DemonKing.Gameplay.Progression;
+using DemonKing.Gameplay.Progression.Configuration;
 using DemonKing.Gameplay.Rewards;
 using DemonKing.Gameplay.Rewards.Configuration;
 using UnityEngine;
@@ -16,6 +18,8 @@ namespace DemonKing.Field.Prototype
             Transform parent,
             RewardService rewardService,
             RewardDefinition trainingDummyReward,
+            ProgressionAcquisitionService acquisitionService,
+            ProgressionGrantDefinition fireMagicTrainingGrant,
             DialogueLog dialogueLog)
         {
             if (rewardService == null)
@@ -35,6 +39,18 @@ namespace DemonKing.Field.Prototype
                 throw new ArgumentNullException(nameof(dialogueLog));
             }
 
+            if (acquisitionService == null)
+            {
+                throw new ArgumentNullException(nameof(acquisitionService));
+            }
+
+            if (fireMagicTrainingGrant == null || !fireMagicTrainingGrant.IsConfigured)
+            {
+                throw new ArgumentException(
+                    "火炎魔法の訓練取得定義が正しく設定されていません。",
+                    nameof(fireMagicTrainingGrant));
+            }
+
             PrototypeNpcInteractable npc = CreateNpc(parent, dialogueLog);
             var dummyRespawner = new PrototypeCombatDummyRespawner(
                 parent,
@@ -42,6 +58,15 @@ namespace DemonKing.Field.Prototype
                 dummy => ConfigureCombatDummy(dummy, rewardService, trainingDummyReward));
             dummyRespawner.SpawnOrRestore();
             npc.Interacted += () => dummyRespawner.SpawnOrRestore();
+            npc.DialogueCompleted += _ =>
+            {
+                ProgressionGrantResult result = acquisitionService.Grant(fireMagicTrainingGrant);
+                dialogueLog.ShowLine(
+                    "見習い魔術師",
+                    result.WasGranted
+                        ? "火炎魔法を習得した！ Kキー／ゲームパッドYで火炎弾を放てる。"
+                        : "火炎魔法はもう身についている。実戦で熟練を重ねよう。");
+            };
 
             rewardService.RewardGranted += LogGrantedReward;
         }
@@ -77,10 +102,14 @@ namespace DemonKing.Field.Prototype
 
         private static void LogGrantedReward(RewardGrantResult result)
         {
+            string progressionSummary = result.ProgressionGrantResult.WasGranted
+                ? $" Art {string.Join(", ", result.ProgressionGrantResult.LearnedArtIds)}" +
+                  $" Skill {string.Join(", ", result.ProgressionGrantResult.UnlockedSkillIds)}"
+                : string.Empty;
             Debug.Log(
                 $"経験値を{result.GrantedExperience}獲得。" +
                 $" レベル {result.LevelUpResult.PreviousLevel} → {result.LevelUpResult.CurrentLevel}、" +
-                $"累積経験値 {result.LevelUpResult.CurrentExperience}");
+                $"累積経験値 {result.LevelUpResult.CurrentExperience}{progressionSummary}");
         }
     }
 }

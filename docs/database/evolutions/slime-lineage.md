@@ -7,6 +7,8 @@ relatedContentIds:
   - character.player.slime
   - art.magic.fire
   - skill.combat.predatory_instinct
+  - evolution.slime.apex_predator
+  - evolution.slime.archmage
 ---
 
 # スライム進化系列
@@ -24,7 +26,9 @@ relatedContentIds:
 ```text
 character.player.slime
   ├ 捕食経験と戦闘系Skill -> evolution.slime.predator
+  │                         -> evolution.slime.apex_predator
   └ 魔法Artの習得・熟練   -> evolution.slime.arcane
+                            -> evolution.slime.archmage
 ```
 
 ## 分岐条件
@@ -43,19 +47,21 @@ character.player.slime
 
 ## 排他・再進化ルール
 
-同じ進化段階の2分岐は `evolution-group.slime.tier1` に所属し、片方を選択するともう片方は取得できません。選択済みNodeを取り消すRuntime APIはありません。再進化や上位形態は未設計です。
+同じ進化段階の分岐は段階別の排他グループに所属します。Tier 1で片方を選ぶともう片方は取得できず、上位Nodeは選択したTier 1を前提とします。選択済みNodeを取り消すRuntime APIはありません。
 
 ## Runtimeデータ
 
-両分岐のEvolution Definition、条件評価、排他選択、Save復元、Gameplay補正、選択UI、Prototype形態表示は実装済みです。具体的な閾値、変化量、外見色はUnity DefinitionをSource of Truthとします。
+4 NodeのEvolution Definition、条件評価、排他選択、Save復元、Gameplay補正、選択UI、専用形態表示は実装済みです。具体的な閾値、変化量はUnity DefinitionをSource of Truthとします。
 
-捕食系は暖色の大型形態と角状エフェクト、魔術系は青紫の形態と周回する魔力光で区別します。現在は既存ピクセルフレームのデータ駆動再着色であり、本番用の専用Sprite、Prefab、Animator Controllerは未制作です。魔術系分岐が参照する火炎魔法ArtもRuntime未登録のため、現在のPrototypeでは魔術系条件を満たせません。
+捕食系は暖色の棘を持つ専用Sprite Sheetと角状エフェクト、魔術系は青紫の魔術意匠を持つ専用Sprite Sheetと周回する魔力光で区別します。両系統の取得条件はPrototype内の訓練で満たせます。
 
 ## 関連リンク
 
 - [プレイヤースライム](../monsters/player-slime.md)
 - [火炎魔法](../arts/fire-magic.md)
 - [捕食者の本能](../skills/predatory-instinct.md)
+- [覇王捕食スライム](./apex-predator-slime.md)
+- [大魔導スライム](./archmage-slime.md)
 
 ## Stable Content IDでの関連
 

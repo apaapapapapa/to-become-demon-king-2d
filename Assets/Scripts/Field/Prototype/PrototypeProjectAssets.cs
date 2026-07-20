@@ -1,5 +1,6 @@
 using DemonKing.Field.Prototype.Configuration;
 using DemonKing.Gameplay.Characters.Configuration;
+using DemonKing.Gameplay.Progression.Configuration;
 using DemonKing.Gameplay.Rewards.Configuration;
 using UnityEngine;
 
@@ -20,6 +21,7 @@ namespace DemonKing.Field.Prototype
 
         [Header("Rewards")]
         [SerializeField] private RewardDefinition trainingDummyReward;
+        [SerializeField] private ProgressionGrantDefinition fireMagicTrainingGrant;
 
         [Header("UI")]
         [SerializeField] private Font uiFont;
@@ -41,6 +43,7 @@ namespace DemonKing.Field.Prototype
         public PrototypeApplicationSettings ApplicationSettings => applicationSettings;
         public CharacterDefinition PlayerCharacter => playerCharacter;
         public RewardDefinition TrainingDummyReward => trainingDummyReward;
+        public ProgressionGrantDefinition FireMagicTrainingGrant => fireMagicTrainingGrant;
         public Font UiFont => uiFont;
         public bool HasUiFont => uiFont != null;
         public GameObject CottagePrefab => cottagePrefab;
@@ -62,6 +65,8 @@ namespace DemonKing.Field.Prototype
             playerCharacter.IsConfigured &&
             trainingDummyReward != null &&
             trainingDummyReward.IsConfigured &&
+            fireMagicTrainingGrant != null &&
+            fireMagicTrainingGrant.IsConfigured &&
             cottagePrefab != null &&
             treePrefab != null &&
             lamppostPrefab != null &&

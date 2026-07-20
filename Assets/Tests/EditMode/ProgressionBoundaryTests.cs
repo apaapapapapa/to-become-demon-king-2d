@@ -19,6 +19,17 @@ namespace DemonKing.Tests.EditMode
     public sealed class ProgressionBoundaryTests
     {
         [Test]
+        public void ProgressionGrantResult_既定値は空の取得結果として扱える()
+        {
+            ProgressionGrantResult result = default;
+
+            Assert.That(result.GrantId, Is.Empty);
+            Assert.That(result.LearnedArtIds, Is.Empty);
+            Assert.That(result.UnlockedSkillIds, Is.Empty);
+            Assert.That(result.WasGranted, Is.False);
+        }
+
+        [Test]
         public void CharacterProgressionState_保存DTOを経由して状態を復元できる()
         {
             CharacterProgressionState state = CharacterProgressionState.Restore(
@@ -216,6 +227,53 @@ namespace DemonKing.Tests.EditMode
         }
 
         [Test]
+        public void Evolution_系統別Tier1取得後に上位Nodeを評価できる()
+        {
+            PrototypeProjectAssets projectAssets =
+                Resources.Load<PrototypeProjectAssets>("Settings/PrototypeProjectAssets");
+
+            CharacterProgressionState predatorState = CharacterProgressionState.Restore(
+                "character.player.slime",
+                level: 4,
+                currentExperience: 30,
+                unlockedSkillIds: new[] { "skill.combat.predatory_instinct" },
+                unlockedEvolutionNodeIds: new[] { "evolution.slime.predator" });
+            var predatorService = new EvolutionProgressionService(
+                predatorState,
+                projectAssets.PlayerCharacter.EvolutionDefinitions);
+
+            Assert.That(
+                predatorService.Evaluate("evolution.slime.apex_predator").Status,
+                Is.EqualTo(EvolutionEvaluationStatus.Available));
+            Assert.That(
+                predatorService.Evolve("evolution.slime.apex_predator").Succeeded,
+                Is.True);
+
+            CharacterProgressionState arcaneState = CharacterProgressionState.Restore(
+                "character.player.slime",
+                level: 4,
+                currentExperience: 30,
+                unlockedSkillIds: null,
+                unlockedEvolutionNodeIds: new[] { "evolution.slime.arcane" },
+                artProgressStates: new[] { ArtProgressState.Restore("art.magic.fire", 8) });
+            var arcaneService = new EvolutionProgressionService(
+                arcaneState,
+                projectAssets.PlayerCharacter.EvolutionDefinitions,
+                (string artId, out int rank) =>
+                {
+                    rank = artId == "art.magic.fire" ? 3 : 0;
+                    return rank > 0;
+                });
+
+            Assert.That(
+                arcaneService.Evaluate("evolution.slime.archmage").Status,
+                Is.EqualTo(EvolutionEvaluationStatus.Available));
+            Assert.That(
+                arcaneService.Evolve("evolution.slime.archmage").Succeeded,
+                Is.True);
+        }
+
+        [Test]
         public void NumericModifier_加算値と割合を順序に依存せず適用する()
         {
             NumericModifier modifier = new NumericModifier(2d, 0d)
@@ -368,18 +426,25 @@ namespace DemonKing.Tests.EditMode
             Assert.That(basicMelee.AbilityId, Is.EqualTo("ability.basic_melee"));
             Assert.That(basicMelee.DisplayName, Is.Not.Empty);
             Assert.That(basicMelee.CooldownSeconds, Is.GreaterThanOrEqualTo(0f));
+            Assert.That(projectAssets.PlayerCharacter.ArtDefinitions.Count, Is.EqualTo(1));
+            ArtDefinition fireMagic = projectAssets.PlayerCharacter.ArtDefinitions[0];
+            Assert.That(fireMagic.IsConfigured, Is.True);
+            Assert.That(fireMagic.ArtId, Is.EqualTo("art.magic.fire"));
+            Assert.That(fireMagic.AbilityUnlocks[0].AbilityDefinition.AbilityId,
+                Is.EqualTo("ability.magic.fire_bolt"));
             Assert.That(projectAssets.PlayerCharacter.SkillDefinitions.Count, Is.EqualTo(1));
             SkillDefinition skillDefinition = projectAssets.PlayerCharacter.SkillDefinitions[0];
             Assert.That(skillDefinition, Is.Not.Null);
             Assert.That(skillDefinition.IsConfigured, Is.True);
             Assert.That(skillDefinition.SkillId, Is.EqualTo("skill.combat.predatory_instinct"));
-            Assert.That(projectAssets.PlayerCharacter.EvolutionDefinitions.Count, Is.EqualTo(2));
-            Assert.That(
-                projectAssets.PlayerCharacter.EvolutionDefinitions[0].IsConfigured,
-                Is.True);
-            Assert.That(
-                projectAssets.PlayerCharacter.EvolutionDefinitions[1].IsConfigured,
-                Is.True);
+            Assert.That(projectAssets.PlayerCharacter.EvolutionDefinitions.Count, Is.EqualTo(4));
+            foreach (EvolutionDefinition definition in
+                     projectAssets.PlayerCharacter.EvolutionDefinitions)
+            {
+                Assert.That(definition.IsConfigured, Is.True, definition.EvolutionNodeId);
+                Assert.That(definition.Appearance.SpriteSheet, Is.Not.Null,
+                    definition.EvolutionNodeId);
+            }
             Assert.That(
                 projectAssets.PlayerCharacter.EvolutionDefinitions[0].Appearance.VisualEffect,
                 Is.EqualTo(EvolutionVisualEffect.PredatorSpikes));
@@ -392,6 +457,15 @@ namespace DemonKing.Tests.EditMode
             Assert.That(projectAssets.TrainingDummyReward.IsConfigured, Is.True);
             Assert.That(projectAssets.TrainingDummyReward.RewardId, Is.EqualTo("reward.training_dummy"));
             Assert.That(projectAssets.TrainingDummyReward.Experience, Is.EqualTo(5));
+            Assert.That(projectAssets.TrainingDummyReward.ProgressionGrant, Is.Not.Null);
+            Assert.That(
+                projectAssets.TrainingDummyReward.ProgressionGrant.GrantId,
+                Is.EqualTo("grant.reward.predatory_instinct"));
+            Assert.That(projectAssets.FireMagicTrainingGrant, Is.Not.Null);
+            Assert.That(projectAssets.FireMagicTrainingGrant.IsConfigured, Is.True);
+            Assert.That(
+                projectAssets.FireMagicTrainingGrant.GrantId,
+                Is.EqualTo("grant.training.fire_magic"));
         }
 
         private static bool HasFailure(

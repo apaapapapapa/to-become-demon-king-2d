@@ -165,7 +165,23 @@ namespace DemonKing.Tests.PlayMode
             var runtimeContext = new CharacterRuntimeContext(
                 projectAssets.PlayerCharacter,
                 progressionState);
-            var rewardService = new RewardService(runtimeContext);
+            GameObject recipient = new("Reward Test Recipient");
+            AbilityController abilityController = recipient.AddComponent<AbilityController>();
+            abilityController.Configure(projectAssets.PlayerCharacter.AbilityDefinitions);
+            SkillProgressionController skillController =
+                recipient.AddComponent<SkillProgressionController>();
+            skillController.Initialize(
+                progressionState,
+                projectAssets.PlayerCharacter.SkillDefinitions);
+            ArtProgressionController artController =
+                recipient.AddComponent<ArtProgressionController>();
+            artController.Initialize(
+                progressionState,
+                projectAssets.PlayerCharacter.ArtDefinitions);
+            var acquisitionService = new ProgressionAcquisitionService(
+                artController,
+                skillController);
+            var rewardService = new RewardService(runtimeContext, acquisitionService);
 
             GameObject dummyObject = new("Reward Test Dummy");
             PrototypeCombatDummy dummy = dummyObject.AddComponent<PrototypeCombatDummy>();
@@ -192,6 +208,12 @@ namespace DemonKing.Tests.PlayMode
             Assert.That(grantedResult.LevelUpResult.DidLevelUp, Is.True);
             Assert.That(progressionState.CurrentExperience, Is.EqualTo(5));
             Assert.That(progressionState.Level, Is.EqualTo(2));
+            Assert.That(
+                progressionState.IsSkillUnlocked("skill.combat.predatory_instinct"),
+                Is.True);
+            Assert.That(
+                grantedResult.ProgressionGrantResult.UnlockedSkillIds,
+                Is.EqualTo(new[] { "skill.combat.predatory_instinct" }));
 
             RewardGrantResult duplicateResult = rewardService.GrantDefeatReward(
                 damageResult.DefeatContext,
@@ -203,7 +225,79 @@ namespace DemonKing.Tests.PlayMode
                 Is.EqualTo(RewardGrantFailureReason.AlreadyGranted));
             Assert.That(progressionState.CurrentExperience, Is.EqualTo(5));
 
+            Object.Destroy(recipient);
+            Object.Destroy(dummyObject);
             yield return null;
+        }
+
+        [UnityTest]
+        public IEnumerator 火炎魔法Art取得_火炎弾が命中して実行単位で熟練する()
+        {
+            PrototypeProjectAssets projectAssets =
+                Resources.Load<PrototypeProjectAssets>("Settings/PrototypeProjectAssets");
+            CharacterProgressionState progressionState = CharacterProgressionState.CreateInitial(
+                projectAssets.PlayerCharacter.CharacterId);
+
+            GameObject attacker = new("Fire Art Test User");
+            attacker.transform.position = new Vector3(600f, 600f, 0f);
+            attacker.AddComponent<ProjectileAttackExecutor>();
+            AbilityController abilityController = attacker.AddComponent<AbilityController>();
+            abilityController.Configure(projectAssets.PlayerCharacter.AbilityDefinitions);
+            SkillProgressionController skillController =
+                attacker.AddComponent<SkillProgressionController>();
+            skillController.Initialize(
+                progressionState,
+                projectAssets.PlayerCharacter.SkillDefinitions);
+            ArtProgressionController artController =
+                attacker.AddComponent<ArtProgressionController>();
+            artController.Initialize(
+                progressionState,
+                projectAssets.PlayerCharacter.ArtDefinitions);
+            var acquisitionService = new ProgressionAcquisitionService(
+                artController,
+                skillController);
+
+            ProgressionGrantResult acquisitionResult = acquisitionService.Grant(
+                projectAssets.FireMagicTrainingGrant);
+            Assert.That(acquisitionResult.LearnedArtIds,
+                Is.EqualTo(new[] { "art.magic.fire" }));
+            Assert.That(abilityController.HasAbility("ability.magic.fire_bolt"), Is.True);
+
+            GameObject target = CreateDamageTarget(
+                "Fire Art Target",
+                (Vector2)attacker.transform.position + Vector2.right * 2f);
+            Health targetHealth = target.GetComponent<Health>();
+            targetHealth.ConfigureMaxHealth(10);
+            yield return null;
+            Physics2D.SyncTransforms();
+
+            AbilityUseResult useResult = abilityController.TryUse(
+                "ability.magic.fire_bolt",
+                attacker,
+                new AbilityExecutionInput(Vector2.right));
+            Assert.That(useResult.Succeeded, Is.True);
+
+            for (int frame = 0; frame < 120 && targetHealth.CurrentHealth == 10; frame++)
+            {
+                yield return null;
+            }
+
+            Assert.That(targetHealth.CurrentHealth, Is.EqualTo(8));
+            Assert.That(
+                progressionState.TryGetArtProgress(
+                    "art.magic.fire",
+                    out ArtProgressState fireProgress),
+                Is.True);
+            Assert.That(fireProgress.MasteryPoints, Is.EqualTo(1));
+            Assert.That(
+                abilityController.TryGetRuntimeState(
+                    "ability.magic.fire_bolt",
+                    out AbilityRuntimeState runtimeState),
+                Is.True);
+            Assert.That(runtimeState.IsExecuting, Is.False);
+
+            Object.Destroy(attacker);
+            Object.Destroy(target);
         }
 
         [UnityTest]

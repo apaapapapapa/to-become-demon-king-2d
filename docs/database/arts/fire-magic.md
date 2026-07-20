@@ -2,18 +2,19 @@
 title: 火炎魔法
 contentId: art.magic.fire
 contentType: art
-status: Planned / Runtime Not Registered
+status: Runtime Implemented
 relatedContentIds:
   - character.player.slime
   - skill.combat.predatory_instinct
   - evolution.slime.lineage
+  - evolution.slime.archmage
 ---
 
 # 火炎魔法
 
-- Status: Planned / Runtime Not Registered
+- Status: Runtime Implemented
 - Art ID: `art.magic.fire`
-- Unity Definition: 未作成
+- Unity Definition: `Assets/Resources/Settings/Gameplay/FireMagicArt.asset`
 
 ## 概要
 
@@ -21,7 +22,7 @@ relatedContentIds:
 
 ## 習得
 
-- 主な習得経路: 魔術訓練または関連アイテム（未実装）
+- 主な習得経路: 見習い魔術師との訓練会話を最後まで進める
 - 条件の意味: 魔力を外部へ放出する制御を身につけること
 - 関連Evolution: `evolution.slime.arcane` はこのArtの熟練ランクを条件として参照する
 
@@ -30,9 +31,8 @@ relatedContentIds:
 | 解放段階 | Ability ID | 役割 |
 | --- | --- | --- |
 | 習得時 | `ability.magic.fire_bolt` | 単体への遠距離攻撃 |
-| 熟練後 | `ability.magic.flame_burst` | 範囲を制圧する派生攻撃 |
 
-Ability Definition、熟練ランク閾値、威力、クールダウン、コストは未作成です。実装時はUnity DefinitionをSource of Truthとします。
+火炎弾は `K` / Gamepad Button Northで使用し、命中したExecutionごとに熟練します。上位ランク用の追加Abilityは今後のコンテンツタスクです。Definitionの閾値、威力、クールダウンはUnityをSource of Truthとします。
 
 ## Skillとの関係
 
@@ -46,6 +46,7 @@ Art熟練補正を持つSkillの対象になり得ます。Skillは火炎Ability
 
 - [プレイヤースライム](../monsters/player-slime.md)
 - [スライム進化系列](../evolutions/slime-lineage.md)
+- [大魔導スライム](../evolutions/archmage-slime.md)
 
 ## Stable Content IDでの関連
 

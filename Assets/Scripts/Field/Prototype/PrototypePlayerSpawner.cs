@@ -88,6 +88,13 @@ namespace DemonKing.Field.Prototype
                 meleeAttackExecutor = root.AddComponent<MeleeAttackExecutor>();
             }
 
+            ProjectileAttackExecutor projectileAttackExecutor =
+                root.GetComponent<ProjectileAttackExecutor>();
+            if (projectileAttackExecutor == null)
+            {
+                projectileAttackExecutor = root.AddComponent<ProjectileAttackExecutor>();
+            }
+
             AbilityController abilityController = root.GetComponent<AbilityController>();
             if (abilityController == null)
             {
@@ -143,6 +150,11 @@ namespace DemonKing.Field.Prototype
             if (root.GetComponent<PrototypeMeleeAttackEffect>() == null)
             {
                 root.AddComponent<PrototypeMeleeAttackEffect>();
+            }
+
+            if (root.GetComponent<PrototypeProjectileAttackEffect>() == null)
+            {
+                root.AddComponent<PrototypeProjectileAttackEffect>();
             }
 
             CharacterDodge2D dodge = root.GetComponent<CharacterDodge2D>();

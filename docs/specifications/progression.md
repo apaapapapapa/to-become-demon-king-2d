@@ -45,7 +45,7 @@ Skillをきっかけに能動行動を利用可能にする場合も、その行
 
 Evolutionは `evolution.*` Nodeとして定義し、レベル、Skill、Artランク、前提Node、排他グループを共通サービスで評価します。適用済みNode IDだけをRuntime Stateへ不可逆に追加し、同じ排他グループの別Nodeを拒否します。
 
-選択済みNodeのGameplay補正はSkillと同じ汎用Modifier Sourceへ公開します。進化選択UIとPrototype形態表示は実装済みで、本番用の専用アートはPresentation内の後続タスクです。詳細は [Evolution仕様](./evolution.md) を参照してください。
+選択済みNodeのGameplay補正はSkillと同じ汎用Modifier Sourceへ公開します。進化選択UI、系統別の上位Node、専用2フレームアートの表示まで実装済みです。詳細は [Evolution仕様](./evolution.md) を参照してください。
 
 ## Experience
 
@@ -77,7 +77,7 @@ CharacterProgressionState.GainExperience
 
 ## 今後
 
-1. Skill、Art、Evolutionの具体的な取得元・選択UI
-2. Evolution専用の見た目・演出と上位Node
+1. 複数Art・Skillを扱う選択UIと入力割当
+2. 追加の取得元、上位Art・Skill・Evolutionコンテンツ
 3. Abilityコスト、能力値、習得条件への追加補正
 4. 回復、バフ、デバフなどの効果成立通知

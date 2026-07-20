@@ -28,6 +28,7 @@ namespace DemonKing.Field.Prototype
         private int nextDialogueIndex;
 
         public event Action Interacted;
+        public event Action<GameObject> DialogueCompleted;
 
         private void Awake()
         {
@@ -72,6 +73,7 @@ namespace DemonKing.Field.Prototype
             {
                 dialogueLog.Clear();
                 nextDialogueIndex = 0;
+                DialogueCompleted?.Invoke(interactor);
                 Debug.Log($"{displayName}との会話を終了しました。", this);
                 return;
             }

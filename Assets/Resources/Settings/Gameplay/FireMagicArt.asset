@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8a7f2c1d4e5b4690a1b2c3d4e5f60703, type: 3}
+  m_Name: FireMagicArt
+  m_EditorClassIdentifier:
+  artId: art.magic.fire
+  displayName: 火炎魔法
+  description: 火の魔力を外へ放つ能動Art。命中を重ねることで熟練する。
+  icon: {fileID: 0}
+  category: magic
+  cumulativeMasteryPointsByRank:
+  - 0
+  - 3
+  - 8
+  abilityUnlocks:
+  - abilityDefinition: {fileID: 11400000, guid: bf40532d38964405895ec5747543f001, type: 2}
+    requiredRank: 1
+    masteryPointsPerEffectiveUse: 1

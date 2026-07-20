@@ -17,11 +17,14 @@ MonoBehaviour:
   statsDefinition: {fileID: 11400000, guid: 40111111111111111111111111111101, type: 2}
   abilityDefinitions:
   - {fileID: 11400000, guid: 40111111111111111111111111111102, type: 2}
-  artDefinitions: []
+  artDefinitions:
+  - {fileID: 11400000, guid: bf40532d38964405895ec5747543f002, type: 2}
   skillDefinitions:
   - {fileID: 11400000, guid: 90111111111111111111111111111107, type: 2}
   evolutionDefinitions:
   - {fileID: 11400000, guid: a0211111111111111111111111111106, type: 2}
   - {fileID: 11400000, guid: a0211111111111111111111111111107, type: 2}
+  - {fileID: 11400000, guid: bf40532d38964405895ec5747543f005, type: 2}
+  - {fileID: 11400000, guid: bf40532d38964405895ec5747543f006, type: 2}
   dodgeDefinition: {fileID: 11400000, guid: 5f7a1c3e9b2d4680a4e6f8c1d3b50729, type: 2}
   experienceTableDefinition: {fileID: 11400000, guid: 142f71c4336b4d68bd743d11d1073062, type: 2}

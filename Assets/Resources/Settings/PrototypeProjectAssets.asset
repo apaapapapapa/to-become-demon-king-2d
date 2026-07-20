@@ -15,6 +15,7 @@ MonoBehaviour:
   applicationSettings: {fileID: 11400000, guid: 2e6b9d1f4a8c43e7b0d5f2196c3a7e84, type: 2}
   playerCharacter: {fileID: 11400000, guid: 1a1a71944c52407c875514f165112f28, type: 2}
   trainingDummyReward: {fileID: 11400000, guid: e91e5cdb86114094aefa2a8a0a483030, type: 2}
+  fireMagicTrainingGrant: {fileID: 11400000, guid: bf40532d38964405895ec5747543f003, type: 2}
   uiFont: {fileID: 12800000, guid: 0447c22bc17a1ab4888b6b3fa6f24fd3, type: 3}
   cottagePrefab: {fileID: 100000, guid: 68dcb65a10db454ba871daae7788796f, type: 3}
   treePrefab: {fileID: 100000, guid: 6177d65eef744c4fa7e36b1f71ad9598, type: 3}

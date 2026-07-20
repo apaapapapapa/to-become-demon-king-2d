@@ -12,6 +12,6 @@
 - [成長](./progression.md)
 - [セーブ](./save.md)
 
-今後、会話、クエスト、Scene遷移などを機能単位で追加します。Art、Skill、Evolutionは基盤実装済みですが、正式な取得・選択UIとEvolutionの視覚形態は未実装です。
+今後、会話、クエスト、Scene遷移などを機能単位で追加します。Art、Skill、Evolutionは基盤、最初の正式取得経路、専用Evolution形態まで実装済みです。複数コンテンツの選択UIと入力割当は未実装です。
 
 仕様書には振る舞い、状態遷移、境界、Source of Truth、Stable ID、未実装事項を記載します。

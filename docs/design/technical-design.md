@@ -96,17 +96,19 @@ CharacterProgressionState.GainExperience
 
 `RewardDefinition` が報酬IDと静的報酬内容を持ちます。同一Defeatへの重複報酬を防ぎます。
 
-`AbilityDefinition` は共通の静的情報、`AbilityRuntimeState` は個体ごとのクールダウン・使用回数・実行中状態を保持します。現在の近接攻撃効果は `MeleeAttackExecutor` が担当します。
+`AbilityDefinition` は共通の静的情報、`AbilityRuntimeState` は個体ごとのクールダウン・使用回数・実行中状態を保持します。近接攻撃は `MeleeAttackExecutor`、火炎弾などの飛翔体は `ProjectileAttackExecutor` が担当します。
 
 `ArtDefinition` は `art.*` ID、熟練ランク閾値、複数のAbility解放定義を保持します。`ArtProgressState` はArt IDと累積Mastery Pointだけを保持し、ランクと解放AbilityをDefinitionから導出します。
 
 Art習得・ランクアップ時は解放済みAbilityを `AbilityController` へ冪等に付与します。Ability効果の成立後は、Execution IDを含む共通通知をArt成長処理が購読し、同じ使用者とExecutionに1回だけMastery Pointを加算します。
 
+`ProgressionGrantDefinition` は訓練や報酬が付与するArt・Skillだけを保持し、`ProgressionAcquisitionService` が既存Controllerへ共通の取得要求を送ります。取得条件や消費は取得元側に残します。
+
 `SkillDefinition` は受動補正を保持し、`SkillProgressionService` が取得済みIDから `NumericModifier` を集約します。`SkillProgressionController` は与ダメージ、Abilityクールダウン、Art熟練ポイントの汎用Modifier SourceとしてGameplayへ接続します。
 
 `EvolutionDefinition` はNode ID、対象Character、排他グループ、レベル・Skill・Artランク・前提Node条件、永続補正、外見プロファイルを保持します。`EvolutionProgressionService` が全条件を評価して成功時だけNode IDをRuntime Stateへ追加し、`EvolutionProgressionController` が選択済みNodeの補正を汎用Modifier Sourceへ公開します。
 
-`EvolutionSelectionController` はGameplayの選択状態とInput Contextを管理し、`EvolutionMenuView` が評価結果をuGUIへ表示します。`PrototypeSlimeEvolutionPresenter` は成功通知またはSave復元済みNodeを外見プロファイルへ変換し、既存ピクセルフレームの再着色と形態別エフェクトを適用します。
+`EvolutionSelectionController` はGameplayの選択状態とInput Contextを管理し、`EvolutionMenuView` が評価結果をuGUIへ表示します。`PrototypeSlimeEvolutionPresenter` は成功通知またはSave復元済みNodeを外見プロファイルへ変換し、専用2フレームSprite Sheetと形態別エフェクトを適用します。
 
 詳細は [Ability仕様](../specifications/ability.md)、[Art仕様](../specifications/art.md)、[Skill仕様](../specifications/skill.md)、[Evolution仕様](../specifications/evolution.md)、[戦闘仕様](../specifications/combat.md)、[成長仕様](../specifications/progression.md) を参照してください。
 
@@ -152,7 +154,9 @@ Prototype NPCのInteraction通知はCompositionで `PrototypeCombatDummyRespawne
 - `ArtDefinition`
 - `SkillDefinition`
 - `EvolutionDefinition`
+- `ProgressionGrantDefinition`
 - `MeleeAttackDefinition`
+- `ProjectileAttackDefinition`
 - `DodgeDefinition`
 - `ExperienceTableDefinition`
 - `RewardDefinition`
