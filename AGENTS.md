@@ -2,230 +2,137 @@
 
 ## 目的
 
-このファイルは、CodexなどのAIエージェントが `to-become-demon-king-2d` を変更するときの共通ルールを定義します。
+このファイルは、CodexなどのAIエージェントが `to-become-demon-king-2d` を変更するときに最初に読む共通ルールと参照ルートです。
 
-このリポジトリでは、Unity実装とKnowledge Baseを同じプロダクトとして扱います。コードだけ、またはドキュメントだけを無関係に変更せず、変更の意味に応じて両方を同期してください。
+Unity実装とKnowledge Baseを同じプロダクトとして扱い、変更の意味に応じてコード、Unityアセット、テスト、仕様を同期してください。
 
-## 最初に読む場所
+## AI Reading Strategy
 
-| 作業 | 主な参照先 |
-| --- | --- |
-| ゲームの方向性を変える | `docs/game/vision.md` |
-| アーキテクチャを変える | `docs/design/architecture.md` |
-| 実装方式・技術規約を変える | `docs/design/technical-design.md` |
-| 入力を変える | `docs/specifications/input.md` |
-| 戦闘を変える | `docs/specifications/combat.md` |
-| Artを変える | `docs/specifications/art.md` |
-| Skillを変える | `docs/specifications/skill.md` |
-| Evolutionを変える | `docs/specifications/evolution.md` |
-| Interactionを変える | `docs/specifications/interaction.md` |
-| 成長を変える | `docs/specifications/progression.md` |
-| Saveを変える | `docs/specifications/save.md` |
-| ストーリーを追加・変更する | `docs/story/` |
-| 世界設定を追加・変更する | `docs/world/` |
-| モンスターを追加する | `docs/database/monsters/` |
-| 進化関係を追加する | `docs/database/evolutions/` |
-| アイテムを追加する | `docs/database/items/` |
-| アーツを追加する | `docs/database/arts/` |
-| スキルを追加する | `docs/database/skills/` |
-| 長期的な設計判断を行う | `docs/decisions/` |
-| 開発優先順位を変える | `docs/development/roadmap.md` |
+1. この `AGENTS.md` を読む。
+2. `docs/ai/context-map.md` から変更対象Featureを特定する。
+3. Context Mapの `Spec` と `Code` を先に読む。
+4. UIやFeature間配線を変更するときだけ `Integration` / 関連Featureを追加で読む。
+5. 影響範囲が広い場合は必要な範囲を広げるが、リポジトリ全体を事前に読むことを前提にしない。
+
+Context Mapは索引でありSource of Truthではありません。
+
+## Core Rules
+
+- `DemonKing.Domain` へ `UnityEngine`、Scene、`GameObject`、`MonoBehaviour`、`ScriptableObject`を持ち込まない。
+- GameplayはDomain / Coreを利用できるが、Prototype固有クラスや具体的なuGUI Viewへ依存しない。
+- `Field/Prototype` はCompositionと試作用コンテンツに限定し、恒久的なDomain / Gameplayルールを蓄積しない。
+- ScriptableObject Definition、Runtime State、Save DTOを分離し、Definitionを可変状態や保存状態として書き換えない。
+- Combatへ経験値、ドロップ、Art / Skill取得、Evolution処理を直接埋め込まない。
+- Feature間連携は必要に応じてCompositionや共通イベント境界で接続し、Dialogue、Combat、Quest、Reward等を具体実装同士で直接結合しない。
+- SteamやコンソールSDKをGameplayから直接呼ばず、Platform依存処理は専用境界の外側へ置く。
+- Stable Content IDは表示名やAsset名から独立させ、Save Dataやコンテンツ参照に使用したIDを単純な名称変更・Asset移動で変更しない。
+- Abilityは実行可能な行動、Artは能動技能、Skillは受動成長、Evolutionは形態・成長経路の選択として分離する。
+- 実装状況は現在のコードとUnityアセットで確認する。未実装を「実装済み」と書かず、古い計画文書だけを根拠に実装済み機能を「未実装」と断定しない。
+
+詳細な責務境界は `docs/design/architecture.md`、Dialogue / Quest / Spawnの拡張境界は `docs/design/extension-foundations.md` を参照してください。
 
 ## Source of Truth
 
-### コード・Unityアセットが正
+| 情報 | Source of Truth |
+| --- | --- |
+| コンパイルされる実装 | C#コード |
+| Scene / Prefab / Input | Unityアセット |
+| 静的Definition・バランス値・Asset参照 | ScriptableObject |
+| プレイ中の可変状態 | Runtime State / Domain |
+| 保存形式 | Save DTO |
+| ゲームビジョン・世界観・物語意図 | `docs/` |
+| 仕様の意味・責務境界・設計判断 | `docs/specifications/`, `docs/design/`, `docs/decisions/` |
+| 自動検証対象 | テストコード |
 
-- 実際にコンパイルされるC#コード
-- Scene / Prefab / Input Actions
-- ScriptableObjectに保存する静的Definition・Runtime設定値
-- Package / Project Settings
-- 自動テスト
+Runtime数値をMarkdownへ大量に複製しません。Input、Combat、Interaction、Save、成長系データ構造、UI状態遷移、Platform境界、Stable Content ID規則を変更した場合は関連docsも同期してください。
 
-Markdownへ同じ数値を複製して二重管理しないでください。
+## Architecture Boundaries
 
-### docsが正
+- Domain: Unity非依存の状態・値・Save DTO。
+- Definition: ScriptableObjectによる静的コンテンツ定義。
+- Runtime State: プレイ中に変化する状態。
+- Save DTO: Runtime Stateと分離しMapper経由で変換する保存形式。
+- 保存先の具体実装は `ISaveService` の外側に置く。
+- Unity Objectを参照する `DamageRequest` / `DamageResult` / `DefeatContext` 等はGameplay境界に置く。
+- 同一DefeatへのReward重複付与を許可しない現在の境界を維持する。
 
-- ゲームビジョン
-- 世界観と物語の意図
-- 仕様の意味と制約
-- アーキテクチャ上の責務境界
-- 採用・不採用の設計判断
-- ロードマップ
-- モンスターや進化などの人間向け索引
+## Task Routing
 
-### 実装とdocsを同期する情報
+| 作業 | 最初に確認する場所 |
+| --- | --- |
+| Input / Interaction / Dialogue / Combat / Ability / Art / Skill / Evolution / Progression / Reward / Save / Pause / Dodge / Quest / Spawning / Enemy AI | `docs/ai/context-map.md` の該当Feature |
+| ゲームの方向性 | `docs/game/vision.md` |
+| アーキテクチャ変更 | `docs/design/architecture.md` |
+| 実装方式・技術規約 | `docs/design/technical-design.md` |
+| 長期的な設計判断 | `docs/decisions/` |
+| 開発優先順位 | `docs/development/roadmap.md` |
+| ストーリー / 世界設定 | `docs/story/` / `docs/world/` |
+| コンテンツ索引 | `docs/database/` |
 
-- Input Action / Binding
-- Combatルール
-- Interactionルール
-- Save仕様
-- 成長・Art・Skill・Evolutionのデータ構造
-- Scene遷移
-- UI状態遷移
-- Platform依存境界
-- Stable Content IDの命名規則
+## Change Workflow
 
-## Domain / Definition / Runtime State / Save DTO
+1. Context Mapから関連仕様・主要コード・テストを特定する。
+2. 現在のコードとUnityアセットを確認する。
+3. 既存の責務境界を壊さず実装する。
+4. Runtime変更では関連するDomain / EditMode / PlayModeテストを確認・追加する。
+5. 仕様や設計意図が変わった場合は同じPRでdocsを更新する。
+6. 長期的な設計判断ならADRを追加する。
+7. 実装状況の記述は現在の実装に合わせる。
 
-### Domain
+1つの機能変更は、可能な限りRuntime実装、Unityアセット／設定、テスト、関連仕様、必要なADRを同じPRへ含めます。
 
-`DemonKing.Domain` はUnity非依存の純C#領域です。
+## Stable Content ID / Naming
 
-例:
-
-- `CharacterProgressionState`
-- `ArtProgressState` / `ArtMasteryTable`
-- `ExperienceTable` / `LevelUpResult`
-- `GameSaveData` / `PlayerSaveData`
-- Stable Content ID関連
-
-Unity Scene、`GameObject`、MonoBehaviour、ScriptableObjectなどのUnity依存型をDomainへ持ち込みません。
-
-`DamageRequest` / `DamageResult` / `DefeatContext` は `UnityEngine.GameObject` を参照するため、Domainではなく `Gameplay/Combat` に置きます。
-
-### Definition
-
-ScriptableObjectは静的なコンテンツ定義・バランス値・アセット参照を保持します。
-
-例:
-
-- `CharacterDefinition`
-- `CharacterStatsDefinition`
-- `ArtDefinition`
-- `SkillDefinition`
-- `EvolutionDefinition`
-- `ProgressionGrantDefinition`
-- `MeleeAttackDefinition`
-- `ProjectileAttackDefinition`
-- `DodgeDefinition`
-- `ExperienceTableDefinition`
-- `RewardDefinition`
-
-### Runtime State
-
-プレイ中に変化するレベル、経験値、Art熟練度、Skill解放、Evolution解放などはRuntime Stateで保持します。DefinitionのScriptableObjectを書き換えて保存状態として使用しないでください。
-
-### Save DTO
-
-保存用データはRuntime Stateから分離し、Mapperを経由して変換します。保存先の具体実装は `ISaveService` の外側に置きます。
-
-## Stable Content ID
-
-Character、Ability、Art、Reward、将来のSkill・Evolution Nodeなど、保存データやコンテンツ間参照に使うIDは表示名やAsset名から独立させます。
-
-例:
+代表例:
 
 ```text
 character.player.slime
 ability.basic_melee
-art.magic.example
-skill.combat.example
+art.magic.fire
+skill.combat.predatory_instinct
+evolution.slime.apex_predator
 reward.training_dummy
-grant.training.example
+dialogue.training.apprentice_mage
+quest.training.first_defeat
 ```
-
-一度Save Dataへ使用したIDは、単純な表示名変更やAsset移動で変更しないでください。
-
-## 変更時の基本手順
-
-1. 関連するKnowledge Base文書を読む。
-2. 現在のコードとUnityアセットを確認する。
-3. 既存の責務境界を壊さず実装する。
-4. 仕様や設計意図が変わった場合は同じPRでdocsを更新する。
-5. 長期的な設計判断ならADRを追加する。
-6. Runtimeコード変更では関連するDomain / EditMode / PlayModeテストを確認・追加する。
-7. 実装していない機能をドキュメント上で「実装済み」と書かない。
-
-## ドキュメント配置ルール
-
-```text
-docs/
-  game/             ゲームビジョン・ゲームループ
-  design/           アーキテクチャ・技術設計
-  specifications/   実装と同期する機能仕様
-  story/            ストーリー・キャラクター・クエスト
-  world/            場所・勢力・世界設定
-  database/         モンスター・進化・アイテム・アーツ・スキルの索引
-  development/      ロードマップ・運用・AI開発ルール
-  decisions/        ADR
-  templates/        新規ドキュメントのテンプレート
-```
-
-新しいMarkdownを `docs/` 直下へ無秩序に追加しないでください。
-
-## 命名
 
 - Markdownファイル名は原則 `kebab-case.md`。
-- 固有IDが必要なデータは、表示名ではなく安定した英数字IDを用意する。
 - ADRは `ADR-0001-title.md` 形式。
 - 1ファイル1責務を基本とする。
+- C#コメントは日本語で記述し、「なぜ」「Unity固有制約」「移行境界」を優先する。
+- 古い設計を説明するコメントを残さない。
 
-## モンスター・進化・アイテム・アーツ・スキル
+## Tests
 
-コンテンツ数が少ない間は `docs/database/` を人間向けKnowledge Baseとして使用します。
+AIが実装対象からテストを検索しやすい命名を優先します。
 
-Runtime値はScriptableObjectを正とし、MarkdownへHPや攻撃力などの全数値をコピーしないでください。必要な場合は「役割」「特徴」「進化条件の意味」「安定ID」「参照するDefinition」などを記載します。
+- 単一クラスが主対象なら原則 `<ClassName>Tests.cs` / `<ClassName>Tests`。
+- Unity実行モードを明示する既存テストは `<ClassName>PlayModeTests` 等も可。
+- 統合テストは `DialogueInteractionFlowTests` のようにFeatureとFlowが分かる名前にする。
+- 無関係な責務のテストを1クラスへ追加し続けない。
+- Unity依存が不要なルールはDomain / EditMode側の高速なテストを優先する。
 
-Abilityは実行可能な行動、Artは1つ以上のAbilityを習得・熟練する能動技能、Skillは受動的な成長要素として分離します。攻撃魔法や特殊剣攻撃などの能動技能をSkillとして登録しないでください。
+追加前にContext Mapの `Tests` と対象クラス名で既存テストを確認してください。
 
-データ数が増え、一覧生成や整合性検証が必要になった段階で `game-data/` のYAML / JSONなどをSingle Source of Truthとし、UnityとVitePress双方へ生成する方式をADRで検討します。先行して独自データ生成基盤を作らないでください。
+## Documentation
 
-## コメント
+- `docs/ai/`: AI向けの軽量な参照索引。詳細仕様を複製しない。
+- `docs/game/`: ゲームビジョン。
+- `docs/design/`: アーキテクチャ・技術設計。
+- `docs/specifications/`: 実装と同期する機能仕様。
+- `docs/story/`, `docs/world/`: 物語・世界設定。
+- `docs/database/`: コンテンツの人間向け索引。
+- `docs/development/`: ロードマップ・運用。
+- `docs/decisions/`: ADR。
 
-C#コメントは日本語で記述します。
+新しいMarkdownを `docs/` 直下へ無秩序に追加しないでください。AI専用の内部索引だけを追加した場合、VitePress公開ナビゲーションへの追加は必須ではありません。
 
-コメントはコードを読めば分かる処理手順ではなく、次を優先します。
+## 詳細ドキュメント
 
-- なぜこの責務がここにあるか
-- なぜ別の実装を採用しなかったか
-- Prototype専用か恒久機能か
-- 将来削除・移行する境界か
-- Unity固有の制約や注意点
-
-古い設計を説明するコメントを残さないでください。
-
-## Prototype境界
-
-`Field/Prototype`、`SlimeController`、`RuntimeShapeFactory` などには移行境界が残っています。
-
-純粋な状態・保存DTOは `Domain`、アプリケーション基盤は `Core`、Unity上のゲームルールは `Gameplay`、表示は `Presentation` へ置き、`Field/Prototype` はCompositionと試作用コンテンツに限定します。
-
-## CombatとReward
-
-Combatコンポーネントへ経験値・ドロップ・進化処理を直接埋め込まないでください。
-
-`DamageRequest` / `DamageResult` / `DefeatContext` は `Gameplay/Combat` のUnity依存境界として扱います。`DamageResult` / `DefeatContext` から `RewardService` へ接続し、経験値加算などを処理します。同じDefeatに対する重複報酬を許可しない現在の境界を維持します。
-
-## Platform対応
-
-Steamや将来のコンソールSDKをGameplayコードから直接呼び出さないでください。
-
-保存先、実績、クラウド、ユーザー識別などのPlatform依存機能は専用境界の外側へ置きます。保存処理は `ISaveService` を経由します。
-
-## PRの単位
-
-可能な限り、1つの機能変更を次の単位で同じPRへ含めます。
-
-```text
-Domain / Runtime実装
-+ Unityアセット／設定
-+ テスト
-+ 関連仕様
-+ 必要ならADR
-```
-
-ドキュメント更新だけのPRも許可しますが、その場合は実装変更がないことを明確にします。
-
-## VitePress
-
-Knowledge BaseのNode依存関係は、ルートのsemantic-release用 `package.json` と分離して `docs/package.json` で管理します。
-
-```bash
-cd docs
-npm install
-npm run dev
-npm run build
-npm run preview
-```
-
-VitePressのナビゲーションや新しい主要カテゴリを追加した場合は `docs/.vitepress/config.mts` も更新してください。
+- `docs/design/architecture.md`
+- `docs/design/technical-design.md`
+- `docs/design/extension-foundations.md`
+- `docs/specifications/`
+- `docs/development/roadmap.md`
+- `docs/development/release.md`
+- `docs/decisions/`

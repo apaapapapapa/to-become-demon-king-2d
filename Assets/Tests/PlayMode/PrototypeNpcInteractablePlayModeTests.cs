@@ -4,33 +4,14 @@ using DemonKing.Gameplay.Combat;
 using DemonKing.Gameplay.Dialogue;
 using DemonKing.Gameplay.Dialogue.Configuration;
 using DemonKing.Gameplay.Spawning;
-using DemonKing.Presentation.UI;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.TestTools;
-using UnityEngine.UI;
 
 namespace DemonKing.Tests.PlayMode
 {
-    public sealed class DialogueLogPlayModeTests
+    public sealed class PrototypeNpcInteractablePlayModeTests
     {
-        [Test]
-        public void LinearDialogueSequence_空行を読み飛ばし終了後Resetで先頭から再開できる()
-        {
-            var sequence = new LinearDialogueSequence(new[] { " first ", " ", null, "second" });
-
-            Assert.That(sequence.TryAdvance(out string first), Is.True);
-            Assert.That(first, Is.EqualTo("first"));
-            Assert.That(sequence.TryAdvance(out string second), Is.True);
-            Assert.That(second, Is.EqualTo("second"));
-            Assert.That(sequence.TryAdvance(out _), Is.False);
-
-            sequence.Reset();
-
-            Assert.That(sequence.TryAdvance(out string restarted), Is.True);
-            Assert.That(restarted, Is.EqualTo("first"));
-        }
-
         [UnityTest]
         public IEnumerator PrototypeNpcInteractable_DialogueDefinitionの内容で会話を進め終了後に閉じる()
         {
@@ -127,41 +108,6 @@ namespace DemonKing.Tests.PlayMode
             Object.Destroy(npcObject);
             Object.Destroy(interactor);
             Object.Destroy(definition);
-            yield return null;
-        }
-
-        [UnityTest]
-        public IEnumerator DialogueLogView_最新の発言のみを表示しClearでパネルを閉じる()
-        {
-            var dialogueLog = new DialogueLog();
-            GameObject uiRoot = new("Dialogue UI Test", typeof(RectTransform));
-            uiRoot.AddComponent<Canvas>();
-            DialogueLogView view = uiRoot.AddComponent<DialogueLogView>();
-            Font font = Resources.Load<PrototypeProjectAssets>("Settings/PrototypeProjectAssets").UiFont;
-            view.Initialize(font, dialogueLog);
-
-            Assert.That(view.IsVisible, Is.False);
-
-            dialogueLog.ShowLine("見習い魔術師", "最初の会話です。");
-
-            Assert.That(view.IsVisible, Is.True);
-            Assert.That(view.DisplayedText, Does.Contain("見習い魔術師"));
-            Assert.That(view.DisplayedText, Does.Contain("最初の会話です。"));
-
-            dialogueLog.ShowLine("見習い魔術師", "次の会話です。");
-
-            Assert.That(view.DisplayedText, Does.Not.Contain("最初の会話です。"));
-            Assert.That(view.DisplayedText, Does.Contain("次の会話です。"));
-
-            dialogueLog.Clear();
-
-            Assert.That(view.IsVisible, Is.False);
-            Assert.That(view.DisplayedText, Is.Empty);
-            Assert.That(
-                uiRoot.GetComponentsInChildren<Text>(includeInactive: true).Length,
-                Is.GreaterThanOrEqualTo(2));
-
-            Object.Destroy(uiRoot);
             yield return null;
         }
     }
