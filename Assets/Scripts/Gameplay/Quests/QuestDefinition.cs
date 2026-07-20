@@ -10,11 +10,13 @@ namespace DemonKing.Gameplay.Quests.Configuration
     public sealed class QuestObjectiveDefinition
     {
         [SerializeField] private string objectiveId = string.Empty;
+        [SerializeField] private string displayName = string.Empty;
         [SerializeField] private string eventId = string.Empty;
         [SerializeField] private string subjectId = string.Empty;
         [SerializeField, Min(1)] private int requiredCount = 1;
 
         public string ObjectiveId => objectiveId;
+        public string DisplayName => string.IsNullOrWhiteSpace(displayName) ? objectiveId : displayName.Trim();
         public string EventId => eventId;
         public string SubjectId => subjectId;
         public int RequiredCount => Math.Max(1, requiredCount);
@@ -27,11 +29,13 @@ namespace DemonKing.Gameplay.Quests.Configuration
             string id,
             string requiredEventId,
             string requiredSubjectId = "",
-            int count = 1)
+            int count = 1,
+            string name = "")
         {
             return new QuestObjectiveDefinition
             {
                 objectiveId = StableContentId.Require(id, nameof(id)),
+                displayName = string.IsNullOrWhiteSpace(name) ? StableContentId.Require(id, nameof(id)) : name.Trim(),
                 eventId = StableContentId.Require(requiredEventId, nameof(requiredEventId)),
                 subjectId = StableContentId.Normalize(requiredSubjectId),
                 requiredCount = Math.Max(1, count),
@@ -51,7 +55,7 @@ namespace DemonKing.Gameplay.Quests.Configuration
     }
 
     /// <summary>
-    /// Questの静的なObjective条件を定義します。
+    /// Questの静的な表示情報とObjective条件を定義します。
     /// Runtime進捗はDomainのQuestProgressStateへ分離し、Definition自体は変更しません。
     /// </summary>
     [CreateAssetMenu(
