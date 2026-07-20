@@ -205,13 +205,16 @@ namespace DemonKing.Gameplay.Characters
 
         private void SnapToGround()
         {
-            Vector3 position = body.position;
-            position.z = groundElevation;
-            body.position = position;
             verticalVelocity = 0f;
             flightVerticalInput = 0f;
             Mode = CharacterElevationMode.Grounded;
+
+            // Rigidbody interpolation中の直前位置をFreezePositionZが保持しないよう、
+            // 先にElevationを固定してからGround Elevationへ明示的にテレポートします。
             physicsBody.SetElevationLocked(true);
+            Vector3 position = body.position;
+            position.z = groundElevation;
+            body.position = position;
         }
     }
 }
