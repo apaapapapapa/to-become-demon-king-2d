@@ -1,3 +1,4 @@
+using System;
 using DemonKing.Gameplay.Dialogue;
 using DemonKing.Gameplay.Interaction;
 using DemonKing.Presentation.Rendering;
@@ -25,6 +26,8 @@ namespace DemonKing.Field.Prototype
 
         private DialogueLog dialogueLog;
         private int nextDialogueIndex;
+
+        public event Action Interacted;
 
         private void Awake()
         {
@@ -56,6 +59,8 @@ namespace DemonKing.Field.Prototype
 
         public void Interact(GameObject interactor)
         {
+            Interacted?.Invoke();
+
             if (dialogueLog == null)
             {
                 Debug.LogWarning("会話ログが設定されていないため、NPCの発言を画面へ表示できません。", this);

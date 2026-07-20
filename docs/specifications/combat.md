@@ -38,6 +38,8 @@ RewardService
 
 - `MeleeAttackExecutor.AttackPerformed` が攻撃位置、向き、範囲、命中数を通知し、`PrototypeMeleeAttackEffect` が斬撃を表示する
 - `Health.Died` を `PrototypeMonsterDefeatEffect` が購読し、撃破位置へ破裂・消滅表現を表示する
+- 訓練用スライムは撃破時に削除し、見習い魔術師への次のInteract入力で同じ位置へ再生成する
+- 訓練用スライムが生存中にInteract入力した場合は、同じ個体のHPを全回復する
 - 撃破エフェクトは対象の子にせず独立したGameObjectとして生成し、対象が同じフレームで破棄されても最後まで再生する
 - 現在の図形生成エフェクトはPrototype境界とし、本番アート確定後はPrefab、Animator、Particle Systemなどへ差し替える
 

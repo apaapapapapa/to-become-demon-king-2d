@@ -121,6 +121,8 @@ ISaveService
 
 Prototype NPCが複数発言の進行位置を保持し、`DialogueLog` は現在表示する1件だけを管理します。`DialogueLogView` は表示中の発言をuGUIへ反映し、会話終了時は非表示にします。Interactionは発言内容や表示階層へ依存しません。
 
+Prototype NPCのInteraction通知はCompositionで `PrototypeCombatDummyRespawner` へ接続します。再生成担当は現在の訓練用スライムだけを追跡し、撃破済みなら新規生成、生存中ならHP全回復を行います。NPCはCombatや報酬処理へ直接依存しません。
+
 ## Pause / UI
 
 `GamePauseController` がTimeScaleとInput Contextを管理し、`PauseMenuView` は表示だけを担当します。本番UI基盤はCanvas（uGUI）です。
