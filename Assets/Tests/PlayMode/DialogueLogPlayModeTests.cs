@@ -12,7 +12,7 @@ namespace DemonKing.Tests.PlayMode
     public sealed class DialogueLogPlayModeTests
     {
         [UnityTest]
-        public IEnumerator PrototypeNpcInteractable_会話ログへ固定発言を追加する()
+        public IEnumerator PrototypeNpcInteractable_話しかけるたび会話を進め終了後に閉じる()
         {
             var dialogueLog = new DialogueLog();
             GameObject npcObject = new("Dialogue Test NPC");
@@ -24,16 +24,27 @@ namespace DemonKing.Tests.PlayMode
 
             npc.Interact(interactor);
 
-            Assert.That(dialogueLog.Lines.Count, Is.EqualTo(1));
-            Assert.That(dialogueLog.Lines[0].Speaker, Is.EqualTo("見習い魔術師"));
-            Assert.That(dialogueLog.Lines[0].Text, Does.Contain("訓練用スライム"));
+            Assert.That(dialogueLog.CurrentLine?.Speaker, Is.EqualTo("見習い魔術師"));
+            Assert.That(dialogueLog.CurrentLine?.Text, Does.Contain("魔王"));
+
+            npc.Interact(interactor);
+            Assert.That(dialogueLog.CurrentLine?.Text, Does.Contain("訓練用スライム"));
+
+            npc.Interact(interactor);
+            Assert.That(dialogueLog.CurrentLine?.Text, Does.Contain("攻撃"));
+
+            npc.Interact(interactor);
+            Assert.That(dialogueLog.HasCurrentLine, Is.False);
+
+            npc.Interact(interactor);
+            Assert.That(dialogueLog.CurrentLine?.Text, Does.Contain("魔王"));
 
             Object.Destroy(npcObject);
             Object.Destroy(interactor);
         }
 
         [UnityTest]
-        public IEnumerator DialogueLogView_発言追加時に画面内のログパネルを表示する()
+        public IEnumerator DialogueLogView_最新の発言のみを表示しClearでパネルを閉じる()
         {
             var dialogueLog = new DialogueLog();
             GameObject uiRoot = new("Dialogue UI Test", typeof(RectTransform));
@@ -44,11 +55,21 @@ namespace DemonKing.Tests.PlayMode
 
             Assert.That(view.IsVisible, Is.False);
 
-            dialogueLog.AddLine("見習い魔術師", "画面に表示する会話です。");
+            dialogueLog.ShowLine("見習い魔術師", "最初の会話です。");
 
             Assert.That(view.IsVisible, Is.True);
             Assert.That(view.DisplayedText, Does.Contain("見習い魔術師"));
-            Assert.That(view.DisplayedText, Does.Contain("画面に表示する会話です。"));
+            Assert.That(view.DisplayedText, Does.Contain("最初の会話です。"));
+
+            dialogueLog.ShowLine("見習い魔術師", "次の会話です。");
+
+            Assert.That(view.DisplayedText, Does.Not.Contain("最初の会話です。"));
+            Assert.That(view.DisplayedText, Does.Contain("次の会話です。"));
+
+            dialogueLog.Clear();
+
+            Assert.That(view.IsVisible, Is.False);
+            Assert.That(view.DisplayedText, Is.Empty);
             Assert.That(
                 uiRoot.GetComponentsInChildren<Text>(includeInactive: true).Length,
                 Is.GreaterThanOrEqualTo(2));

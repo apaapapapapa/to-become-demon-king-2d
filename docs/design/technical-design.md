@@ -113,7 +113,7 @@ ISaveService
 
 `PlayerInteractor` は `IInteractable` のみに依存し、NPC、扉、宝箱などの固有処理を知りません。
 
-Prototype NPCの固定発言は `DialogueLog` が直近4件を保持し、`DialogueLogView` がuGUIへ表示します。Interactionは発言内容や表示階層へ依存しません。
+Prototype NPCが複数発言の進行位置を保持し、`DialogueLog` は現在表示する1件だけを管理します。`DialogueLogView` は表示中の発言をuGUIへ反映し、会話終了時は非表示にします。Interactionは発言内容や表示階層へ依存しません。
 
 ## Pause / UI
 

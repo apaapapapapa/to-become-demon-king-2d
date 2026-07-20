@@ -7,7 +7,7 @@ namespace DemonKing.Field.Prototype
 {
     /// <summary>
     /// Interaction機能を確認するための試作NPCです。
-    /// 会話システム導入前のため、現在は固定発言をセッション内の会話ログへ追加します。
+    /// 話しかけるたびに会話を進め、最終発言の次の入力で表示を閉じます。
     /// </summary>
     [DisallowMultipleComponent]
     [RequireComponent(typeof(CircleCollider2D))]
@@ -16,9 +16,15 @@ namespace DemonKing.Field.Prototype
     {
         [SerializeField] private string displayName = "見習い魔術師";
         [SerializeField, TextArea(2, 4)]
-        private string dialogueText = "魔王を目指しているの？ まずは訓練用スライムで腕試ししてみて。";
+        private string[] dialogueTexts =
+        {
+            "魔王を目指しているの？",
+            "まずは訓練用スライムで腕試ししてみて。",
+            "攻撃は何度でも試せるよ。準備ができたら行ってみて。",
+        };
 
         private DialogueLog dialogueLog;
+        private int nextDialogueIndex;
 
         private void Awake()
         {
@@ -53,13 +59,35 @@ namespace DemonKing.Field.Prototype
             if (dialogueLog == null)
             {
                 Debug.LogWarning("会話ログが設定されていないため、NPCの発言を画面へ表示できません。", this);
-            }
-            else
-            {
-                dialogueLog.AddLine(displayName, dialogueText);
+                return;
             }
 
+            string dialogueText = GetNextDialogueText();
+            if (dialogueText == null)
+            {
+                dialogueLog.Clear();
+                nextDialogueIndex = 0;
+                Debug.Log($"{displayName}との会話を終了しました。", this);
+                return;
+            }
+
+            dialogueLog.ShowLine(displayName, dialogueText);
             Debug.Log($"{displayName}：『{dialogueText}』", this);
+        }
+
+        private string GetNextDialogueText()
+        {
+            while (dialogueTexts != null && nextDialogueIndex < dialogueTexts.Length)
+            {
+                string dialogueText = dialogueTexts[nextDialogueIndex];
+                nextDialogueIndex++;
+                if (!string.IsNullOrWhiteSpace(dialogueText))
+                {
+                    return dialogueText.Trim();
+                }
+            }
+
+            return null;
         }
 
         private void CreateVisuals()

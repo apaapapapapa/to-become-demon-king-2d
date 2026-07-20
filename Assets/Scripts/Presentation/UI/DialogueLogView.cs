@@ -1,4 +1,3 @@
-using System.Text;
 using DemonKing.Gameplay.Dialogue;
 using UnityEngine;
 using UnityEngine.UI;
@@ -37,7 +36,7 @@ namespace DemonKing.Presentation.UI
 
             if (dialogueLog != null)
             {
-                dialogueLog.LineAdded += HandleLineAdded;
+                dialogueLog.Changed += HandleDialogueChanged;
             }
 
             Refresh();
@@ -52,12 +51,12 @@ namespace DemonKing.Presentation.UI
         {
             if (dialogueLog != null)
             {
-                dialogueLog.LineAdded -= HandleLineAdded;
+                dialogueLog.Changed -= HandleDialogueChanged;
                 dialogueLog = null;
             }
         }
 
-        private void HandleLineAdded(DialogueLine line)
+        private void HandleDialogueChanged()
         {
             Refresh();
         }
@@ -69,28 +68,16 @@ namespace DemonKing.Presentation.UI
                 return;
             }
 
-            bool hasLines = dialogueLog != null && dialogueLog.Lines.Count > 0;
-            panelRoot.SetActive(hasLines);
-            if (!hasLines)
+            DialogueLine? currentLine = dialogueLog?.CurrentLine;
+            panelRoot.SetActive(currentLine.HasValue);
+            if (!currentLine.HasValue)
             {
                 logText.text = string.Empty;
                 return;
             }
 
-            var builder = new StringBuilder();
-            foreach (DialogueLine line in dialogueLog.Lines)
-            {
-                if (builder.Length > 0)
-                {
-                    builder.AppendLine();
-                }
-
-                builder.Append(line.Speaker);
-                builder.Append("：");
-                builder.Append(line.Text);
-            }
-
-            logText.text = builder.ToString();
+            DialogueLine line = currentLine.Value;
+            logText.text = $"{line.Speaker}：{line.Text}";
         }
 
         private void BuildHierarchy()
