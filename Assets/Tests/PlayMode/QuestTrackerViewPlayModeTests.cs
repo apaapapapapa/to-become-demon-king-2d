@@ -16,7 +16,7 @@ namespace DemonKing.Tests.PlayMode
     public sealed class QuestTrackerViewPlayModeTests
     {
         [UnityTest]
-        public IEnumerator QuestTrackerView_受注進捗完了を表示する()
+        public IEnumerator QuestTrackerView_受注進捗報告可能完了を表示する()
         {
             QuestDefinition quest = QuestDefinition.CreateRuntime(
                 "quest.test.ui",
@@ -60,9 +60,14 @@ namespace DemonKing.Tests.PlayMode
                 GameplayEventIds.EnemyDefeated,
                 "character.training_dummy"));
 
-            Assert.That(view.DisplayedStatusText, Is.EqualTo("完了"));
+            Assert.That(view.DisplayedStatusText, Is.EqualTo("報告可能"));
             Assert.That(view.DisplayedObjectiveText, Does.Contain("2/2"));
             Assert.That(view.DisplayedObjectiveText, Does.Contain("✓"));
+            Assert.That(view.DisplayedNotificationText, Does.Contain("見習い魔術師に報告"));
+
+            service.CompleteQuest(quest.QuestId);
+
+            Assert.That(view.DisplayedStatusText, Is.EqualTo("完了"));
             Assert.That(view.DisplayedNotificationText, Does.Contain("クエスト完了"));
             Assert.That(
                 uiRoot.GetComponentsInChildren<Text>(includeInactive: true).Length,
