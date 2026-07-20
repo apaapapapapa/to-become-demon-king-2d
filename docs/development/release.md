@@ -68,6 +68,8 @@ npm run test:release
 npm run release:dry-run
 ```
 
+VitePressの依存関係は `docs/package.json` で別管理しているため、Knowledge Baseのビルドは `docs/` ディレクトリ内で実行します。
+
 dry-runでもGitHubへの接続確認を行うため、通常はPull Request上のActions実行結果と設定ファイルの検証を利用します。ローカルで完全なdry-runを行う場合は、対象リポジトリを読み書きできる一時トークンを環境変数 `GITHUB_TOKEN` に設定してください。トークンはファイルやコマンド履歴へ保存しません。
 
 ## 失敗時の扱い
