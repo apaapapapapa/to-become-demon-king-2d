@@ -10,7 +10,8 @@ namespace DemonKing.Field.Prototype
 {
     /// <summary>
     /// InteractionとCombatの最小プレイ可能ループを確認するため、試作NPCと訓練用ダミーを配置します。
-    /// 恒久機能のロジックは持たず、Prototypeシーン向けの組み立てだけを担当します。
+    /// 恒久機能のロジックは持たず、Prototypeシーン向けの生成と依存注入だけを担当します。
+    /// Feature間のイベント調停はPrototypeTrainingAreaCoordinatorへ委譲します。
     /// </summary>
     internal sealed class PrototypeGameplayFeatureInstaller
     {
@@ -57,18 +58,18 @@ namespace DemonKing.Field.Prototype
                 new Vector3(1.45f, -0.45f, 0f),
                 dummy => ConfigureCombatDummy(dummy, rewardService, trainingDummyReward));
             dummyRespawner.SpawnOrRestore();
-            npc.Interacted += () => dummyRespawner.SpawnOrRestore();
-            npc.DialogueCompleted += _ =>
-            {
-                ProgressionGrantResult result = acquisitionService.Grant(fireMagicTrainingGrant);
-                dialogueLog.ShowLine(
-                    "見習い魔術師",
-                    result.WasGranted
-                        ? "火炎魔法を習得した！ Kキー／ゲームパッドYで火炎弾を放てる。"
-                        : "火炎魔法はもう身についている。実戦で熟練を重ねよう。");
-            };
 
-            rewardService.RewardGranted += LogGrantedReward;
+            GameObject coordinatorObject = new("訓練エリア制御");
+            coordinatorObject.transform.SetParent(parent, false);
+            PrototypeTrainingAreaCoordinator coordinator =
+                coordinatorObject.AddComponent<PrototypeTrainingAreaCoordinator>();
+            coordinator.Initialize(
+                npc,
+                dummyRespawner,
+                acquisitionService,
+                fireMagicTrainingGrant,
+                dialogueLog,
+                rewardService);
         }
 
         private static PrototypeNpcInteractable CreateNpc(Transform parent, DialogueLog dialogueLog)
@@ -98,18 +99,6 @@ namespace DemonKing.Field.Prototype
                     Debug.LogWarning($"撃破報酬を付与できませんでした: {result.FailureReason}");
                 }
             };
-        }
-
-        private static void LogGrantedReward(RewardGrantResult result)
-        {
-            string progressionSummary = result.ProgressionGrantResult.WasGranted
-                ? $" Art {string.Join(", ", result.ProgressionGrantResult.LearnedArtIds)}" +
-                  $" Skill {string.Join(", ", result.ProgressionGrantResult.UnlockedSkillIds)}"
-                : string.Empty;
-            Debug.Log(
-                $"経験値を{result.GrantedExperience}獲得。" +
-                $" レベル {result.LevelUpResult.PreviousLevel} → {result.LevelUpResult.CurrentLevel}、" +
-                $"累積経験値 {result.LevelUpResult.CurrentExperience}{progressionSummary}");
         }
     }
 }
