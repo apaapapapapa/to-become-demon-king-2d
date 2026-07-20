@@ -1,14 +1,8 @@
 ---
-title: Skill名
-contentId: skill.category.name
-contentType: skill
-status: Draft
-relatedContentIds: []
+runtimeSource: Assets/Resources/Settings/Gameplay/ExampleSkill.asset
 ---
 
-# Skill名
-
-Unity Definition: `Assets/...`
+<RuntimeContentHeader />
 
 ## 概要
 
@@ -16,24 +10,17 @@ Unity Definition: `Assets/...`
 
 ## 効果の意味
 
-- 補正対象:
-- 対象Content ID:
-- 発動条件:
-- 制約:
+Runtimeの補正対象・演算・対象Content IDは `runtimeSource` のUnity Definitionを正とし、このページではプレイヤー体験上の意味だけを記載する。
 
-補正方式やRuntimeルールを再掲せず、[Skill仕様](../specifications/skill.md) を参照する。
+補正方式やRuntimeルールは [Skill仕様](../specifications/skill.md) を参照する。
 
 ## 習得
 
 - 主な習得経路:
 - 条件の意味:
 
-## 関連リンク
+## 関連コンテンツ
 
-- Monsters:
-- Arts:
-- Evolution:
-- Items:
-- Quests:
+<ContentRelations />
 
-frontmatterのメタデータ規則は [ドキュメント規約](../development/documentation-rules.md) を参照する。
+`relatedContentIds` はRuntimeから導出できない意味的な関連がある場合だけfrontmatterへ1回記載する。詳細は [ドキュメント規約](../development/documentation-rules.md) を参照する。
