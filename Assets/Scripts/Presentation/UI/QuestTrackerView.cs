@@ -9,7 +9,7 @@ using UnityEngine.UI;
 namespace DemonKing.Presentation.UI
 {
     /// <summary>
-    /// 受注中Questの進捗を常設表示し、受注・進捗・完了の状態遷移を非モーダル通知で提示します。
+    /// 受注済みQuestの進捗を常設表示し、受注・進捗・報告可能・完了の状態遷移を非モーダル通知で提示します。
     /// Questの進行ルールは持たず、QuestProgressionServiceの状態とイベントだけを表示します。
     /// </summary>
     [DisallowMultipleComponent]
@@ -19,6 +19,7 @@ namespace DemonKing.Presentation.UI
         private static readonly Color PanelColor = new(0.05f, 0.075f, 0.12f, 0.92f);
         private static readonly Color AccentColor = new(0.93f, 0.72f, 0.28f, 0.98f);
         private static readonly Color ActiveColor = new(0.98f, 0.82f, 0.42f, 1f);
+        private static readonly Color ReadyColor = new(0.45f, 0.82f, 1f, 1f);
         private static readonly Color CompletedColor = new(0.52f, 0.92f, 0.62f, 1f);
         private static readonly Color TextColor = new(0.95f, 0.95f, 0.88f, 1f);
         private const float NotificationDurationSeconds = 2.5f;
@@ -55,6 +56,7 @@ namespace DemonKing.Presentation.UI
             {
                 questService.QuestAccepted += HandleQuestAccepted;
                 questService.ProgressChanged += HandleProgressChanged;
+                questService.QuestReadyToTurnIn += HandleQuestReadyToTurnIn;
                 questService.QuestCompleted += HandleQuestCompleted;
                 displayedQuestId = ResolveInitialDisplayedQuestId();
             }
@@ -74,6 +76,7 @@ namespace DemonKing.Presentation.UI
             {
                 questService.QuestAccepted -= HandleQuestAccepted;
                 questService.ProgressChanged -= HandleProgressChanged;
+                questService.QuestReadyToTurnIn -= HandleQuestReadyToTurnIn;
                 questService.QuestCompleted -= HandleQuestCompleted;
                 questService = null;
             }
@@ -97,13 +100,20 @@ namespace DemonKing.Presentation.UI
             displayedQuestId = update.QuestId;
             Refresh();
 
-            if (update.QuestCompleted)
+            if (update.QuestReadyToTurnIn)
             {
                 return;
             }
 
             string objectiveName = ResolveObjectiveName(update.QuestId, update.ObjectiveId);
             ShowNotification($"クエスト進捗\n{objectiveName}  {update.CurrentCount}");
+        }
+
+        private void HandleQuestReadyToTurnIn(QuestProgressState state)
+        {
+            displayedQuestId = state.QuestId;
+            Refresh();
+            ShowNotification($"目標達成\n{ResolveQuestName(state.QuestId)}\n見習い魔術師に報告しよう");
         }
 
         private void HandleQuestCompleted(QuestProgressState state)
@@ -134,14 +144,29 @@ namespace DemonKing.Presentation.UI
             }
 
             trackerPanel.SetActive(true);
-            statusText.text = state.IsCompleted ? "完了" : "受注中";
-            statusText.color = state.IsCompleted ? CompletedColor : ActiveColor;
+            if (state.IsCompleted)
+            {
+                statusText.text = "完了";
+                statusText.color = CompletedColor;
+            }
+            else if (state.IsReadyToTurnIn)
+            {
+                statusText.text = "報告可能";
+                statusText.color = ReadyColor;
+            }
+            else
+            {
+                statusText.text = "受注中";
+                statusText.color = ActiveColor;
+            }
+
             titleText.text = definition.DisplayName;
             objectiveText.text = BuildObjectiveText(definition, state);
         }
 
         private string ResolveInitialDisplayedQuestId()
         {
+            string readyQuestId = string.Empty;
             string completedQuestId = string.Empty;
             foreach (QuestProgressState state in questService.States)
             {
@@ -150,13 +175,18 @@ namespace DemonKing.Presentation.UI
                     return state.QuestId;
                 }
 
+                if (state.IsReadyToTurnIn && string.IsNullOrWhiteSpace(readyQuestId))
+                {
+                    readyQuestId = state.QuestId;
+                }
+
                 if (state.IsCompleted && string.IsNullOrWhiteSpace(completedQuestId))
                 {
                     completedQuestId = state.QuestId;
                 }
             }
 
-            return completedQuestId;
+            return !string.IsNullOrWhiteSpace(readyQuestId) ? readyQuestId : completedQuestId;
         }
 
         private string ResolveQuestName(string questId)
@@ -322,7 +352,7 @@ namespace DemonKing.Presentation.UI
                 new Vector2(0.5f, 1f),
                 new Vector2(0.5f, 1f),
                 new Vector2(0f, -28f),
-                new Vector2(520f, 82f));
+                new Vector2(520f, 110f));
             notificationPanel = panel.gameObject;
 
             notificationText = CreateText(
