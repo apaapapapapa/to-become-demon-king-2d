@@ -6,44 +6,22 @@ namespace DemonKing.Gameplay.Content
 {
     /// <summary>
     /// Stable Content IDから静的コンテンツDefinitionを解決する読み取り専用カタログです。
-    /// Composition Rootが利用可能なDefinitionを登録し、図鑑UI等の参照基盤として使用します。
+    /// Root Definitionから到達可能な子DefinitionはGameContentDefinitionCollectorで再帰収集します。
     /// </summary>
     public sealed class GameContentCatalog
     {
         private readonly Dictionary<string, IGameContentDefinition> definitionsById =
             new(StringComparer.Ordinal);
 
-        public GameContentCatalog(IEnumerable<IGameContentDefinition> definitions)
+        public GameContentCatalog(IEnumerable<IGameContentDefinition> rootDefinitions)
         {
-            if (definitions == null)
-            {
-                throw new ArgumentNullException(nameof(definitions));
-            }
+            IReadOnlyList<IGameContentDefinition> definitions =
+                GameContentDefinitionCollector.Collect(rootDefinitions);
 
             foreach (IGameContentDefinition definition in definitions)
             {
-                if (definition == null)
-                {
-                    throw new ArgumentException(
-                        "Content Definitionにnullを登録することはできません。",
-                        nameof(definitions));
-                }
-
-                if (!StableContentId.IsValid(definition.ContentId))
-                {
-                    throw new ArgumentException(
-                        $"Stable Content IDが不正です: {definition.ContentId}",
-                        nameof(definitions));
-                }
-
-                if (definitionsById.ContainsKey(definition.ContentId))
-                {
-                    throw new ArgumentException(
-                        $"Stable Content IDが重複しています: {definition.ContentId}",
-                        nameof(definitions));
-                }
-
-                definitionsById.Add(definition.ContentId, definition);
+                string contentId = StableContentId.Normalize(definition.ContentId);
+                definitionsById.Add(contentId, definition);
             }
         }
 
@@ -51,7 +29,7 @@ namespace DemonKing.Gameplay.Content
 
         public bool TryGet(string contentId, out IGameContentDefinition definition)
         {
-            return definitionsById.TryGetValue(contentId, out definition);
+            return definitionsById.TryGetValue(StableContentId.Normalize(contentId), out definition);
         }
 
         public IReadOnlyList<IGameContentDefinition> GetVisibleEncyclopediaEntries()
