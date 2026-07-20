@@ -35,8 +35,32 @@ namespace DemonKing.Field.Prototype
                 throw new ArgumentNullException(nameof(dialogueLog));
             }
 
-            CreateNpc(parent, dialogueLog);
-            PrototypeCombatDummy dummy = CreateCombatDummy(parent);
+            PrototypeNpcInteractable npc = CreateNpc(parent, dialogueLog);
+            var dummyRespawner = new PrototypeCombatDummyRespawner(
+                parent,
+                new Vector3(1.45f, -0.45f, 0f),
+                dummy => ConfigureCombatDummy(dummy, rewardService, trainingDummyReward));
+            dummyRespawner.SpawnOrRestore();
+            npc.Interacted += () => dummyRespawner.SpawnOrRestore();
+
+            rewardService.RewardGranted += LogGrantedReward;
+        }
+
+        private static PrototypeNpcInteractable CreateNpc(Transform parent, DialogueLog dialogueLog)
+        {
+            GameObject npc = new("見習い魔術師");
+            npc.transform.SetParent(parent, false);
+            npc.transform.localPosition = new Vector3(-0.85f, 0.35f, 0f);
+            PrototypeNpcInteractable interactable = npc.AddComponent<PrototypeNpcInteractable>();
+            interactable.ConfigureDialogueLog(dialogueLog);
+            return interactable;
+        }
+
+        private static void ConfigureCombatDummy(
+            PrototypeCombatDummy dummy,
+            RewardService rewardService,
+            RewardDefinition trainingDummyReward)
+        {
             dummy.ConfigureReward(trainingDummyReward);
             dummy.gameObject.AddComponent<PrototypeMonsterDefeatEffect>();
             dummy.Defeated += context =>
@@ -49,25 +73,6 @@ namespace DemonKing.Field.Prototype
                     Debug.LogWarning($"撃破報酬を付与できませんでした: {result.FailureReason}");
                 }
             };
-
-            rewardService.RewardGranted += LogGrantedReward;
-        }
-
-        private static void CreateNpc(Transform parent, DialogueLog dialogueLog)
-        {
-            GameObject npc = new("見習い魔術師");
-            npc.transform.SetParent(parent, false);
-            npc.transform.localPosition = new Vector3(-0.85f, 0.35f, 0f);
-            PrototypeNpcInteractable interactable = npc.AddComponent<PrototypeNpcInteractable>();
-            interactable.ConfigureDialogueLog(dialogueLog);
-        }
-
-        private static PrototypeCombatDummy CreateCombatDummy(Transform parent)
-        {
-            GameObject dummy = new("訓練用スライム");
-            dummy.transform.SetParent(parent, false);
-            dummy.transform.localPosition = new Vector3(1.45f, -0.45f, 0f);
-            return dummy.AddComponent<PrototypeCombatDummy>();
         }
 
         private static void LogGrantedReward(RewardGrantResult result)

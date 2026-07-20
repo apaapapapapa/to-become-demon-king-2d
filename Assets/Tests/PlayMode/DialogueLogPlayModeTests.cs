@@ -1,5 +1,6 @@
 using System.Collections;
 using DemonKing.Field.Prototype;
+using DemonKing.Gameplay.Combat;
 using DemonKing.Gameplay.Dialogue;
 using DemonKing.Presentation.UI;
 using NUnit.Framework;
@@ -41,6 +42,52 @@ namespace DemonKing.Tests.PlayMode
 
             Object.Destroy(npcObject);
             Object.Destroy(interactor);
+        }
+
+        [UnityTest]
+        public IEnumerator PrototypeNpcInteractable_話しかけると撃破済みスライムを復活させる()
+        {
+            GameObject world = new("Respawn Test World");
+            var respawner = new PrototypeCombatDummyRespawner(
+                world.transform,
+                new Vector3(1.45f, -0.45f, 0f),
+                configureSpawnedDummy: null);
+            PrototypeCombatDummy defeatedDummy = respawner.SpawnOrRestore();
+
+            var dialogueLog = new DialogueLog();
+            GameObject npcObject = new("Respawn Test NPC");
+            PrototypeNpcInteractable npc = npcObject.AddComponent<PrototypeNpcInteractable>();
+            npc.ConfigureDialogueLog(dialogueLog);
+            npc.Interacted += () => respawner.SpawnOrRestore();
+            GameObject interactor = new("Respawn Test Interactor");
+
+            yield return null;
+
+            Health defeatedHealth = defeatedDummy.GetComponent<Health>();
+            defeatedHealth.ApplyDamage(new DamageRequest(99));
+            yield return null;
+
+            Assert.That(defeatedDummy == null, Is.True);
+
+            npc.Interact(interactor);
+
+            PrototypeCombatDummy respawnedDummy = respawner.CurrentDummy;
+            Assert.That(respawnedDummy, Is.Not.Null);
+            Assert.That(respawnedDummy, Is.Not.SameAs(defeatedDummy));
+            Assert.That(respawnedDummy.IsAlive, Is.True);
+            Assert.That(respawnedDummy.transform.localPosition, Is.EqualTo(new Vector3(1.45f, -0.45f, 0f)));
+
+            Health respawnedHealth = respawnedDummy.GetComponent<Health>();
+            respawnedHealth.ApplyDamage(new DamageRequest(1));
+            npc.Interact(interactor);
+
+            Assert.That(respawner.CurrentDummy, Is.SameAs(respawnedDummy));
+            Assert.That(respawnedHealth.CurrentHealth, Is.EqualTo(respawnedHealth.MaxHealth));
+
+            Object.Destroy(world);
+            Object.Destroy(npcObject);
+            Object.Destroy(interactor);
+            yield return null;
         }
 
         [UnityTest]

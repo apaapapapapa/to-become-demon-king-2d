@@ -24,6 +24,7 @@ namespace DemonKing.Field.Prototype
         public event Action<DefeatContext> Defeated;
 
         public string RewardDefinitionId => rewardDefinitionId;
+        public bool IsAlive => health != null && health.IsAlive;
 
         private void Awake()
         {
@@ -84,6 +85,16 @@ namespace DemonKing.Field.Prototype
             }
 
             health.ConfigureCombatIdentity(actorId, rewardDefinitionId);
+        }
+
+        public void RestoreToFull()
+        {
+            if (health == null)
+            {
+                health = GetComponent<Health>();
+            }
+
+            health.RestoreToFull();
         }
 
         private void HandleDamaged(DamageResult result)
