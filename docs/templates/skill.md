@@ -4,20 +4,11 @@ runtimeSource: Assets/Resources/Settings/Gameplay/ExampleSkill.asset
 
 <RuntimeContentHeader />
 
-## 概要
+## 開発者向け参照
 
-このSkillのゲームプレイ上・世界観上の役割を記載する。
+名称、概要、図鑑解説、Icon、補正対象、演算、対象Content IDは `SkillDefinition` をSource of Truthとする。
 
-## 効果の意味
-
-Runtimeの補正対象・演算・対象Content IDは `runtimeSource` のUnity Definitionを正とし、このページではプレイヤー体験上の意味だけを記載する。
-
-補正方式やRuntimeルールは [Skill仕様](../specifications/skill.md) を参照する。
-
-## 習得
-
-- 主な習得経路:
-- 条件の意味:
+Skill共通の補正方式とRuntimeルールは [Skill仕様](../specifications/skill.md) を参照し、このページへ再掲しない。
 
 ## 関連コンテンツ
 
