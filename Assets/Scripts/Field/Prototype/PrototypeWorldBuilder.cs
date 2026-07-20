@@ -60,7 +60,9 @@ namespace DemonKing.Field.Prototype
             {
                 new PrototypeGameplayFeatureInstaller().Install(
                     world,
+                    player,
                     gameplayServices,
+                    projectAssets.TrainingSlimeAi,
                     projectAssets.TrainingDummyReward,
                     projectAssets.FireMagicTrainingGrant,
                     projectAssets.ApprenticeMageDialogue,

@@ -1,4 +1,6 @@
 using System;
+using DemonKing.Gameplay.AI;
+using DemonKing.Gameplay.AI.Configuration;
 using DemonKing.Gameplay.Dialogue;
 using DemonKing.Gameplay.Dialogue.Configuration;
 using DemonKing.Gameplay.Progression.Configuration;
@@ -10,7 +12,7 @@ using UnityEngine;
 namespace DemonKing.Field.Prototype
 {
     /// <summary>
-    /// InteractionとCombatの最小プレイ可能ループを確認するため、試作NPCと訓練用ダミーを配置します。
+    /// InteractionとCombatの最小プレイ可能ループを確認するため、試作NPCと訓練用スライムを配置します。
     /// 恒久機能のロジックは持たず、Prototypeシーン向けの生成と依存注入だけを担当します。
     /// Feature間のイベント調停はPrototypeTrainingAreaCoordinatorへ委譲します。
     /// </summary>
@@ -18,15 +20,29 @@ namespace DemonKing.Field.Prototype
     {
         public void Install(
             Transform parent,
+            GameObject player,
             PrototypeGameplayServices gameplayServices,
+            EnemyAiDefinition trainingSlimeAi,
             RewardDefinition trainingDummyReward,
             ProgressionGrantDefinition fireMagicTrainingGrant,
             DialogueDefinition apprenticeMageDialogue,
             DialogueLog dialogueLog)
         {
+            if (player == null)
+            {
+                throw new ArgumentNullException(nameof(player));
+            }
+
             if (gameplayServices == null)
             {
                 throw new ArgumentNullException(nameof(gameplayServices));
+            }
+
+            if (trainingSlimeAi == null || !trainingSlimeAi.IsConfigured)
+            {
+                throw new ArgumentException(
+                    "訓練用スライムのAI定義が正しく設定されていません。",
+                    nameof(trainingSlimeAi));
             }
 
             if (trainingDummyReward == null || !trainingDummyReward.IsConfigured)
@@ -59,7 +75,12 @@ namespace DemonKing.Field.Prototype
             var dummyFactory = new PrototypeCombatDummyFactory(
                 parent,
                 new Vector3(1.45f, -0.45f, 0f),
-                dummy => ConfigureCombatDummy(dummy, gameplayServices.RewardService, trainingDummyReward));
+                dummy => ConfigureCombatDummy(
+                    dummy,
+                    player,
+                    trainingSlimeAi,
+                    gameplayServices.RewardService,
+                    trainingDummyReward));
             var dummyLifecycle = new SpawnLifecycle<PrototypeCombatDummy>(
                 dummyFactory.Spawn,
                 dummy => dummy != null && dummy.IsAlive,
@@ -98,11 +119,21 @@ namespace DemonKing.Field.Prototype
 
         private static void ConfigureCombatDummy(
             PrototypeCombatDummy dummy,
+            GameObject player,
+            EnemyAiDefinition trainingSlimeAi,
             RewardService rewardService,
             RewardDefinition trainingDummyReward)
         {
             dummy.ConfigureReward(trainingDummyReward);
             dummy.gameObject.AddComponent<PrototypeMonsterDefeatEffect>();
+
+            EnemyAiController enemyAi = dummy.GetComponent<EnemyAiController>();
+            if (enemyAi == null)
+            {
+                enemyAi = dummy.gameObject.AddComponent<EnemyAiController>();
+            }
+
+            enemyAi.Configure(trainingSlimeAi, player);
             dummy.Defeated += context =>
             {
                 RewardGrantResult result = rewardService.GrantDefeatReward(

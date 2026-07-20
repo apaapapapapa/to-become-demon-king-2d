@@ -154,5 +154,9 @@ AIエージェントが変更対象に必要な仕様・コード・テストへ
 
 ## Enemy AI
 
-- **Planning:** `docs/development/roadmap.md`
-- **Related:** Ability, Combat, Characters, Field Physics / Movement
+- **Spec:** `docs/specifications/enemy-ai.md`
+- **Code:** `Assets/Scripts/Gameplay/AI/`
+- **Configuration:** `Assets/Resources/Settings/Gameplay/TrainingSlimeAi.asset`
+- **Integration:** `Assets/Scripts/Field/Prototype/PrototypeGameplayFeatureInstaller.cs`, `Assets/Scripts/Field/Prototype/PrototypeCombatDummy.cs`
+- **Tests:** `Assets/Tests/PlayMode/EnemyAiPlayModeTests.cs`
+- **Related:** Ability, Combat, Characters, Field Physics / Movement, Spawning

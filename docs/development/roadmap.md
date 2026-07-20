@@ -14,10 +14,12 @@
 - Domain / Runtime Assembly境界
 - ScriptableObject Definition、Runtime State、Save DTO境界
 
-### Combat / Ability / Progression
+### Combat / Ability / AI / Progression
 
 - Ability共通実行基盤と基本近接攻撃
 - DamageResult / DefeatContext / RewardService
+- 敵AIのIdle / Chase / Attack、索敵・離脱、高度差による追跡・攻撃制御
+- 敵AIから既存Ability Systemを利用する攻撃経路
 - Experience / Level
 - Art習得・熟練・Ability解放
 - 受動Skill取得と汎用Modifier
@@ -43,12 +45,11 @@
 
 ## 次の開発フェーズ
 
-1. 敵AI
-2. Questの受注・進捗・完了をプレイヤーへ提示するUI / UX
-3. NPC会話とQuestを使った縦切りゲームループの拡張
-4. 複数Art / Skillの選択UIと入力割当
-5. 追加の正式Runtimeコンテンツと取得経路
-6. 実際のローカルSave実装
+1. Questの受注・進捗・完了をプレイヤーへ提示するUI / UX
+2. NPC会話とQuestを使った縦切りゲームループの拡張
+3. 複数Art / Skillの選択UIと入力割当
+4. 追加の正式Runtimeコンテンツと取得経路
+5. 実際のローカルSave実装
 
 ## 将来候補
 

@@ -8,6 +8,7 @@
 - [Dialogue](./dialogue.md)
 - [Ability](./ability.md)
 - [戦闘](./combat.md)
+- [敵AI](./enemy-ai.md)
 - [Art](./art.md)
 - [Skill](./skill.md)
 - [Evolution](./evolution.md)

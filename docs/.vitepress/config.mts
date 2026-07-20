@@ -37,6 +37,7 @@ export default defineConfig({
         { text: 'Dialogue', link: '/specifications/dialogue' },
         { text: 'Ability', link: '/specifications/ability' },
         { text: '戦闘', link: '/specifications/combat' },
+        { text: '敵AI', link: '/specifications/enemy-ai' },
         { text: 'Art', link: '/specifications/art' },
         { text: 'Skill', link: '/specifications/skill' },
         { text: 'Evolution', link: '/specifications/evolution' },
