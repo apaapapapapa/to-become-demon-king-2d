@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using DemonKing.Core.Input;
 using DemonKing.Gameplay.Combat.Configuration;
@@ -23,6 +24,8 @@ namespace DemonKing.Gameplay.Combat
         private readonly HashSet<IDamageable> damagedTargets = new();
         private PlayerInputReader inputReader;
         private Vector2 facingDirection = Vector2.down;
+
+        public event Action<MeleeAttackEvent> AttackPerformed;
 
         private int Damage => attackDefinition == null ? DefaultDamage : attackDefinition.Damage;
         private float AttackRadius => attackDefinition == null ? DefaultAttackRadius : attackDefinition.AttackRadius;
@@ -76,7 +79,7 @@ namespace DemonKing.Gameplay.Combat
             attackDefinition = definition;
         }
 
-        private void HandleAttackPressed()
+        public void PerformAttack()
         {
             Vector2 center = (Vector2)transform.position + facingDirection * AttackDistance;
             Collider2D[] colliders = Physics2D.OverlapCircleAll(center, AttackRadius, attackLayers);
@@ -90,6 +93,7 @@ namespace DemonKing.Gameplay.Combat
                 DamageTags.BasicAttack);
 
             damagedTargets.Clear();
+            int hitCount = 0;
 
             foreach (Collider2D collider in colliders)
             {
@@ -107,10 +111,23 @@ namespace DemonKing.Gameplay.Combat
                         continue;
                     }
 
-                    damageable.ApplyDamage(request);
+                    DamageResult result = damageable.ApplyDamage(request);
+                    if (result.WasApplied)
+                    {
+                        hitCount++;
+                    }
                 }
             }
+
+            AttackPerformed?.Invoke(new MeleeAttackEvent(
+                transform.position,
+                center,
+                facingDirection,
+                AttackRadius,
+                hitCount));
         }
+
+        private void HandleAttackPressed() => PerformAttack();
 
 #if UNITY_EDITOR
         private void OnDrawGizmosSelected()

@@ -57,6 +57,62 @@ namespace DemonKing.Tests.PlayMode
         }
 
         [UnityTest]
+        public IEnumerator PlayerMeleeAttack_攻撃実行時に斬撃エフェクトを生成して自動破棄する()
+        {
+            GameObject attacker = new("Attack Effect Test Player");
+            PlayerMeleeAttack meleeAttack = attacker.AddComponent<PlayerMeleeAttack>();
+            PrototypeMeleeAttackEffect effect = attacker.AddComponent<PrototypeMeleeAttackEffect>();
+            int performedCount = 0;
+            MeleeAttackEvent performedEvent = default;
+            meleeAttack.AttackPerformed += attackEvent =>
+            {
+                performedCount++;
+                performedEvent = attackEvent;
+            };
+
+            yield return null;
+
+            meleeAttack.PerformAttack();
+            GameObject spawnedEffect = effect.LastSpawnedEffect;
+
+            Assert.That(performedCount, Is.EqualTo(1));
+            Assert.That(performedEvent.FacingDirection, Is.EqualTo(Vector2.down));
+            Assert.That(spawnedEffect, Is.Not.Null);
+            Assert.That(
+                spawnedEffect.GetComponentsInChildren<SpriteRenderer>().Length,
+                Is.GreaterThanOrEqualTo(8));
+
+            yield return new WaitForSecondsRealtime(0.3f);
+
+            Assert.That(spawnedEffect == null, Is.True);
+            Object.Destroy(attacker);
+        }
+
+        [UnityTest]
+        public IEnumerator MonsterDefeatEffect_撃破時に破裂エフェクトを生成して対象と独立して再生する()
+        {
+            GameObject monster = new("Defeat Effect Test Monster");
+            Health health = monster.AddComponent<Health>();
+            PrototypeMonsterDefeatEffect effect = monster.AddComponent<PrototypeMonsterDefeatEffect>();
+
+            yield return null;
+
+            health.ApplyDamage(new DamageRequest(99));
+            GameObject spawnedEffect = effect.LastSpawnedEffect;
+            Object.Destroy(monster);
+
+            Assert.That(spawnedEffect, Is.Not.Null);
+            Assert.That(spawnedEffect.transform.parent, Is.Null);
+            Assert.That(
+                spawnedEffect.GetComponentsInChildren<SpriteRenderer>().Length,
+                Is.GreaterThanOrEqualTo(13));
+
+            yield return new WaitForSecondsRealtime(0.65f);
+
+            Assert.That(spawnedEffect == null, Is.True);
+        }
+
+        [UnityTest]
         public IEnumerator 訓練用ダミー撃破_RewardServiceがプレイヤーへ経験値を一度だけ付与する()
         {
             PrototypeProjectAssets projectAssets =

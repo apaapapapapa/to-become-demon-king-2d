@@ -57,6 +57,33 @@ namespace DemonKing.Gameplay.Combat
     }
 
     /// <summary>
+    /// 近接攻撃の実行結果を、アニメーションや効果音などの演出へ通知するための情報です。
+    /// </summary>
+    public readonly struct MeleeAttackEvent
+    {
+        public MeleeAttackEvent(
+            Vector2 origin,
+            Vector2 center,
+            Vector2 facingDirection,
+            float radius,
+            int hitCount)
+        {
+            Origin = origin;
+            Center = center;
+            FacingDirection = facingDirection;
+            Radius = radius;
+            HitCount = hitCount;
+        }
+
+        public Vector2 Origin { get; }
+        public Vector2 Center { get; }
+        public Vector2 FacingDirection { get; }
+        public float Radius { get; }
+        public int HitCount { get; }
+        public bool DidHit => HitCount > 0;
+    }
+
+    /// <summary>
     /// 撃破報酬、クエスト、演出がHealthへ依存せず結果を受け取るための情報です。
     /// </summary>
     public sealed class DefeatContext
