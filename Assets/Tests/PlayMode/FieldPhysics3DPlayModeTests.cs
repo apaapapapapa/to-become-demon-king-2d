@@ -11,20 +11,17 @@ namespace DemonKing.Tests.PlayMode
     public sealed class FieldPhysics3DPlayModeTests
     {
         [UnityTest]
-        public IEnumerator CharacterPhysicsBody3D_DisablesLegacy2DPhysicsAndLocksElevation()
+        public IEnumerator CharacterPhysicsBody3D_ConfiguresPure3DPhysicsAndLocksElevation()
         {
             GameObject actor = new("3D Physics Actor");
-            Rigidbody2D legacyBody = actor.AddComponent<Rigidbody2D>();
-            CircleCollider2D legacyCollider = actor.AddComponent<CircleCollider2D>();
-
             CharacterPhysicsBody3D physicsBody = actor.AddComponent<CharacterPhysicsBody3D>();
             yield return null;
 
             Assert.That(physicsBody.Body, Is.Not.Null);
             Assert.That(physicsBody.CollisionVolume, Is.Not.Null);
             Assert.That(physicsBody.Body.useGravity, Is.False);
-            Assert.That(legacyBody.simulated, Is.False);
-            Assert.That(legacyCollider.enabled, Is.False);
+            Assert.That(actor.GetComponent<Rigidbody2D>(), Is.Null);
+            Assert.That(actor.GetComponents<Collider2D>(), Is.Empty);
             Assert.That(
                 (physicsBody.Body.constraints & RigidbodyConstraints.FreezePositionZ) != 0,
                 Is.True);

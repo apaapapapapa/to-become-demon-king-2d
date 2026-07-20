@@ -17,8 +17,6 @@ namespace DemonKing.Gameplay.Combat
     [DisallowMultipleComponent]
     public sealed class MeleeAttackExecutor : MonoBehaviour, IAbilityExecutor
     {
-        private const float GroundElevationTolerance = 0.001f;
-
         [SerializeField] private LayerMask attackLayers = ~0;
 
         private readonly HashSet<IDamageable> damagedTargets = new();
@@ -68,18 +66,6 @@ namespace DemonKing.Gameplay.Combat
                 damageRequest,
                 request);
 
-            // 移行期間中の既存PlayModeテストや旧Prefab互換用です。
-            // Runtimeの正式なActorはCharacterPhysicsBody3DがCollider2Dを無効化するため3D Queryだけを使用します。
-            if (hitCount == 0 && Mathf.Abs(user.transform.position.z) <= GroundElevationTolerance)
-            {
-                hitCount += ApplyLegacy2DHits(
-                    center,
-                    definition.AttackRadius,
-                    user,
-                    damageRequest,
-                    request);
-            }
-
             AttackPerformed?.Invoke(new MeleeAttackEvent(
                 origin,
                 center,
@@ -105,32 +91,6 @@ namespace DemonKing.Gameplay.Combat
             int hitCount = 0;
 
             foreach (Collider collider in colliders)
-            {
-                if (collider == null || collider.transform.IsChildOf(user.transform))
-                {
-                    continue;
-                }
-
-                hitCount += ApplyDamageFromBehaviours(
-                    collider.GetComponentsInParent<MonoBehaviour>(false),
-                    damageRequest,
-                    executionRequest);
-            }
-
-            return hitCount;
-        }
-
-        private int ApplyLegacy2DHits(
-            Vector2 center,
-            float radius,
-            GameObject user,
-            DamageRequest damageRequest,
-            AbilityExecutionRequest executionRequest)
-        {
-            Collider2D[] colliders = Physics2D.OverlapCircleAll(center, radius, attackLayers);
-            int hitCount = 0;
-
-            foreach (Collider2D collider in colliders)
             {
                 if (collider == null || collider.transform.IsChildOf(user.transform))
                 {

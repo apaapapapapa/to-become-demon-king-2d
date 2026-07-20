@@ -11,14 +11,14 @@ namespace DemonKing.Gameplay.Characters
     /// </summary>
     [DisallowMultipleComponent]
     [RequireComponent(typeof(MoveInputReader))]
-    public class CharacterPlanarMotor : MonoBehaviour
+    [RequireComponent(typeof(CharacterPhysicsBody3D))]
+    public sealed class CharacterPlanarMotor : MonoBehaviour
     {
         private const float DefaultMoveSpeed = 3.4f;
 
         [SerializeField] private CharacterStatsDefinition statsDefinition;
 
         private MoveInputReader inputReader;
-        private CharacterPhysicsBody3D physicsBody;
         private Rigidbody body;
         private Vector2 currentInput;
         private bool clampToBounds;
@@ -29,10 +29,10 @@ namespace DemonKing.Gameplay.Characters
         public float MoveSpeed => statsDefinition == null ? DefaultMoveSpeed : statsDefinition.MoveSpeed;
         public bool IsMovementLocked => movementLocked;
 
-        protected virtual void Awake()
+        private void Awake()
         {
             inputReader = GetComponent<MoveInputReader>();
-            physicsBody = GetComponent<CharacterPhysicsBody3D>();
+            CharacterPhysicsBody3D physicsBody = GetComponent<CharacterPhysicsBody3D>();
             if (physicsBody == null)
             {
                 physicsBody = gameObject.AddComponent<CharacterPhysicsBody3D>();
@@ -42,12 +42,12 @@ namespace DemonKing.Gameplay.Characters
             body = physicsBody.Body;
         }
 
-        protected virtual void Update()
+        private void Update()
         {
             currentInput = inputReader == null ? Vector2.zero : inputReader.Move;
         }
 
-        protected virtual void FixedUpdate()
+        private void FixedUpdate()
         {
             if (body == null || movementLocked)
             {
