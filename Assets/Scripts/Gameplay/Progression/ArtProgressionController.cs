@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using DemonKing.Domain.Progression;
 using DemonKing.Gameplay.Abilities;
 using DemonKing.Gameplay.Progression.Configuration;
+using DemonKing.Gameplay.Modifiers;
 using UnityEngine;
 
 namespace DemonKing.Gameplay.Progression
@@ -40,7 +41,8 @@ namespace DemonKing.Gameplay.Progression
                 gameObject,
                 progressionState,
                 abilityController,
-                artDefinitions);
+                artDefinitions,
+                FindMasteryModifierSources());
             abilityController.EffectResolved += HandleEffectResolved;
         }
 
@@ -67,6 +69,21 @@ namespace DemonKing.Gameplay.Progression
         private void HandleEffectResolved(AbilityEffectResolved effect)
         {
             Service?.AwardMastery(effect);
+        }
+
+        private IReadOnlyList<IArtMasteryModifierSource> FindMasteryModifierSources()
+        {
+            var sources = new List<IArtMasteryModifierSource>();
+            MonoBehaviour[] behaviours = GetComponents<MonoBehaviour>();
+            foreach (MonoBehaviour behaviour in behaviours)
+            {
+                if (behaviour is IArtMasteryModifierSource source)
+                {
+                    sources.Add(source);
+                }
+            }
+
+            return sources;
         }
 
         private void EnsureInitialized()

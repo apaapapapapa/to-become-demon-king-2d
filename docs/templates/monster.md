@@ -1,3 +1,11 @@
+---
+title: モンスター名
+contentId: character.category.name
+contentType: monster
+status: Draft
+relatedContentIds: []
+---
+
 # モンスター名
 
 - Status: Draft

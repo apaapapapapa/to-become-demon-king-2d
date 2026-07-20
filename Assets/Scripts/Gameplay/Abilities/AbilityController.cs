@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using DemonKing.Domain;
 using DemonKing.Gameplay.Abilities.Configuration;
+using DemonKing.Gameplay.Modifiers;
 using UnityEngine;
 
 namespace DemonKing.Gameplay.Abilities
@@ -163,7 +164,9 @@ namespace DemonKing.Gameplay.Abilities
             try
             {
                 AbilityExecutionResult executionResult = executor.Execute(request);
-                state.CommitUse(request.Definition.CooldownSeconds, executionResult.IsComplete);
+                state.CommitUse(
+                    ResolveCooldown(request.Definition),
+                    executionResult.IsComplete);
             }
             catch
             {
@@ -307,6 +310,22 @@ namespace DemonKing.Gameplay.Abilities
             }
 
             return null;
+        }
+
+        private float ResolveCooldown(AbilityDefinition definition)
+        {
+            NumericModifier modifier = NumericModifier.Identity;
+            MonoBehaviour[] behaviours = GetComponents<MonoBehaviour>();
+            foreach (MonoBehaviour behaviour in behaviours)
+            {
+                if (behaviour is IAbilityCooldownModifierSource source)
+                {
+                    modifier = modifier.Combine(
+                        source.GetAbilityCooldownModifier(definition));
+                }
+            }
+
+            return modifier.Apply(definition.CooldownSeconds);
         }
 
         private AbilityUseResult Notify(AbilityUseResult result)

@@ -1,3 +1,11 @@
+---
+title: Art名
+contentId: art.category.name
+contentType: art
+status: Draft
+relatedContentIds: []
+---
+
 # Art名
 
 - Status: Draft

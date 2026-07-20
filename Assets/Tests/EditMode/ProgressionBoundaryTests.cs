@@ -4,6 +4,7 @@ using DemonKing.Domain.Save;
 using DemonKing.Field.Prototype;
 using DemonKing.Gameplay.Combat.Configuration;
 using DemonKing.Gameplay.Progression.Configuration;
+using DemonKing.Gameplay.Modifiers;
 using NUnit.Framework;
 using UnityEditor;
 using UnityEngine;
@@ -111,6 +112,33 @@ namespace DemonKing.Tests.EditMode
 
             Assert.That(applied, Is.EqualTo(1));
             Assert.That(state.MasteryPoints, Is.EqualTo(long.MaxValue));
+        }
+
+        [Test]
+        public void CharacterProgressionState_Skill取得を冪等に保存できる()
+        {
+            CharacterProgressionState state = CharacterProgressionState.CreateInitial(
+                "character.player.slime");
+
+            Assert.That(state.TryUnlockSkill("skill.combat.test"), Is.True);
+            Assert.That(state.TryUnlockSkill("skill.combat.test"), Is.False);
+            Assert.That(state.IsSkillUnlocked("skill.combat.test"), Is.True);
+
+            CharacterProgressionState restored = CharacterProgressionSaveMapper.FromSaveData(
+                CharacterProgressionSaveMapper.ToSaveData(state));
+
+            Assert.That(restored.UnlockedSkillIds, Is.EqualTo(new[] { "skill.combat.test" }));
+        }
+
+        [Test]
+        public void NumericModifier_加算値と割合を順序に依存せず適用する()
+        {
+            NumericModifier modifier = new NumericModifier(2d, 0d)
+                .Combine(new NumericModifier(0d, 0.5d));
+
+            Assert.That(modifier.Apply(2), Is.EqualTo(6));
+            Assert.That(modifier.Apply(2f), Is.EqualTo(6f));
+            Assert.That(modifier.Apply(2L), Is.EqualTo(6L));
         }
 
         [Test]
@@ -255,6 +283,11 @@ namespace DemonKing.Tests.EditMode
             Assert.That(basicMelee.AbilityId, Is.EqualTo("ability.basic_melee"));
             Assert.That(basicMelee.DisplayName, Is.Not.Empty);
             Assert.That(basicMelee.CooldownSeconds, Is.GreaterThanOrEqualTo(0f));
+            Assert.That(projectAssets.PlayerCharacter.SkillDefinitions.Count, Is.EqualTo(1));
+            SkillDefinition skillDefinition = projectAssets.PlayerCharacter.SkillDefinitions[0];
+            Assert.That(skillDefinition, Is.Not.Null);
+            Assert.That(skillDefinition.IsConfigured, Is.True);
+            Assert.That(skillDefinition.SkillId, Is.EqualTo("skill.combat.predatory_instinct"));
             Assert.That(projectAssets.PlayerCharacter.ExperienceTableDefinition, Is.Not.Null);
             Assert.That(projectAssets.PlayerCharacter.ExperienceTableDefinition.IsConfigured, Is.True);
             Assert.That(projectAssets.TrainingDummyReward, Is.Not.Null);

@@ -68,6 +68,11 @@ Gameplay/
   Progression/
     ArtProgressionController
     ArtProgressionService
+    SkillProgressionController
+    SkillProgressionService
+  Modifiers/
+    NumericModifier
+    Modifier Source contracts
   Rewards/
 ```
 
@@ -93,6 +98,7 @@ Prototypeシーンを組み立てるComposition層です。恒久的なDomain/Ga
 Definition
   AbilityDefinition
   ArtDefinition
+  SkillDefinition
   CharacterDefinition
   CharacterStatsDefinition
   MeleeAttackDefinition
@@ -119,6 +125,8 @@ Definitionは静的定義、Runtime Stateはプレイ中に変化する状態、
 character.player.slime
 ability.basic_melee
 art.magic.example
+skill.combat.example
+evolution.slime.example
 reward.training_dummy
 ```
 
@@ -149,6 +157,7 @@ CharacterDefinition
   ├ statsDefinition
   ├ abilityDefinitions[]
   ├ artDefinitions[]
+  ├ skillDefinitions[]
   ├ dodgeDefinition
   └ experienceTableDefinition
 ```
@@ -195,6 +204,8 @@ ArtProgressState.AddMastery
 
 Art進捗はDomain、静的なランク閾値とAbility対応はDefinition、習得・熟練度加算・Ability付与の調停はGameplayの責務です。効果処理から成長状態を直接変更しません。
 
+Skillは `CharacterProgressionState.UnlockedSkillIds` と `SkillDefinition` から受動補正を導出します。`SkillProgressionController` が補正を汎用Modifier Source契約として公開し、Ability、Combat、Artは補正取得元がSkill、装備、バフのどれであるかを知りません。
+
 ## Save境界
 
 ```text
@@ -238,17 +249,17 @@ ISaveService
 - Art Definition / Runtime State / 習得 / 熟練度 / Ability付与
 - Ability Execution ID / 効果成立通知
 - Save DTO Version 2 / Version 1 Migration
+- 受動Skill Definition / 取得 / 汎用補正接続
 - EditMode / PlayModeテスト
 
 ## 直近の拡張方針
 
-1. 受動Skill
-2. Evolution
-3. NPC会話
-4. 敵AI
-5. クエスト・目的管理
-6. Art入力・UIと正式コンテンツ
-7. 実際のセーブ保存実装
+1. Evolution
+2. NPC会話
+3. 敵AI
+4. クエスト・目的管理
+5. Art / Skill入力・UIと正式Runtimeコンテンツ
+6. 実際のセーブ保存実装
 
 ## リアーキテクチャ判断基準
 

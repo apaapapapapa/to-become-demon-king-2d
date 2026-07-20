@@ -25,6 +25,7 @@ namespace DemonKing.EditorTools
         private const string PlayerPrefabPath = "Assets/Resources/Prefabs/Characters/PrototypeSlime.prefab";
         private const string PlayerCharacterStatsPath = "Assets/Resources/Settings/Gameplay/PlayerCharacterStats.asset";
         private const string PlayerMeleeAttackPath = "Assets/Resources/Settings/Gameplay/PlayerMeleeAttack.asset";
+        private const string PredatoryInstinctSkillPath = "Assets/Resources/Settings/Gameplay/PredatoryInstinctSkill.asset";
         private const string PlayerDodgePath = "Assets/Resources/Settings/Gameplay/PlayerDodge.asset";
         private const string PlayerExperienceTablePath = "Assets/Resources/Settings/Gameplay/PlayerExperienceTable.asset";
         private const string TrainingDummyRewardPath = "Assets/Resources/Settings/Gameplay/TrainingDummyReward.asset";
@@ -129,6 +130,10 @@ namespace DemonKing.EditorTools
                 serializedObject,
                 "abilityDefinitions",
                 Load<MeleeAttackDefinition>(PlayerMeleeAttackPath));
+            changed |= AssignArrayIfDifferent(
+                serializedObject,
+                "skillDefinitions",
+                Load<SkillDefinition>(PredatoryInstinctSkillPath));
             changed |= AssignIfDifferent(serializedObject, "dodgeDefinition", Load<DodgeDefinition>(PlayerDodgePath));
             changed |= AssignIfDifferent(serializedObject, "experienceTableDefinition", Load<ExperienceTableDefinition>(PlayerExperienceTablePath));
 
@@ -233,7 +238,7 @@ namespace DemonKing.EditorTools
         private static bool AssignArrayIfDifferent(
             SerializedObject serializedObject,
             string propertyName,
-            params AbilityDefinition[] values)
+            params Object[] values)
         {
             SerializedProperty property = serializedObject.FindProperty(propertyName);
             if (property == null || !property.isArray)
@@ -242,7 +247,7 @@ namespace DemonKing.EditorTools
                 return false;
             }
 
-            AbilityDefinition[] validValues = values.Where(value => value != null).ToArray();
+            Object[] validValues = values.Where(value => value != null).ToArray();
             bool isSame = property.arraySize == validValues.Length;
             for (int index = 0; isSame && index < validValues.Length; index++)
             {

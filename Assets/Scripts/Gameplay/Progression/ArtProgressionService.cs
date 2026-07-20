@@ -5,6 +5,7 @@ using DemonKing.Domain.Progression;
 using DemonKing.Gameplay.Abilities;
 using DemonKing.Gameplay.Abilities.Configuration;
 using DemonKing.Gameplay.Progression.Configuration;
+using DemonKing.Gameplay.Modifiers;
 using UnityEngine;
 
 namespace DemonKing.Gameplay.Progression
@@ -98,12 +99,14 @@ namespace DemonKing.Gameplay.Progression
             new(StringComparer.Ordinal);
         private readonly HashSet<Guid> awardedExecutionIds = new();
         private readonly Queue<Guid> awardedExecutionOrder = new();
+        private readonly IReadOnlyList<IArtMasteryModifierSource> masteryModifierSources;
 
         public ArtProgressionService(
             GameObject owner,
             CharacterProgressionState progressionState,
             AbilityController abilityController,
-            IEnumerable<ArtDefinition> artDefinitions)
+            IEnumerable<ArtDefinition> artDefinitions,
+            IEnumerable<IArtMasteryModifierSource> masteryModifierSources = null)
         {
             this.owner = owner != null
                 ? owner
@@ -122,6 +125,9 @@ namespace DemonKing.Gameplay.Progression
             }
 
             RegisterDefinitions(artDefinitions);
+            this.masteryModifierSources = masteryModifierSources == null
+                ? Array.Empty<IArtMasteryModifierSource>()
+                : new List<IArtMasteryModifierSource>(masteryModifierSources);
             SynchronizeGrantedAbilities();
         }
 
@@ -198,6 +204,7 @@ namespace DemonKing.Gameplay.Progression
             }
 
             ArtMasteryTable masteryTable = masteryTables[normalizedId];
+            amount = ResolveMasteryPoints(definition, amount);
             int previousRank = masteryTable.GetRankForTotalMasteryPoints(
                 progressState.MasteryPoints);
             long appliedPoints = progressState.GainMastery(amount);
@@ -358,6 +365,20 @@ namespace DemonKing.Gameplay.Progression
             }
 
             return true;
+        }
+
+        private long ResolveMasteryPoints(ArtDefinition definition, long baseAmount)
+        {
+            NumericModifier modifier = NumericModifier.Identity;
+            foreach (IArtMasteryModifierSource source in masteryModifierSources)
+            {
+                if (source != null)
+                {
+                    modifier = modifier.Combine(source.GetArtMasteryModifier(definition));
+                }
+            }
+
+            return modifier.Apply(baseAmount, minimumValue: 1);
         }
 
         private static bool IsValidArtId(string artId)

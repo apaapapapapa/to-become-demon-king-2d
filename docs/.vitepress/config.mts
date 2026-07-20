@@ -33,6 +33,7 @@ export default defineConfig({
         { text: '入力', link: '/specifications/input' },
         { text: 'Ability', link: '/specifications/ability' },
         { text: 'Art', link: '/specifications/art' },
+        { text: 'Skill', link: '/specifications/skill' },
         { text: '戦闘', link: '/specifications/combat' },
         { text: 'インタラクション', link: '/specifications/interaction' },
         { text: '成長', link: '/specifications/progression' },
@@ -48,10 +49,15 @@ export default defineConfig({
       '/database/': [{ text: 'ゲームデータベース', items: [
         { text: '概要', link: '/database/' },
         { text: 'モンスター', link: '/database/monsters/' },
+        { text: 'プレイヤースライム', link: '/database/monsters/player-slime' },
+        { text: '訓練用スライム', link: '/database/monsters/training-slime' },
         { text: '進化テーブル', link: '/database/evolutions/' },
+        { text: 'スライム進化系列', link: '/database/evolutions/slime-lineage' },
         { text: 'アイテム', link: '/database/items/' },
         { text: 'アーツ', link: '/database/arts/' },
-        { text: 'スキル', link: '/database/skills/' }
+        { text: '火炎魔法', link: '/database/arts/fire-magic' },
+        { text: 'スキル', link: '/database/skills/' },
+        { text: '捕食者の本能', link: '/database/skills/predatory-instinct' }
       ] }],
       '/development/': [{ text: '開発', items: [
         { text: '概要', link: '/development/' },

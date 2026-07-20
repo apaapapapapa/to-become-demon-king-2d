@@ -13,4 +13,8 @@ monsters/
 
 Runtime数値はUnity側のDefinitionを正とします。
 
-現在、正式な完成版モンスターデータは未登録です。Prototypeの訓練用スライムはシステム確認用として区別します。
+## 登録ページ
+
+<ContentCatalog content-type="monster" />
+
+完成版の敵モンスターは未登録です。Prototype用コンテンツはStatusと実装境界を各ページで明記します。

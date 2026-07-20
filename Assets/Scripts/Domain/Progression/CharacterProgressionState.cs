@@ -111,6 +111,31 @@ namespace DemonKing.Domain.Progression
             return true;
         }
 
+        public bool TryUnlockSkill(string skillId)
+        {
+            string normalizedId = StableContentId.Require(skillId, nameof(skillId));
+            if (!normalizedId.StartsWith("skill.", StringComparison.Ordinal))
+            {
+                throw new ArgumentException(
+                    "Skill IDはskill.*形式である必要があります。",
+                    nameof(skillId));
+            }
+
+            if (unlockedSkillIds.Contains(normalizedId))
+            {
+                return false;
+            }
+
+            unlockedSkillIds.Add(normalizedId);
+            return true;
+        }
+
+        public bool IsSkillUnlocked(string skillId)
+        {
+            string normalizedId = StableContentId.Normalize(skillId);
+            return unlockedSkillIds.Contains(normalizedId);
+        }
+
         public bool TryGetArtProgress(string artId, out ArtProgressState progressState)
         {
             string normalizedId = StableContentId.Normalize(artId);
