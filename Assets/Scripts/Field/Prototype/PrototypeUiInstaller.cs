@@ -1,6 +1,7 @@
 using DemonKing.Core.Application;
 using DemonKing.Gameplay.Dialogue;
 using DemonKing.Gameplay.Progression;
+using DemonKing.Gameplay.Quests;
 using DemonKing.Presentation.UI;
 using UnityEngine;
 using UnityEngine.UI;
@@ -9,7 +10,7 @@ namespace DemonKing.Field.Prototype
 {
     /// <summary>
     /// プロトタイプシーンへCanvas（uGUI）ベースのUIルートを構築します。
-    /// UIはプレイヤーPrefabから独立したシーンライフサイクルで管理し、フォントとPause状態を外側から注入します。
+    /// UIはプレイヤーPrefabから独立したシーンライフサイクルで管理し、必要なRuntime Serviceを外側から注入します。
     /// </summary>
     internal static class PrototypeUiInstaller
     {
@@ -17,7 +18,8 @@ namespace DemonKing.Field.Prototype
             Font uiFont,
             GamePauseController pauseController,
             DialogueLog dialogueLog,
-            EvolutionSelectionController evolutionSelectionController)
+            EvolutionSelectionController evolutionSelectionController,
+            QuestProgressionService questProgressionService)
         {
             GameObject uiRoot = new("UI Root", typeof(RectTransform));
 
@@ -39,6 +41,9 @@ namespace DemonKing.Field.Prototype
 
             DialogueLogView dialogueLogView = uiRoot.AddComponent<DialogueLogView>();
             dialogueLogView.Initialize(uiFont, dialogueLog);
+
+            QuestTrackerView questTrackerView = uiRoot.AddComponent<QuestTrackerView>();
+            questTrackerView.Initialize(uiFont, questProgressionService);
 
             PauseMenuView pauseMenuView = uiRoot.AddComponent<PauseMenuView>();
             pauseMenuView.Initialize(uiFont, pauseController);
