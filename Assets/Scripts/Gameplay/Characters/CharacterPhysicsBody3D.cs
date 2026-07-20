@@ -3,10 +3,11 @@ using UnityEngine;
 namespace DemonKing.Gameplay.Characters
 {
     /// <summary>
-    /// キャラクターの3D Physics本体を構成します。
-    /// X/Yは既存のフィールド平面、ZはElevationとして扱い、現行の地上移動ではZを固定します。
-    /// Jump / Flight実装時はSetElevationLocked(false)で高さ方向の制御を解放できます。
+    /// キャラクターの3D Physics本体と、1 FixedUpdate内の移動合成を担当します。
+    /// X/Yはフィールド平面、ZはElevationとして扱います。
+    /// Planar / Dodge / Elevationの各MotorはRigidbody.MovePositionを直接呼ばず、このComponentへ移動量を要求します。
     /// </summary>
+    [DefaultExecutionOrder(1000)]
     [DisallowMultipleComponent]
     [RequireComponent(typeof(Rigidbody))]
     [RequireComponent(typeof(CapsuleCollider))]
@@ -21,14 +22,50 @@ namespace DemonKing.Gameplay.Characters
         [SerializeField, Min(0f)] private float centerElevation = DefaultHeight * 0.5f;
         [SerializeField] private bool lockElevation = true;
 
+        private Vector2 pendingPlanarDelta;
+        private float pendingElevationDelta;
+
         public Rigidbody Body { get; private set; }
         public CapsuleCollider CollisionVolume { get; private set; }
         public bool IsElevationLocked => lockElevation;
-        public float Elevation => transform.position.z;
+        public float Elevation => Body == null ? transform.position.z : Body.position.z;
 
         private void Awake()
         {
             EnsureConfigured();
+        }
+
+        private void FixedUpdate()
+        {
+            if (Body == null)
+            {
+                ClearPendingMovement();
+                return;
+            }
+
+            Vector2 planarDelta = pendingPlanarDelta;
+            float elevationDelta = pendingElevationDelta;
+            ClearPendingMovement();
+
+            if (planarDelta.sqrMagnitude <= Mathf.Epsilon && Mathf.Abs(elevationDelta) <= Mathf.Epsilon)
+            {
+                return;
+            }
+
+            Vector3 next = Body.position;
+            next.x += planarDelta.x;
+            next.y += planarDelta.y;
+            if (!lockElevation)
+            {
+                next.z += elevationDelta;
+            }
+
+            Body.MovePosition(next);
+        }
+
+        private void OnDisable()
+        {
+            ClearPendingMovement();
         }
 
         public void EnsureConfigured()
@@ -54,10 +91,37 @@ namespace DemonKing.Gameplay.Characters
             CollisionVolume.isTrigger = false;
         }
 
+        public void QueuePlanarDelta(Vector2 delta)
+        {
+            pendingPlanarDelta += delta;
+        }
+
+        public void QueueElevationDelta(float delta)
+        {
+            if (!lockElevation)
+            {
+                pendingElevationDelta += delta;
+            }
+        }
+
+        public void SetElevationImmediate(float elevation)
+        {
+            pendingElevationDelta = 0f;
+            Body ??= GetComponent<Rigidbody>();
+            Vector3 position = Body.position;
+            position.z = elevation;
+            Body.position = position;
+        }
+
         public void SetElevationLocked(bool locked)
         {
             lockElevation = locked;
             Body ??= GetComponent<Rigidbody>();
+
+            if (locked)
+            {
+                pendingElevationDelta = 0f;
+            }
 
             RigidbodyConstraints constraints =
                 RigidbodyConstraints.FreezeRotationX |
@@ -69,6 +133,12 @@ namespace DemonKing.Gameplay.Characters
             }
 
             Body.constraints = constraints;
+        }
+
+        private void ClearPendingMovement()
+        {
+            pendingPlanarDelta = Vector2.zero;
+            pendingElevationDelta = 0f;
         }
     }
 }
