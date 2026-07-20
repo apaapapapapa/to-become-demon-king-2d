@@ -1,3 +1,24 @@
+## [1.8.0](https://github.com/apaapapapapa/to-become-demon-king-2d/compare/v1.7.0...v1.8.0) (2026-07-20)
+
+### Features
+
+* add character elevation motor ([97bdcc5](https://github.com/apaapapapapa/to-become-demon-king-2d/commit/97bdcc56a049e77087c3e2e83ef1d6b8a7205a75))
+* add jump and flight input actions ([c0ff1a7](https://github.com/apaapapapapa/to-become-demon-king-2d/commit/c0ff1a72a1cb030d588ee7e5c2b477c9446c86ee))
+* bind jump and flight controls ([49b0444](https://github.com/apaapapapapa/to-become-demon-king-2d/commit/49b0444f7ab96767f127bd34fc05fd59138521bd))
+* connect player input to elevation movement ([f126f45](https://github.com/apaapapapapa/to-become-demon-king-2d/commit/f126f45ad634ca65632b6ccee436af48c9bee4e7))
+* include elevation movement in player composition ([6c9ed34](https://github.com/apaapapapapa/to-become-demon-king-2d/commit/6c9ed344a4d276a3550b4a7726fb1156b7b454e1))
+* visualize character elevation ([b6b79c5](https://github.com/apaapapapapa/to-become-demon-king-2d/commit/b6b79c59798366fafea67057f7f3da6a4717c6c6))
+* wire player elevation movement and presentation ([b8f5fb6](https://github.com/apaapapapapa/to-become-demon-king-2d/commit/b8f5fb6fcd9ad175a8d5f84856788b48e1533805))
+
+### Bug Fixes
+
+* clear elevation velocity when locking height ([5a8da62](https://github.com/apaapapapapa/to-become-demon-king-2d/commit/5a8da62cdf36173ae374c0222a65dc77bf19bd7c))
+* keep base ground support explicit ([9eef515](https://github.com/apaapapapapa/to-become-demon-king-2d/commit/9eef515a17f98b17bb1a7868009bfcc843101087))
+* lock base ground after resetting move target ([a13986a](https://github.com/apaapapapapa/to-become-demon-king-2d/commit/a13986af51ac751234aacb99502eb68907377f1e))
+* overwrite queued move target when snapping elevation ([25aa144](https://github.com/apaapapapapa/to-become-demon-king-2d/commit/25aa144c9e8b0a0ddbb931bcc8066d914bae2f82))
+* separate logical ground elevation from physics contact pose ([7a1cdd3](https://github.com/apaapapapapa/to-become-demon-king-2d/commit/7a1cdd380ac5a61ef18477cf37dc5deaa0cdf47b))
+* snap elevation after locking ground position ([c98a457](https://github.com/apaapapapapa/to-become-demon-king-2d/commit/c98a457e83b888883793687948354fe58792a1d2))
+
 ## [1.7.0](https://github.com/apaapapapapa/to-become-demon-king-2d/compare/v1.6.0...v1.7.0) (2026-07-20)
 
 ### Features
