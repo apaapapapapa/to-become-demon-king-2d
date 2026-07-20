@@ -1,5 +1,6 @@
 using System;
 using DemonKing.Gameplay.Dialogue;
+using DemonKing.Gameplay.Dialogue.Configuration;
 using DemonKing.Gameplay.Interaction;
 using DemonKing.Presentation.Rendering;
 using UnityEngine;
@@ -8,22 +9,15 @@ namespace DemonKing.Field.Prototype
 {
     /// <summary>
     /// Interaction機能を確認するための試作NPCです。
-    /// 話しかけるたびに会話を進め、最終発言の次の入力で表示を閉じます。
-    /// 会話の進行位置はUnity非依存のLinearDialogueSequenceへ委譲します。
+    /// 会話コンテンツはDialogueDefinition、進行位置はLinearDialogueSequenceへ委譲し、
+    /// このComponentはInteractionと画面表示への橋渡しだけを担当します。
     /// </summary>
     [DisallowMultipleComponent]
     [RequireComponent(typeof(CircleCollider2D))]
     [RequireComponent(typeof(GroupYSorter))]
     public sealed class PrototypeNpcInteractable : MonoBehaviour, IInteractable
     {
-        [SerializeField] private string displayName = "見習い魔術師";
-        [SerializeField, TextArea(2, 4)]
-        private string[] dialogueTexts =
-        {
-            "魔王を目指しているの？",
-            "まずは訓練用スライムで腕試ししてみて。",
-            "攻撃は何度でも試せるよ。準備ができたら行ってみて。",
-        };
+        [SerializeField] private DialogueDefinition dialogueDefinition;
 
         private DialogueLog dialogueLog;
         private LinearDialogueSequence dialogueSequence;
@@ -31,9 +25,11 @@ namespace DemonKing.Field.Prototype
         public event Action Interacted;
         public event Action<GameObject> DialogueCompleted;
 
+        public string DialogueId => dialogueDefinition == null ? string.Empty : dialogueDefinition.DialogueId;
+
         private void Awake()
         {
-            dialogueSequence = new LinearDialogueSequence(dialogueTexts);
+            RebuildDialogueSequence();
 
             CircleCollider2D interactionCollider = GetComponent<CircleCollider2D>();
             interactionCollider.isTrigger = true;
@@ -61,6 +57,17 @@ namespace DemonKing.Field.Prototype
             dialogueLog = log;
         }
 
+        public void ConfigureDialogue(DialogueDefinition definition)
+        {
+            if (definition == null || !definition.IsConfigured)
+            {
+                throw new ArgumentException("NPCの会話定義が正しく設定されていません。", nameof(definition));
+            }
+
+            dialogueDefinition = definition;
+            RebuildDialogueSequence();
+        }
+
         public void Interact(GameObject interactor)
         {
             Interacted?.Invoke();
@@ -71,18 +78,31 @@ namespace DemonKing.Field.Prototype
                 return;
             }
 
-            dialogueSequence ??= new LinearDialogueSequence(dialogueTexts);
+            if (dialogueDefinition == null || !dialogueDefinition.IsConfigured)
+            {
+                Debug.LogWarning("会話定義が設定されていないため、NPCの発言を進行できません。", this);
+                return;
+            }
+
+            dialogueSequence ??= new LinearDialogueSequence(dialogueDefinition.Lines);
             if (!dialogueSequence.TryAdvance(out string dialogueText))
             {
                 dialogueLog.Clear();
                 dialogueSequence.Reset();
                 DialogueCompleted?.Invoke(interactor);
-                Debug.Log($"{displayName}との会話を終了しました。", this);
+                Debug.Log($"{dialogueDefinition.Speaker}との会話を終了しました。", this);
                 return;
             }
 
-            dialogueLog.ShowLine(displayName, dialogueText);
-            Debug.Log($"{displayName}：『{dialogueText}』", this);
+            dialogueLog.ShowLine(dialogueDefinition.Speaker, dialogueText);
+            Debug.Log($"{dialogueDefinition.Speaker}：『{dialogueText}』", this);
+        }
+
+        private void RebuildDialogueSequence()
+        {
+            dialogueSequence = dialogueDefinition != null && dialogueDefinition.IsConfigured
+                ? new LinearDialogueSequence(dialogueDefinition.Lines)
+                : null;
         }
 
         private void CreateVisuals()
