@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using DemonKing.Domain;
 
 namespace DemonKing.Gameplay.Content
 {
@@ -28,12 +29,21 @@ namespace DemonKing.Gameplay.Content
                         nameof(definitions));
                 }
 
-                if (!definitionsById.TryAdd(definition.ContentId, definition))
+                if (!StableContentId.IsValid(definition.ContentId))
+                {
+                    throw new ArgumentException(
+                        $"Stable Content IDが不正です: {definition.ContentId}",
+                        nameof(definitions));
+                }
+
+                if (definitionsById.ContainsKey(definition.ContentId))
                 {
                     throw new ArgumentException(
                         $"Stable Content IDが重複しています: {definition.ContentId}",
                         nameof(definitions));
                 }
+
+                definitionsById.Add(definition.ContentId, definition);
             }
         }
 
