@@ -1,8 +1,6 @@
 # セーブ仕様
 
-## 現在の状態
-
-保存先の具体実装は未着手ですが、Runtime Stateと保存形式を分離する境界は実装済みです。
+## 保存境界
 
 ```text
 CharacterProgressionState
@@ -12,48 +10,38 @@ PlayerSaveData
 GameSaveData
   ↓
 ISaveService
-  ↓ 将来
-Local / Cloud / Platform Storage
+  ↓
+Storage
 ```
-
-## 方針
 
 - Runtime StateをSave DTOとして直接使用しない。
 - Save DTOをGameplay実行状態として使用しない。
 - 変換ロジックはMapperへ集約する。
-- 保存先は `ISaveService` の外側へ置く。
+- 保存先の具体実装は `ISaveService` の外側へ置く。
 - Save Dataからコンテンツを参照するときはStable Content IDを使用する。
+
+レイヤー上の責務は [アーキテクチャ](../design/architecture.md#definition--runtime-state--save-dto) を参照してください。
 
 ## Art進捗
 
-Save Version 2から、`PlayerSaveData` にキャラクター単位のArt進捗を保持します。
+Save Version 2から `PlayerSaveData` にキャラクター単位のArt進捗を保持します。
 
 ```text
 artProgress[]
-  artId           // art.*
-  masteryPoints   // 累積値
+  artId
+  masteryPoints
 ```
 
 Art進捗レコードの存在を習得済みの意味とします。現在ランクと解放済みAbilityは `ArtDefinition` から導出するため保存しません。Art装備枠は設けないため、装備Artも保存しません。
 
-`GameSaveDataMigrator` がVersion 1のデータへ空の `artProgress` を補い、Version 2へ更新します。現在より新しいVersionやVersion 1より古いデータは拒否します。
+`GameSaveDataMigrator` がVersion 1のデータへ空の `artProgress` を補い、Version 2へ更新します。対応範囲外のVersionは拒否します。
 
 ## Skill取得状態
 
-取得済みSkillは `PlayerSaveData.unlockedSkillIds` に `skill.*` IDとして保存します。Skill ID欄はVersion 1から存在するため、受動Skill基盤の実装ではSave Versionを変更しません。補正結果やDefinition参照は保存せず、ロード後に再計算します。
+取得済みSkillは `PlayerSaveData.unlockedSkillIds` に `skill.*` IDとして保存します。補正結果やDefinition参照は保存せず、ロード後に再計算します。
 
 ## Evolution選択状態
 
-適用済みEvolution Nodeは `PlayerSaveData.unlockedEvolutionNodeIds` に `evolution.*` IDとして保存します。条件評価結果、排他グループ、補正値、Definition参照は保存しません。
+適用済みEvolution Nodeは `PlayerSaveData.unlockedEvolutionNodeIds` に `evolution.*` IDとして保存します。条件評価結果、排他グループ、補正値、Definition参照は保存せず、ロード後にDefinitionから再構築します。
 
-Evolution Node ID欄はVersion 1から存在するため、Evolution基盤の実装でもSave Versionを変更しません。ロード後は選択済みNodeの補正をDefinitionから再構築します。
-
-## 今後
-
-- ローカル保存実装
-- 自動保存タイミング
-- Save Slot
-- 一般的なVersion Migration基盤
-- 未知・削除済みコンテンツIDの扱い
-- Steam Cloud
-- コンソール向け保存
+現在の保存実装状況と今後の対象は [ロードマップ](../development/roadmap.md) を参照してください。
