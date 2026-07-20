@@ -1,33 +1,42 @@
+using DemonKing.Domain.Quests;
+using DemonKing.Gameplay.Combat;
 using DemonKing.Gameplay.Dialogue;
+using DemonKing.Gameplay.Events;
 using DemonKing.Gameplay.Progression;
 using DemonKing.Gameplay.Progression.Configuration;
+using DemonKing.Gameplay.Quests;
 using DemonKing.Gameplay.Rewards;
+using DemonKing.Gameplay.Spawning;
 using UnityEngine;
 
 namespace DemonKing.Field.Prototype
 {
     /// <summary>
     /// Prototype訓練エリア内のFeature間イベントを調停します。
-    /// NPC、Combat Dummy、Progression、Rewardの各実装は互いを直接参照せず、
+    /// NPC、Combat Dummy、Progression、Reward、Questの各実装は互いを直接参照せず、
     /// Composition層のこのCoordinatorだけがイベント配線と解除を担当します。
     /// </summary>
     internal sealed class PrototypeTrainingAreaCoordinator : MonoBehaviour
     {
         private PrototypeNpcInteractable npc;
-        private PrototypeCombatDummyRespawner dummyRespawner;
+        private SpawnLifecycle<PrototypeCombatDummy> dummyLifecycle;
         private ProgressionAcquisitionService acquisitionService;
         private ProgressionGrantDefinition trainingGrant;
         private DialogueLog dialogueLog;
         private RewardService rewardService;
+        private GameplayEventHub gameplayEventHub;
+        private QuestProgressionService questProgressionService;
         private bool initialized;
 
         public void Initialize(
             PrototypeNpcInteractable npc,
-            PrototypeCombatDummyRespawner dummyRespawner,
+            SpawnLifecycle<PrototypeCombatDummy> dummyLifecycle,
             ProgressionAcquisitionService acquisitionService,
             ProgressionGrantDefinition trainingGrant,
             DialogueLog dialogueLog,
-            RewardService rewardService)
+            RewardService rewardService,
+            GameplayEventHub gameplayEventHub,
+            QuestProgressionService questProgressionService)
         {
             if (initialized)
             {
@@ -36,15 +45,20 @@ namespace DemonKing.Field.Prototype
             }
 
             this.npc = npc;
-            this.dummyRespawner = dummyRespawner;
+            this.dummyLifecycle = dummyLifecycle;
             this.acquisitionService = acquisitionService;
             this.trainingGrant = trainingGrant;
             this.dialogueLog = dialogueLog;
             this.rewardService = rewardService;
+            this.gameplayEventHub = gameplayEventHub;
+            this.questProgressionService = questProgressionService;
 
             npc.Interacted += HandleNpcInteracted;
             npc.DialogueCompleted += HandleDialogueCompleted;
+            dummyLifecycle.Spawned += HandleDummySpawned;
             rewardService.RewardGranted += HandleRewardGranted;
+            gameplayEventHub.Published += questProgressionService.Handle;
+            questProgressionService.QuestCompleted += HandleQuestCompleted;
             initialized = true;
         }
 
@@ -61,15 +75,35 @@ namespace DemonKing.Field.Prototype
                 npc.DialogueCompleted -= HandleDialogueCompleted;
             }
 
+            if (dummyLifecycle != null)
+            {
+                dummyLifecycle.Spawned -= HandleDummySpawned;
+                PrototypeCombatDummy currentDummy = dummyLifecycle.Current;
+                if (currentDummy != null)
+                {
+                    currentDummy.Defeated -= HandleDummyDefeated;
+                }
+            }
+
             if (rewardService != null)
             {
                 rewardService.RewardGranted -= HandleRewardGranted;
+            }
+
+            if (gameplayEventHub != null && questProgressionService != null)
+            {
+                gameplayEventHub.Published -= questProgressionService.Handle;
+            }
+
+            if (questProgressionService != null)
+            {
+                questProgressionService.QuestCompleted -= HandleQuestCompleted;
             }
         }
 
         private void HandleNpcInteracted()
         {
-            dummyRespawner.SpawnOrRestore();
+            dummyLifecycle.SpawnOrRestore();
         }
 
         private void HandleDialogueCompleted(GameObject interactor)
@@ -80,6 +114,30 @@ namespace DemonKing.Field.Prototype
                 result.WasGranted
                     ? "火炎魔法を習得した！ Kキー／ゲームパッドYで火炎弾を放てる。"
                     : "火炎魔法はもう身についている。実戦で熟練を重ねよう。");
+
+            gameplayEventHub.Publish(new GameplayEvent(
+                GameplayEventIds.DialogueCompleted,
+                npc.DialogueId));
+        }
+
+        private void HandleDummySpawned(PrototypeCombatDummy dummy)
+        {
+            dummy.Defeated += HandleDummyDefeated;
+        }
+
+        private void HandleDummyDefeated(DefeatContext context)
+        {
+            PrototypeCombatDummy defeatedDummy = dummyLifecycle.Current;
+            if (defeatedDummy == null)
+            {
+                return;
+            }
+
+            defeatedDummy.Defeated -= HandleDummyDefeated;
+            gameplayEventHub.Publish(new GameplayEvent(
+                GameplayEventIds.EnemyDefeated,
+                defeatedDummy.ActorId));
+            dummyLifecycle.Forget(defeatedDummy);
         }
 
         private static void HandleRewardGranted(RewardGrantResult result)
@@ -92,6 +150,11 @@ namespace DemonKing.Field.Prototype
                 $"経験値を{result.GrantedExperience}獲得。" +
                 $" レベル {result.LevelUpResult.PreviousLevel} → {result.LevelUpResult.CurrentLevel}、" +
                 $"累積経験値 {result.LevelUpResult.CurrentExperience}{progressionSummary}");
+        }
+
+        private static void HandleQuestCompleted(QuestProgressState state)
+        {
+            Debug.Log($"クエスト達成: {state.QuestId}");
         }
     }
 }

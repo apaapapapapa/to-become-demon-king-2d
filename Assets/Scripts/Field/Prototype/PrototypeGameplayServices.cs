@@ -1,5 +1,9 @@
+using System.Collections.Generic;
 using DemonKing.Gameplay.Characters;
+using DemonKing.Gameplay.Events;
 using DemonKing.Gameplay.Progression;
+using DemonKing.Gameplay.Quests;
+using DemonKing.Gameplay.Quests.Configuration;
 using DemonKing.Gameplay.Rewards;
 using UnityEngine;
 
@@ -13,19 +17,28 @@ namespace DemonKing.Field.Prototype
     {
         public PrototypeGameplayServices(
             ProgressionAcquisitionService progressionAcquisitionService,
-            RewardService rewardService)
+            RewardService rewardService,
+            GameplayEventHub gameplayEventHub,
+            QuestProgressionService questProgressionService)
         {
             ProgressionAcquisitionService = progressionAcquisitionService;
             RewardService = rewardService;
+            GameplayEventHub = gameplayEventHub;
+            QuestProgressionService = questProgressionService;
         }
 
         public ProgressionAcquisitionService ProgressionAcquisitionService { get; }
         public RewardService RewardService { get; }
+        public GameplayEventHub GameplayEventHub { get; }
+        public QuestProgressionService QuestProgressionService { get; }
     }
 
     internal static class PrototypeGameplayServicesFactory
     {
-        public static bool TryCreate(GameObject player, out PrototypeGameplayServices services)
+        public static bool TryCreate(
+            GameObject player,
+            IEnumerable<QuestDefinition> questDefinitions,
+            out PrototypeGameplayServices services)
         {
             services = null;
             if (player == null)
@@ -52,7 +65,13 @@ namespace DemonKing.Field.Prototype
 
             var acquisitionService = new ProgressionAcquisitionService(artController, skillController);
             var rewardService = new RewardService(contextHost.Context, acquisitionService);
-            services = new PrototypeGameplayServices(acquisitionService, rewardService);
+            var gameplayEventHub = new GameplayEventHub();
+            var questProgressionService = new QuestProgressionService(questDefinitions);
+            services = new PrototypeGameplayServices(
+                acquisitionService,
+                rewardService,
+                gameplayEventHub,
+                questProgressionService);
             return true;
         }
     }

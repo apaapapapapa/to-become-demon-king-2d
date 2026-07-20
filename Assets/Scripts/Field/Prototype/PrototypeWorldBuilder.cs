@@ -50,14 +50,17 @@ namespace DemonKing.Field.Prototype
                 .Spawn(world);
 
             PrototypeGameplayServices gameplayServices = null;
-            if (PrototypeGameplayServicesFactory.TryCreate(player, out gameplayServices))
+            if (PrototypeGameplayServicesFactory.TryCreate(
+                    player,
+                    projectAssets.QuestDefinitions,
+                    out gameplayServices))
             {
                 new PrototypeGameplayFeatureInstaller().Install(
                     world,
-                    gameplayServices.RewardService,
+                    gameplayServices,
                     projectAssets.TrainingDummyReward,
-                    gameplayServices.ProgressionAcquisitionService,
                     projectAssets.FireMagicTrainingGrant,
+                    projectAssets.ApprenticeMageDialogue,
                     dialogueLog);
             }
 

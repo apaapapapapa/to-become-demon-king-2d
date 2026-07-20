@@ -14,6 +14,9 @@ MonoBehaviour:
   m_EditorClassIdentifier:
   applicationSettings: {fileID: 11400000, guid: 2e6b9d1f4a8c43e7b0d5f2196c3a7e84, type: 2}
   playerCharacter: {fileID: 11400000, guid: 1a1a71944c52407c875514f165112f28, type: 2}
+  apprenticeMageDialogue: {fileID: 11400000, guid: d140532d38964405895ec5747543a001, type: 2}
+  questDefinitions:
+  - {fileID: 11400000, guid: e240532d38964405895ec5747543a001, type: 2}
   trainingDummyReward: {fileID: 11400000, guid: e91e5cdb86114094aefa2a8a0a483030, type: 2}
   fireMagicTrainingGrant: {fileID: 11400000, guid: bf40532d38964405895ec5747543f003, type: 2}
   uiFont: {fileID: 12800000, guid: 0447c22bc17a1ab4888b6b3fa6f24fd3, type: 3}
