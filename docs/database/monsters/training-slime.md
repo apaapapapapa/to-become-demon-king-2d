@@ -9,32 +9,17 @@ relatedContentIds:
 
 # 訓練用スライム
 
-- Status: Prototype Only
-- Actor ID: `character.training_dummy`
-- Reward ID: `reward.training_dummy`
-- Runtime Composition: `PrototypeCombatDummyRespawner`
-
 ## 概要
 
-基本攻撃、撃破、報酬、Art熟練度などのシステム確認に使う訓練対象です。完成版の正式モンスターとは区別します。
+基本攻撃、撃破、報酬、Quest等のシステム確認に使うPrototype専用の訓練対象です。完成版の正式モンスターとは区別します。
 
 ## ゲームプレイ上の役割
 
 - 出現場所: はじまりの草原の訓練場所
 - 戦闘上の特徴: 移動や反撃を行わない
-- プレイヤーに要求する行動: Abilityを命中させ、撃破と成長接続を確認する
+- プレイヤーに要求する行動: Abilityを命中させ、撃破する
 
-## 復活と報酬
-
-撃破後、見習い魔術師へのInteractionで再生成します。生存中のInteractionでは同じ個体を全回復します。同一撃破に対する報酬は1回だけ付与します。
-
-## 進化・Skill・Art
-
-Prototype専用のため、進化、Skill、Artは持ちません。
-
-## 実装参照
-
-Runtime数値は `PrototypeCombatDummy` と `TrainingDummyReward.asset` を参照します。正式コンテンツ化するときは専用Character DefinitionとAIを追加します。
+再生成・復元の振る舞いは [Spawning仕様](../../specifications/spawning.md)、撃破と報酬の境界は [Feature間の責務境界](../../design/feature-boundaries.md#ability--combat--reward--progression) を参照してください。
 
 ## Stable Content IDでの関連
 
