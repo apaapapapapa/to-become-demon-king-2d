@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using DemonKing.Core.Math;
 using DemonKing.Gameplay.Abilities;
 using DemonKing.Gameplay.Abilities.Configuration;
 using DemonKing.Gameplay.Combat.Configuration;
@@ -28,6 +29,7 @@ namespace DemonKing.Gameplay.Combat
     /// <summary>
     /// ProjectileAttackDefinitionを移動する攻撃インスタンスへ変換します。
     /// Art習得状態や入力元を知らず、命中時は共通効果成立通知だけを返します。
+    /// Projectileは発射者のElevationを維持してX/Y平面を進み、命中判定には3D Physicsを使用します。
     /// </summary>
     [DisallowMultipleComponent]
     public sealed class ProjectileAttackExecutor : MonoBehaviour, IAbilityExecutor
@@ -59,7 +61,8 @@ namespace DemonKing.Gameplay.Combat
 
             var definition = (ProjectileAttackDefinition)request.Definition;
             Vector2 direction = request.Input.Direction;
-            Vector2 origin = (Vector2)request.User.transform.position + direction * 0.42f;
+            Vector3 origin = request.User.transform.position +
+                             FieldSpace3D.PlanarDelta(direction) * 0.42f;
             GameObject projectile = new($"Projectile: {definition.DisplayName}");
             projectile.transform.position = origin;
             ProjectileAttackInstance instance =
@@ -101,13 +104,15 @@ namespace DemonKing.Gameplay.Combat
     [DisallowMultipleComponent]
     public sealed class ProjectileAttackInstance : MonoBehaviour
     {
+        private const float GroundElevationTolerance = 0.001f;
+
         private readonly HashSet<IDamageable> checkedTargets = new();
         private AbilityExecutionRequest request;
         private ProjectileAttackDefinition definition;
         private LayerMask attackLayers;
         private AbilityController abilityController;
         private Vector2 direction;
-        private Vector2 origin;
+        private Vector3 origin;
         private int damage;
         private bool initialized;
         private bool resolved;
@@ -139,27 +144,29 @@ namespace DemonKing.Gameplay.Combat
             }
 
             float step = definition.Speed * Time.deltaTime;
-            Vector2 nextPosition = (Vector2)transform.position + direction * step;
+            Vector3 nextPosition = transform.position +
+                                   FieldSpace3D.PlanarDelta(direction) * step;
             if (TryHit(nextPosition))
             {
                 return;
             }
 
             transform.position = nextPosition;
-            TravelledDistance = Vector2.Distance(origin, nextPosition);
+            TravelledDistance = Vector3.Distance(origin, nextPosition);
             if (TravelledDistance >= definition.MaxDistance)
             {
                 Resolve(wasApplied: false);
             }
         }
 
-        private bool TryHit(Vector2 center)
+        private bool TryHit(Vector3 center)
         {
-            Collider2D[] colliders = Physics2D.OverlapCircleAll(
+            Collider[] colliders = Physics.OverlapSphere(
                 center,
                 definition.CollisionRadius,
-                attackLayers);
-            foreach (Collider2D collider in colliders)
+                attackLayers,
+                QueryTriggerInteraction.Collide);
+            foreach (Collider collider in colliders)
             {
                 if (collider == null ||
                     collider.transform.IsChildOf(request.User.transform))
@@ -167,29 +174,61 @@ namespace DemonKing.Gameplay.Combat
                     continue;
                 }
 
-                foreach (MonoBehaviour behaviour in
-                         collider.GetComponentsInParent<MonoBehaviour>(false))
+                if (TryResolveHit(collider.GetComponentsInParent<MonoBehaviour>(false)))
                 {
-                    if (behaviour is not IDamageable damageable ||
-                        !damageable.IsAlive ||
-                        !checkedTargets.Add(damageable))
+                    return true;
+                }
+            }
+
+            // 移行期間中の既存PlayModeテストや旧テストfixtureのみを支える地上互換です。
+            // Runtime ActorのCollider2DはCharacterPhysicsBody3Dで無効化されるため正式な命中判定は3D Queryです。
+            if (Mathf.Abs(center.z) <= GroundElevationTolerance)
+            {
+                Collider2D[] legacyColliders = Physics2D.OverlapCircleAll(
+                    FieldSpace3D.ToPlanar(center),
+                    definition.CollisionRadius,
+                    attackLayers);
+                foreach (Collider2D collider in legacyColliders)
+                {
+                    if (collider == null ||
+                        collider.transform.IsChildOf(request.User.transform))
                     {
                         continue;
                     }
 
-                    Health sourceHealth = request.User.GetComponent<Health>();
-                    var damageRequest = new DamageRequest(
-                        damage,
-                        request.User,
-                        sourceHealth == null ? string.Empty : sourceHealth.ActorId,
-                        definition.AbilityId,
-                        definition.DamageType,
-                        definition.DamageTags,
-                        request.ExecutionId);
-                    DamageResult result = damageable.ApplyDamage(damageRequest);
-                    Resolve(result.WasApplied);
-                    return true;
+                    if (TryResolveHit(collider.GetComponentsInParent<MonoBehaviour>(false)))
+                    {
+                        return true;
+                    }
                 }
+            }
+
+            return false;
+        }
+
+        private bool TryResolveHit(MonoBehaviour[] behaviours)
+        {
+            foreach (MonoBehaviour behaviour in behaviours)
+            {
+                if (behaviour is not IDamageable damageable ||
+                    !damageable.IsAlive ||
+                    !checkedTargets.Add(damageable))
+                {
+                    continue;
+                }
+
+                Health sourceHealth = request.User.GetComponent<Health>();
+                var damageRequest = new DamageRequest(
+                    damage,
+                    request.User,
+                    sourceHealth == null ? string.Empty : sourceHealth.ActorId,
+                    definition.AbilityId,
+                    definition.DamageType,
+                    definition.DamageTags,
+                    request.ExecutionId);
+                DamageResult result = damageable.ApplyDamage(damageRequest);
+                Resolve(result.WasApplied);
+                return true;
             }
 
             return false;

@@ -7,6 +7,7 @@ namespace DemonKing.Field.Prototype
     /// <summary>
     /// プロトタイプシーン内のIsometric Gridと各Tilemapへの参照をまとめます。
     /// シーンに不足がある場合は最小構成を補完し、Builder側がGameObject名探索を繰り返さないようにします。
+    /// Collision Tilemapは3D Collider生成用の配置マーカーとして扱います。
     /// </summary>
     internal sealed class PrototypeTilemapContext
     {
@@ -69,7 +70,7 @@ namespace DemonKing.Field.Prototype
             string sortingLayer,
             int sortingOrder,
             bool rendererEnabled,
-            bool collisionEnabled)
+            bool collisionMarker)
         {
             Transform child = grid.Find(name);
             GameObject tilemapObject;
@@ -100,9 +101,13 @@ namespace DemonKing.Field.Prototype
             renderer.sortingOrder = sortingOrder;
             renderer.enabled = rendererEnabled;
 
-            if (collisionEnabled && tilemapObject.GetComponent<TilemapCollider2D>() == null)
+            if (collisionMarker)
             {
-                tilemapObject.AddComponent<TilemapCollider2D>();
+                TilemapCollider2D legacyCollider = tilemapObject.GetComponent<TilemapCollider2D>();
+                if (legacyCollider != null)
+                {
+                    legacyCollider.enabled = false;
+                }
             }
 
             return tilemap;

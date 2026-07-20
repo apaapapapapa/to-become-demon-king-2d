@@ -11,17 +11,16 @@ namespace DemonKing.Field
 {
     /// <summary>
     /// 既存のPrototype Player Prefabとの互換性を保つため、主要コンポーネントをRequireComponentで束ねる薄いマーカーです。
-    /// ゲームプレイロジックは持たず、入力、移動、Interaction、Combat、物理、描画、アニメーションの実処理は各担当コンポーネントへ委譲します。
+    /// ゲームプレイロジックは持たず、入力、平面移動、Interaction、Combat、3D物理、描画、アニメーションの実処理は各担当コンポーネントへ委譲します。
     /// </summary>
     [RequireComponent(typeof(PlayerInputReader))]
     [RequireComponent(typeof(MoveInputReader))]
-    [RequireComponent(typeof(CharacterMotor2D))]
+    [RequireComponent(typeof(CharacterPlanarMotor))]
+    [RequireComponent(typeof(CharacterPhysicsBody3D))]
     [RequireComponent(typeof(PlayerInteractor))]
     [RequireComponent(typeof(AbilityController))]
     [RequireComponent(typeof(PlayerAbilityInput))]
     [RequireComponent(typeof(MeleeAttackExecutor))]
-    [RequireComponent(typeof(Rigidbody2D))]
-    [RequireComponent(typeof(CircleCollider2D))]
     [RequireComponent(typeof(CharacterSquashAnimator))]
     [RequireComponent(typeof(GroupYSorter))]
     [RequireComponent(typeof(PrototypeSlimeSpriteAnimator))]

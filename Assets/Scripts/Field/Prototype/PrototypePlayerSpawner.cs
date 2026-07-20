@@ -58,6 +58,14 @@ namespace DemonKing.Field.Prototype
                 root.AddComponent<SlimeController>();
             }
 
+            CharacterPhysicsBody3D physicsBody = root.GetComponent<CharacterPhysicsBody3D>();
+            if (physicsBody == null)
+            {
+                physicsBody = root.AddComponent<CharacterPhysicsBody3D>();
+            }
+
+            physicsBody.EnsureConfigured();
+
             PrototypeSlimeSpriteAnimator spriteAnimator =
                 root.GetComponent<PrototypeSlimeSpriteAnimator>();
             if (spriteAnimator == null)
@@ -66,12 +74,14 @@ namespace DemonKing.Field.Prototype
                 spriteAnimator = root.AddComponent<PrototypeSlimeSpriteAnimator>();
             }
 
-            CharacterMotor2D motor = root.GetComponent<CharacterMotor2D>();
-            if (motor != null)
+            CharacterPlanarMotor motor = root.GetComponent<CharacterPlanarMotor>();
+            if (motor == null)
             {
-                motor.Configure(characterDefinition.StatsDefinition);
-                motor.DisableBounds();
+                motor = root.AddComponent<CharacterPlanarMotor>();
             }
+
+            motor.Configure(characterDefinition.StatsDefinition);
+            motor.DisableBounds();
 
             Health health = root.GetComponent<Health>();
             if (health == null)
@@ -157,10 +167,10 @@ namespace DemonKing.Field.Prototype
                 root.AddComponent<PrototypeProjectileAttackEffect>();
             }
 
-            CharacterDodge2D dodge = root.GetComponent<CharacterDodge2D>();
+            CharacterDodge dodge = root.GetComponent<CharacterDodge>();
             if (dodge == null)
             {
-                dodge = root.AddComponent<CharacterDodge2D>();
+                dodge = root.AddComponent<CharacterDodge>();
             }
 
             dodge.Configure(characterDefinition.DodgeDefinition);

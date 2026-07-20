@@ -11,7 +11,7 @@ namespace DemonKing.Field.Prototype
     /// HPと死亡判定は汎用Healthへ委譲し、このクラスは試作表示と結果ログだけを担当します。
     /// </summary>
     [DisallowMultipleComponent]
-    [RequireComponent(typeof(CircleCollider2D))]
+    [RequireComponent(typeof(SphereCollider))]
     [RequireComponent(typeof(GroupYSorter))]
     [RequireComponent(typeof(Health))]
     public sealed class PrototypeCombatDummy : MonoBehaviour
@@ -32,10 +32,10 @@ namespace DemonKing.Field.Prototype
             health = GetComponent<Health>();
             health.ConfigureCombatIdentity(actorId, rewardDefinitionId);
 
-            CircleCollider2D hitCollider = GetComponent<CircleCollider2D>();
+            SphereCollider hitCollider = GetComponent<SphereCollider>();
             hitCollider.isTrigger = true;
             hitCollider.radius = 0.48f;
-            hitCollider.offset = new Vector2(0f, 0.24f);
+            hitCollider.center = new Vector3(0f, 0.24f, 0.48f);
 
             if (GetComponentInChildren<SpriteRenderer>(includeInactive: true) == null)
             {

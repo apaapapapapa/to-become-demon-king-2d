@@ -6,6 +6,7 @@ namespace DemonKing.Field.Prototype
     /// <summary>
     /// プロジェクト管理のインポート済み地形Spriteから、実行時に使用するTileオブジェクトだけを生成します。
     /// Texture2DやSprite自体は生成せず、描画データは外部から渡されたSprite参照を正とします。
+    /// Collision Tileは3D Collider生成位置を示すマーカーであり、2D Colliderは生成しません。
     /// </summary>
     internal sealed class PrototypeRuntimeTileFactory
     {
@@ -24,7 +25,7 @@ namespace DemonKing.Field.Prototype
 
         public Tile GrassTile => grassTile ??= CreateVisualTile("草地タイル", grassSprite);
         public Tile PathTile => pathTile ??= CreateVisualTile("小道タイル", pathSprite);
-        public Tile CollisionTile => collisionTile ??= CreateCollisionTile();
+        public Tile CollisionTile => collisionTile ??= CreateCollisionMarkerTile();
 
         private static Tile CreateVisualTile(string name, Sprite sprite)
         {
@@ -37,14 +38,14 @@ namespace DemonKing.Field.Prototype
             return tile;
         }
 
-        private static Tile CreateCollisionTile()
+        private static Tile CreateCollisionMarkerTile()
         {
             Tile tile = ScriptableObject.CreateInstance<Tile>();
-            tile.name = "衝突タイル";
+            tile.name = "衝突マーカータイル";
             tile.sprite = null;
             tile.color = Color.clear;
             tile.flags = TileFlags.None;
-            tile.colliderType = Tile.ColliderType.Grid;
+            tile.colliderType = Tile.ColliderType.None;
             return tile;
         }
     }
