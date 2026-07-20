@@ -13,7 +13,7 @@ namespace DemonKing.Field.Prototype
     /// このComponentはInteractionと画面表示への橋渡しだけを担当します。
     /// </summary>
     [DisallowMultipleComponent]
-    [RequireComponent(typeof(CircleCollider2D))]
+    [RequireComponent(typeof(SphereCollider))]
     [RequireComponent(typeof(GroupYSorter))]
     public sealed class PrototypeNpcInteractable : MonoBehaviour, IInteractable
     {
@@ -31,10 +31,10 @@ namespace DemonKing.Field.Prototype
         {
             RebuildDialogueSequence();
 
-            CircleCollider2D interactionCollider = GetComponent<CircleCollider2D>();
+            SphereCollider interactionCollider = GetComponent<SphereCollider>();
             interactionCollider.isTrigger = true;
             interactionCollider.radius = 0.55f;
-            interactionCollider.offset = new Vector2(0f, 0.35f);
+            interactionCollider.center = new Vector3(0f, 0.35f, 0.55f);
 
             if (GetComponentInChildren<SpriteRenderer>(includeInactive: true) == null)
             {
