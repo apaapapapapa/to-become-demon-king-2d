@@ -12,6 +12,7 @@ namespace DemonKing.EditorTools
     /// <summary>
     /// Prototypeシーンの基礎構造をEditor上で再生成する補助ツールです。
     /// 既存のPrototype.unityを作り直すため、手作業でシーンを編集した後に実行する場合は保存差分を確認してください。
+    /// Collision Tilemapは配置マーカーで、実際の衝突体積はRuntimeで3D Colliderとして生成します。
     /// </summary>
     public static class IsometricPrototypeSceneBuilder
     {
@@ -91,11 +92,6 @@ namespace DemonKing.EditorTools
             renderer.sortingOrder = sortingOrder;
             renderer.mode = mode;
             renderer.enabled = visible;
-
-            if (name == "Collision")
-            {
-                tilemapObject.AddComponent<TilemapCollider2D>();
-            }
         }
 
         private static void CreateBootstrap()
