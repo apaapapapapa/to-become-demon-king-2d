@@ -5,7 +5,7 @@ namespace DemonKing.Gameplay.Characters
     /// <summary>
     /// キャラクターの3D Physics本体と、1 FixedUpdate内の移動合成を担当します。
     /// X/Yはフィールド平面、ZはElevationとして扱います。
-    /// Planar / Dodge / Elevationの各MotorはRigidbody.MovePositionを直接呼ばず、このComponentへ移動量を要求します。
+    /// Planar / Dodge / Elevationの各MotorはRigidbodyを直接移動せず、このComponentへ移動量を要求します。
     /// </summary>
     [DefaultExecutionOrder(1000)]
     [DisallowMultipleComponent]
@@ -43,29 +43,23 @@ namespace DemonKing.Gameplay.Characters
                 return;
             }
 
-            Vector2 planarDelta = pendingPlanarDelta;
-            float elevationDelta = pendingElevationDelta;
+            float fixedDeltaTime = Mathf.Max(Time.fixedDeltaTime, Mathf.Epsilon);
+            Vector3 velocity = Body.linearVelocity;
+            velocity.x = pendingPlanarDelta.x / fixedDeltaTime;
+            velocity.y = pendingPlanarDelta.y / fixedDeltaTime;
+            velocity.z = lockElevation ? 0f : pendingElevationDelta / fixedDeltaTime;
+            Body.linearVelocity = velocity;
+
             ClearPendingMovement();
-
-            if (planarDelta.sqrMagnitude <= Mathf.Epsilon && Mathf.Abs(elevationDelta) <= Mathf.Epsilon)
-            {
-                return;
-            }
-
-            Vector3 next = Body.position;
-            next.x += planarDelta.x;
-            next.y += planarDelta.y;
-            if (!lockElevation)
-            {
-                next.z += elevationDelta;
-            }
-
-            Body.MovePosition(next);
         }
 
         private void OnDisable()
         {
             ClearPendingMovement();
+            if (Body != null)
+            {
+                Body.linearVelocity = Vector3.zero;
+            }
         }
 
         public void EnsureConfigured()
@@ -74,6 +68,8 @@ namespace DemonKing.Gameplay.Characters
             CollisionVolume = GetComponent<CapsuleCollider>();
 
             Body.useGravity = false;
+            Body.linearDamping = 0f;
+            Body.angularDamping = 0f;
             Body.interpolation = RigidbodyInterpolation.Interpolate;
             SetElevationLocked(lockElevation);
 
@@ -112,11 +108,7 @@ namespace DemonKing.Gameplay.Characters
 
             Vector3 position = Body.position;
             position.z = elevation;
-
-            // 直前のMovePosition予約が次のPhysics stepで再適用されないよう、
-            // 現在Poseと次回移動ターゲットの両方を同じElevationへ揃えます。
             Body.position = position;
-            Body.MovePosition(position);
         }
 
         public void SetElevationLocked(bool locked)
