@@ -1,12 +1,13 @@
 using System.Collections.Generic;
 using DemonKing.Core.Input;
+using DemonKing.Core.Math;
 using UnityEngine;
 
 namespace DemonKing.Gameplay.Interaction
 {
     /// <summary>
-    /// プレイヤーのInteract入力を受け取り、近傍で最も近いIInteractableへ相互作用を委譲します。
-    /// 対象ごとの会話や調査ロジックは持たず、探索と実行だけを担当します。
+    /// プレイヤーのInteract入力を受け取り、3D Physics空間の近傍で最も近いIInteractableへ相互作用を委譲します。
+    /// X/Yをフィールド平面、ZをElevationとして扱うため、高さが離れた対象は自然に検索範囲外になります。
     /// </summary>
     [DisallowMultipleComponent]
     [RequireComponent(typeof(PlayerInputReader))]
@@ -53,14 +54,18 @@ namespace DemonKing.Gameplay.Interaction
 
         private IInteractable FindNearestInteractable()
         {
-            Vector2 center = (Vector2)transform.position + interactionOffset;
-            Collider2D[] colliders = Physics2D.OverlapCircleAll(center, interactionRadius, interactionLayers);
+            Vector3 center = transform.position + FieldSpace3D.PlanarDelta(interactionOffset);
+            Collider[] colliders = Physics.OverlapSphere(
+                center,
+                interactionRadius,
+                interactionLayers,
+                QueryTriggerInteraction.Collide);
 
             visited.Clear();
             IInteractable nearest = null;
             float nearestDistance = float.PositiveInfinity;
 
-            foreach (Collider2D collider in colliders)
+            foreach (Collider collider in colliders)
             {
                 if (collider == null || collider.transform.IsChildOf(transform))
                 {
@@ -70,8 +75,7 @@ namespace DemonKing.Gameplay.Interaction
                 MonoBehaviour[] behaviours = collider.GetComponentsInParent<MonoBehaviour>(false);
                 foreach (MonoBehaviour behaviour in behaviours)
                 {
-                    IInteractable interactable = behaviour as IInteractable;
-                    if (interactable == null || !visited.Add(interactable))
+                    if (behaviour is not IInteractable interactable || !visited.Add(interactable))
                     {
                         continue;
                     }
@@ -81,7 +85,7 @@ namespace DemonKing.Gameplay.Interaction
                         continue;
                     }
 
-                    float distance = ((Vector2)behaviour.transform.position - center).sqrMagnitude;
+                    float distance = (behaviour.transform.position - center).sqrMagnitude;
                     if (distance >= nearestDistance)
                     {
                         continue;
@@ -98,7 +102,9 @@ namespace DemonKing.Gameplay.Interaction
 #if UNITY_EDITOR
         private void OnDrawGizmosSelected()
         {
-            Gizmos.DrawWireSphere((Vector2)transform.position + interactionOffset, interactionRadius);
+            Gizmos.DrawWireSphere(
+                transform.position + FieldSpace3D.PlanarDelta(interactionOffset),
+                interactionRadius);
         }
 #endif
     }
