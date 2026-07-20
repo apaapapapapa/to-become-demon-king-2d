@@ -1,4 +1,5 @@
 using DemonKing.Core.Application;
+using DemonKing.Gameplay.Dialogue;
 using DemonKing.Presentation.UI;
 using UnityEngine;
 using UnityEngine.UI;
@@ -11,7 +12,10 @@ namespace DemonKing.Field.Prototype
     /// </summary>
     internal static class PrototypeUiInstaller
     {
-        public static GameObject Create(Font uiFont, GamePauseController pauseController)
+        public static GameObject Create(
+            Font uiFont,
+            GamePauseController pauseController,
+            DialogueLog dialogueLog)
         {
             GameObject uiRoot = new("UI Root", typeof(RectTransform));
 
@@ -30,6 +34,9 @@ namespace DemonKing.Field.Prototype
 
             GameHudView hudView = uiRoot.AddComponent<GameHudView>();
             hudView.Initialize(uiFont);
+
+            DialogueLogView dialogueLogView = uiRoot.AddComponent<DialogueLogView>();
+            dialogueLogView.Initialize(uiFont, dialogueLog);
 
             PauseMenuView pauseMenuView = uiRoot.AddComponent<PauseMenuView>();
             pauseMenuView.Initialize(uiFont, pauseController);

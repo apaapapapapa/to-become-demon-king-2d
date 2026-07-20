@@ -1,3 +1,4 @@
+using DemonKing.Gameplay.Dialogue;
 using DemonKing.Gameplay.Interaction;
 using DemonKing.Presentation.Rendering;
 using UnityEngine;
@@ -6,7 +7,7 @@ namespace DemonKing.Field.Prototype
 {
     /// <summary>
     /// Interaction機能を確認するための試作NPCです。
-    /// 会話システム導入前のため、現在は相互作用結果をConsoleへ出力します。
+    /// 会話システム導入前のため、現在は固定発言をセッション内の会話ログへ追加します。
     /// </summary>
     [DisallowMultipleComponent]
     [RequireComponent(typeof(CircleCollider2D))]
@@ -14,6 +15,10 @@ namespace DemonKing.Field.Prototype
     public sealed class PrototypeNpcInteractable : MonoBehaviour, IInteractable
     {
         [SerializeField] private string displayName = "見習い魔術師";
+        [SerializeField, TextArea(2, 4)]
+        private string dialogueText = "魔王を目指しているの？ まずは訓練用スライムで腕試ししてみて。";
+
+        private DialogueLog dialogueLog;
 
         private void Awake()
         {
@@ -38,9 +43,23 @@ namespace DemonKing.Field.Prototype
             return enabled && gameObject.activeInHierarchy && interactor != null;
         }
 
+        public void ConfigureDialogueLog(DialogueLog log)
+        {
+            dialogueLog = log;
+        }
+
         public void Interact(GameObject interactor)
         {
-            Debug.Log($"{displayName}：『魔王を目指しているの？ まずは訓練用スライムで腕試ししてみて。』", this);
+            if (dialogueLog == null)
+            {
+                Debug.LogWarning("会話ログが設定されていないため、NPCの発言を画面へ表示できません。", this);
+            }
+            else
+            {
+                dialogueLog.AddLine(displayName, dialogueText);
+            }
+
+            Debug.Log($"{displayName}：『{dialogueText}』", this);
         }
 
         private void CreateVisuals()

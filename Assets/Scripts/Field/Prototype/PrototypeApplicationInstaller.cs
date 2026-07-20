@@ -1,6 +1,7 @@
 using DemonKing.Core.Application;
 using DemonKing.Core.Input;
 using DemonKing.Field.Prototype.Configuration;
+using DemonKing.Gameplay.Dialogue;
 using UnityEngine;
 
 namespace DemonKing.Field.Prototype
@@ -30,10 +31,12 @@ namespace DemonKing.Field.Prototype
             PrototypeSceneConfigurator.Configure(Camera.main);
             PrototypeSortingConfigurator.Configure();
 
+            var dialogueLog = new DialogueLog(capacity: 4);
             PrototypeWorldBuildResult worldResult = new PrototypeWorldBuilder(
                     settings.PlayerSpawnPosition,
                     settings.PlayableTileRadius,
-                    projectAssets)
+                    projectAssets,
+                    dialogueLog)
                 .Build();
 
             GameObject applicationRoot = new("Application Runtime");
@@ -49,7 +52,7 @@ namespace DemonKing.Field.Prototype
             }
 
             pauseController.Initialize(inputReader, settings.PausedTimeScale);
-            PrototypeUiInstaller.Create(projectAssets.UiFont, pauseController);
+            PrototypeUiInstaller.Create(projectAssets.UiFont, pauseController, dialogueLog);
             return applicationRoot;
         }
     }

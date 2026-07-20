@@ -113,6 +113,8 @@ ISaveService
 
 `PlayerInteractor` は `IInteractable` のみに依存し、NPC、扉、宝箱などの固有処理を知りません。
 
+Prototype NPCの固定発言は `DialogueLog` が直近4件を保持し、`DialogueLogView` がuGUIへ表示します。Interactionは発言内容や表示階層へ依存しません。
+
 ## Pause / UI
 
 `GamePauseController` がTimeScaleとInput Contextを管理し、`PauseMenuView` は表示だけを担当します。本番UI基盤はCanvas（uGUI）です。
