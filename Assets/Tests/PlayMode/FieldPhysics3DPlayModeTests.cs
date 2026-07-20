@@ -34,12 +34,14 @@ namespace DemonKing.Tests.PlayMode
                 Is.False);
 
             Object.Destroy(actor);
+            yield return null;
         }
 
         [UnityTest]
         public IEnumerator CharacterElevationMotor_Jumpで上昇して地面へ着地する()
         {
             GameObject actor = new("Jump Actor");
+            actor.transform.position = new Vector3(100f, 100f, 0f);
             CharacterElevationMotor elevationMotor = actor.AddComponent<CharacterElevationMotor>();
             yield return null;
 
@@ -64,18 +66,20 @@ namespace DemonKing.Tests.PlayMode
             Assert.That(elevationMotor.VerticalVelocity, Is.Zero.Within(0.001f));
 
             Object.Destroy(actor);
+            yield return null;
         }
 
         [UnityTest]
         public IEnumerator Flight_建物上端を超えた高度で有限高さColliderを横断できる()
         {
             GameObject building = new("Height Aware Building");
+            building.transform.position = new Vector3(200f, 0f, 0f);
             BoxCollider buildingCollider = building.AddComponent<BoxCollider>();
             buildingCollider.center = new Vector3(0f, 0f, 2f);
             buildingCollider.size = new Vector3(2f, 2f, 4f);
 
             GameObject actor = new("Flying Actor");
-            actor.transform.position = new Vector3(-2f, 0f, 0f);
+            actor.transform.position = new Vector3(198f, 0f, 0f);
             CharacterElevationMotor elevationMotor = actor.AddComponent<CharacterElevationMotor>();
             Rigidbody body = actor.GetComponent<Rigidbody>();
             yield return null;
@@ -93,7 +97,7 @@ namespace DemonKing.Tests.PlayMode
 
             Physics.SyncTransforms();
             Collider[] aerialHits = Physics.OverlapSphere(
-                new Vector3(0f, 0f, elevationMotor.Elevation + 0.36f),
+                new Vector3(200f, 0f, elevationMotor.Elevation + 0.36f),
                 0.3f,
                 ~0,
                 QueryTriggerInteraction.Collide);
@@ -107,11 +111,12 @@ namespace DemonKing.Tests.PlayMode
                 yield return new WaitForFixedUpdate();
             }
 
-            Assert.That(body.position.x, Is.GreaterThan(1.5f));
+            Assert.That(body.position.x, Is.GreaterThan(201.5f));
             Assert.That(elevationMotor.Elevation, Is.GreaterThan(4f));
 
             Object.Destroy(actor);
             Object.Destroy(building);
+            yield return null;
         }
 
         [UnityTest]
@@ -139,6 +144,7 @@ namespace DemonKing.Tests.PlayMode
             Assert.That(aerialHits.Contains(buildingCollider), Is.False);
 
             Object.Destroy(building);
+            yield return null;
         }
     }
 }
