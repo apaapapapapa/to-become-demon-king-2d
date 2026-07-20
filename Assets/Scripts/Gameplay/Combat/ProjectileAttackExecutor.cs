@@ -104,8 +104,6 @@ namespace DemonKing.Gameplay.Combat
     [DisallowMultipleComponent]
     public sealed class ProjectileAttackInstance : MonoBehaviour
     {
-        private const float GroundElevationTolerance = 0.001f;
-
         private readonly HashSet<IDamageable> checkedTargets = new();
         private AbilityExecutionRequest request;
         private ProjectileAttackDefinition definition;
@@ -177,29 +175,6 @@ namespace DemonKing.Gameplay.Combat
                 if (TryResolveHit(collider.GetComponentsInParent<MonoBehaviour>(false)))
                 {
                     return true;
-                }
-            }
-
-            // 移行期間中の既存PlayModeテストや旧テストfixtureのみを支える地上互換です。
-            // Runtime ActorのCollider2DはCharacterPhysicsBody3Dで無効化されるため正式な命中判定は3D Queryです。
-            if (Mathf.Abs(center.z) <= GroundElevationTolerance)
-            {
-                Collider2D[] legacyColliders = Physics2D.OverlapCircleAll(
-                    FieldSpace3D.ToPlanar(center),
-                    definition.CollisionRadius,
-                    attackLayers);
-                foreach (Collider2D collider in legacyColliders)
-                {
-                    if (collider == null ||
-                        collider.transform.IsChildOf(request.User.transform))
-                    {
-                        continue;
-                    }
-
-                    if (TryResolveHit(collider.GetComponentsInParent<MonoBehaviour>(false)))
-                    {
-                        return true;
-                    }
                 }
             }
 
