@@ -30,7 +30,7 @@ namespace DemonKing.Gameplay.Quests
     }
 
     /// <summary>
-    /// GameplayEventをQuest DefinitionのObjective条件へ照合し、Domain Stateだけを更新します。
+    /// Questの受注と、GameplayEventによるObjective進捗を管理します。
     /// Combat、Dialogue、NPCなどイベント発生元の実装には依存しません。
     /// </summary>
     public sealed class QuestProgressionService
@@ -53,14 +53,32 @@ namespace DemonKing.Gameplay.Quests
                 StringComparer.Ordinal);
         }
 
+        public event Action<QuestProgressState> QuestAccepted;
         public event Action<QuestProgressUpdate> ProgressChanged;
         public event Action<QuestProgressState> QuestCompleted;
 
+        public IReadOnlyCollection<QuestDefinition> Definitions => definitions.Values;
         public IReadOnlyCollection<QuestProgressState> States => states.Values;
+
+        public bool TryGetDefinition(string questId, out QuestDefinition definition)
+        {
+            return definitions.TryGetValue(questId ?? string.Empty, out definition);
+        }
 
         public bool TryGetState(string questId, out QuestProgressState state)
         {
             return states.TryGetValue(questId ?? string.Empty, out state);
+        }
+
+        public bool AcceptQuest(string questId)
+        {
+            if (!TryGetState(questId, out QuestProgressState state) || !state.Accept())
+            {
+                return false;
+            }
+
+            QuestAccepted?.Invoke(state);
+            return true;
         }
 
         public void Handle(GameplayEvent gameplayEvent)
@@ -68,7 +86,10 @@ namespace DemonKing.Gameplay.Quests
             foreach (QuestDefinition definition in definitions.Values)
             {
                 QuestProgressState state = states[definition.QuestId];
-                bool wasQuestCompleted = state.IsCompleted;
+                if (!state.IsActive)
+                {
+                    continue;
+                }
 
                 foreach (QuestObjectiveDefinition objectiveDefinition in definition.Objectives)
                 {
@@ -84,7 +105,7 @@ namespace DemonKing.Gameplay.Quests
                         continue;
                     }
 
-                    bool questCompletedNow = !wasQuestCompleted && state.IsCompleted;
+                    bool questCompletedNow = state.TryComplete();
                     ProgressChanged?.Invoke(new QuestProgressUpdate(
                         definition.QuestId,
                         objectiveDefinition.ObjectiveId,
@@ -95,7 +116,6 @@ namespace DemonKing.Gameplay.Quests
                     if (questCompletedNow)
                     {
                         QuestCompleted?.Invoke(state);
-                        wasQuestCompleted = true;
                     }
                 }
             }
