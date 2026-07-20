@@ -10,6 +10,7 @@ using DemonKing.Gameplay.Combat;
 using DemonKing.Gameplay.Combat.Configuration;
 using DemonKing.Gameplay.Progression;
 using DemonKing.Gameplay.Progression.Configuration;
+using DemonKing.Gameplay.Modifiers;
 using DemonKing.Gameplay.Rewards;
 using DemonKing.Presentation.CameraSystem;
 using NUnit.Framework;
@@ -325,6 +326,73 @@ namespace DemonKing.Tests.PlayMode
         }
 
         [UnityTest]
+        public IEnumerator 受動Skill_与ダメージとクールダウンとArt熟練度を補正する()
+        {
+            MeleeAttackDefinition ability = CreateMeleeAbility(
+                "ability.art.test.skill_slash",
+                "Skill補正斬り");
+            SetPrivateField(ability, "cooldownSeconds", 2f);
+            ArtDefinition artDefinition = CreateSingleAbilityArtDefinition(ability);
+            SkillDefinition skillDefinition = CreateSkillDefinition(
+                ability.AbilityId,
+                artDefinition.ArtId);
+
+            GameObject attacker = new("Passive Skill Test User");
+            attacker.transform.position = new Vector3(200f, 200f, 0f);
+            attacker.AddComponent<MeleeAttackExecutor>();
+            AbilityController abilityController = attacker.AddComponent<AbilityController>();
+            abilityController.Configure(Array.Empty<AbilityDefinition>());
+
+            CharacterProgressionState progressionState =
+                CharacterProgressionState.CreateInitial("character.test.skill_user");
+            SkillProgressionController skillController =
+                attacker.AddComponent<SkillProgressionController>();
+            skillController.Initialize(progressionState, new[] { skillDefinition });
+            Assert.That(skillController.Unlock(skillDefinition.SkillId).Succeeded, Is.True);
+            Assert.That(
+                skillController.Unlock(skillDefinition.SkillId).Status,
+                Is.EqualTo(SkillUnlockStatus.AlreadyUnlocked));
+
+            ArtProgressionController artController =
+                attacker.AddComponent<ArtProgressionController>();
+            artController.Initialize(progressionState, new[] { artDefinition });
+            Assert.That(artController.Learn(artDefinition.ArtId).Succeeded, Is.True);
+
+            Vector2 attackCenter = (Vector2)attacker.transform.position +
+                                   Vector2.down * ability.AttackDistance;
+            GameObject target = CreateDamageTarget("Passive Skill Target", attackCenter);
+            Health health = target.GetComponent<Health>();
+            health.ConfigureMaxHealth(10);
+
+            yield return null;
+            Physics2D.SyncTransforms();
+
+            AbilityUseResult result = abilityController.TryUse(
+                ability.AbilityId,
+                attacker,
+                new AbilityExecutionInput(Vector2.down));
+
+            Assert.That(result.Succeeded, Is.True);
+            Assert.That(health.CurrentHealth, Is.EqualTo(8));
+            Assert.That(
+                abilityController.TryGetRuntimeState(ability.AbilityId, out AbilityRuntimeState state),
+                Is.True);
+            Assert.That(state.CooldownRemaining, Is.EqualTo(1f).Within(0.001f));
+            Assert.That(
+                progressionState.TryGetArtProgress(
+                    artDefinition.ArtId,
+                    out ArtProgressState artProgress),
+                Is.True);
+            Assert.That(artProgress.MasteryPoints, Is.EqualTo(2));
+
+            Object.Destroy(attacker);
+            Object.Destroy(target);
+            Object.Destroy(ability);
+            Object.Destroy(artDefinition);
+            Object.Destroy(skillDefinition);
+        }
+
+        [UnityTest]
         public IEnumerator CameraFollow2D_ターゲットへ追従しZ座標を維持する()
         {
             GameObject cameraObject = new("Camera Follow Test");
@@ -387,6 +455,56 @@ namespace DemonKing.Tests.PlayMode
                 definition,
                 "abilityUnlocks",
                 new[] { initialUnlock, derivedUnlock });
+            Assert.That(definition.IsConfigured, Is.True);
+            return definition;
+        }
+
+        private static ArtDefinition CreateSingleAbilityArtDefinition(
+            AbilityDefinition ability)
+        {
+            var unlock = new ArtAbilityUnlockEntry();
+            SetPrivateField(unlock, "abilityDefinition", ability);
+            SetPrivateField(unlock, "requiredRank", 1);
+            SetPrivateField(unlock, "masteryPointsPerEffectiveUse", 1L);
+
+            ArtDefinition definition = ScriptableObject.CreateInstance<ArtDefinition>();
+            SetPrivateField(definition, "artId", "art.sword.skill_test");
+            SetPrivateField(definition, "displayName", "Skill補正試験Art");
+            SetPrivateField(definition, "cumulativeMasteryPointsByRank", new long[] { 0 });
+            SetPrivateField(definition, "abilityUnlocks", new[] { unlock });
+            Assert.That(definition.IsConfigured, Is.True);
+            return definition;
+        }
+
+        private static SkillDefinition CreateSkillDefinition(
+            string abilityId,
+            string artId)
+        {
+            var damage = new SkillModifierEntry();
+            SetPrivateField(damage, "target", SkillModifierTarget.OutgoingDamage);
+            SetPrivateField(damage, "operation", SkillModifierOperation.AddFlat);
+            SetPrivateField(damage, "value", 1f);
+            SetPrivateField(damage, "targetContentId", abilityId);
+
+            var cooldown = new SkillModifierEntry();
+            SetPrivateField(cooldown, "target", SkillModifierTarget.AbilityCooldown);
+            SetPrivateField(cooldown, "operation", SkillModifierOperation.AddRate);
+            SetPrivateField(cooldown, "value", -0.5f);
+            SetPrivateField(cooldown, "targetContentId", abilityId);
+
+            var mastery = new SkillModifierEntry();
+            SetPrivateField(mastery, "target", SkillModifierTarget.ArtMasteryGain);
+            SetPrivateField(mastery, "operation", SkillModifierOperation.AddFlat);
+            SetPrivateField(mastery, "value", 1f);
+            SetPrivateField(mastery, "targetContentId", artId);
+
+            SkillDefinition definition = ScriptableObject.CreateInstance<SkillDefinition>();
+            SetPrivateField(definition, "skillId", "skill.test.passive_modifiers");
+            SetPrivateField(definition, "displayName", "受動補正試験");
+            SetPrivateField(
+                definition,
+                "modifiers",
+                new[] { damage, cooldown, mastery });
             Assert.That(definition.IsConfigured, Is.True);
             return definition;
         }

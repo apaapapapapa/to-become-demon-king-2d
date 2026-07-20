@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using DemonKing.Gameplay.Abilities;
 using DemonKing.Gameplay.Abilities.Configuration;
 using DemonKing.Gameplay.Combat.Configuration;
+using DemonKing.Gameplay.Modifiers;
 using UnityEngine;
 
 namespace DemonKing.Gameplay.Combat
@@ -50,7 +51,7 @@ namespace DemonKing.Gameplay.Combat
                 attackLayers);
             Health sourceHealth = user.GetComponent<Health>();
             var damageRequest = new DamageRequest(
-                definition.Damage,
+                ResolveDamage(user, definition),
                 user,
                 sourceHealth == null ? string.Empty : sourceHealth.ActorId,
                 definition.AbilityId,
@@ -95,6 +96,22 @@ namespace DemonKing.Gameplay.Combat
                 hitCount));
 
             return AbilityExecutionResult.Completed;
+        }
+
+        private static int ResolveDamage(GameObject user, AbilityDefinition definition)
+        {
+            NumericModifier modifier = NumericModifier.Identity;
+            MonoBehaviour[] behaviours = user.GetComponents<MonoBehaviour>();
+            foreach (MonoBehaviour behaviour in behaviours)
+            {
+                if (behaviour is IOutgoingDamageModifierSource source)
+                {
+                    modifier = modifier.Combine(
+                        source.GetOutgoingDamageModifier(definition));
+                }
+            }
+
+            return modifier.Apply(((MeleeAttackDefinition)definition).Damage);
         }
     }
 }

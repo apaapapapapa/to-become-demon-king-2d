@@ -61,6 +61,12 @@ Art成長側がAbility IDから所属Artを逆引きし、同じ使用者とExec
 
 `DamageTags.Art` は従来の `DamageTags.Skill` と同じビット値を維持します。`Skill` はObsoleteな互換Aliasとし、新規実装では使用しません。受動Skillによる補正は攻撃の発生元を意味しないため、Skillタグとして付与しません。
 
+## 受動補正
+
+`MeleeAttackExecutor` は使用者上の `IOutgoingDamageModifierSource` を集約し、補正後の値を `DamageRequest` へ渡します。補正取得元はSkillに限定せず、Executorは取得済みSkill IDを直接参照しません。現在の正式Skill `skill.combat.predatory_instinct` はこの境界を通じて与ダメージへ作用します。
+
+受けるダメージ、属性、耐性への補正は未実装です。
+
 ## Reward接続
 
 `RewardService` は `DefeatContext` と `RewardDefinition` を使って報酬を適用します。現在は訓練用ダミー撃破からプレイヤーの経験値加算まで接続済みです。
@@ -74,6 +80,6 @@ Art成長側がAbility IDから所属Artを逆引きし、同じ使用者とExec
 - ノックバック
 - 攻撃アニメーション同期
 - 回復、バフ、デバフなど非ダメージ効果の成立通知
-- 受動Skillによる戦闘補正
+- 受動Skillによる被ダメージ・属性・耐性補正
 - ドロップ
 - 属性・耐性

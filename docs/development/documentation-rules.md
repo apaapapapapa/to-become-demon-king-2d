@@ -53,6 +53,10 @@ Knowledge Baseを正にする情報:
 
 関連情報は相互リンクします。Monster、Evolution、Art、Skill、Story、Unity Definitionを孤立させません。
 
+Monster、Art、Skill、Evolutionのコンテンツページはfrontmatterへ `contentId`、`contentType`、`status`、`relatedContentIds` を記載します。`relatedContentIds` は相手側にも自分のIDを記載し、双方向にします。
+
+VitePress Data Loaderがカテゴリ一覧と関連リンクを生成し、ビルド時にStable Content IDの重複、存在しない参照、片方向参照を拒否します。Runtime数値はfrontmatterへ複製しません。
+
 ## 変更同期
 
 仕様の意味が変わる実装変更では同じPRで関連ドキュメントを確認します。機械的な更新は強制せず、実装と説明が乖離する場合に更新します。

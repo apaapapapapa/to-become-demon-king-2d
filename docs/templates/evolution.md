@@ -1,3 +1,11 @@
+---
+title: 進化系列名
+contentId: evolution.category.name
+contentType: evolution
+status: Draft
+relatedContentIds: []
+---
+
 # 進化系列名
 
 - Status: Draft

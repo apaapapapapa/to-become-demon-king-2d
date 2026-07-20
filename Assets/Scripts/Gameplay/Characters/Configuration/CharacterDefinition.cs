@@ -19,6 +19,7 @@ namespace DemonKing.Gameplay.Characters.Configuration
         [SerializeField] private CharacterStatsDefinition statsDefinition;
         [SerializeField] private AbilityDefinition[] abilityDefinitions = Array.Empty<AbilityDefinition>();
         [SerializeField] private ArtDefinition[] artDefinitions = Array.Empty<ArtDefinition>();
+        [SerializeField] private SkillDefinition[] skillDefinitions = Array.Empty<SkillDefinition>();
         [SerializeField] private DodgeDefinition dodgeDefinition;
         [SerializeField] private ExperienceTableDefinition experienceTableDefinition;
 
@@ -28,6 +29,8 @@ namespace DemonKing.Gameplay.Characters.Configuration
         public IReadOnlyList<AbilityDefinition> AbilityDefinitions => abilityDefinitions;
         public IReadOnlyList<ArtDefinition> ArtDefinitions =>
             artDefinitions ?? Array.Empty<ArtDefinition>();
+        public IReadOnlyList<SkillDefinition> SkillDefinitions =>
+            skillDefinitions ?? Array.Empty<SkillDefinition>();
         public DodgeDefinition DodgeDefinition => dodgeDefinition;
         public ExperienceTableDefinition ExperienceTableDefinition => experienceTableDefinition;
 
@@ -76,6 +79,20 @@ namespace DemonKing.Gameplay.Characters.Configuration
                             {
                                 return false;
                             }
+                        }
+                    }
+                }
+
+                var skillIds = new HashSet<string>(StringComparer.Ordinal);
+                if (skillDefinitions != null)
+                {
+                    foreach (SkillDefinition definition in skillDefinitions)
+                    {
+                        if (definition == null ||
+                            !definition.IsConfigured ||
+                            !skillIds.Add(definition.SkillId))
+                        {
+                            return false;
                         }
                     }
                 }

@@ -1,6 +1,6 @@
 # Art仕様
 
-- Status: Foundation Implemented / No Content Registered
+- Status: Foundation Implemented / Planned Content Page Registered
 
 ## 用語と責務
 
@@ -131,12 +131,13 @@ Save Version 2でArt進捗を追加しました。既存のSave Version 1は `Ga
 - Save DTO Version 2とVersion 1からのMigration
 - `DamageTags.Art` と旧 `DamageTags.Skill` の互換Alias
 
-正式なArtコンテンツ、Art固有の入力割当・UI、訓練や報酬など具体的な習得元は未実装です。回復、バフ、デバフなども通知型は利用できますが、各Executorからの効果成立通知は今後接続します。
+`IArtMasteryModifierSource` による受動Skillの熟練ポイント補正まで接続済みです。正式Runtime Artコンテンツ、Art固有の入力割当・UI、訓練や報酬など具体的な習得元は未実装です。火炎魔法はKnowledge Base上の計画ページだけを登録しています。回復、バフ、デバフなども通知型は利用できますが、各Executorからの効果成立通知は今後接続します。
 
 ## 関連仕様
 
 - [Ability仕様](./ability.md)
 - [成長仕様](./progression.md)
+- [Skill仕様](./skill.md)
 - [戦闘仕様](./combat.md)
 - [セーブ仕様](./save.md)
 - [Art一覧](../database/arts/)
