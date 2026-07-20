@@ -31,7 +31,7 @@ namespace DemonKing.Field.Prototype
             PrototypeSceneConfigurator.Configure(Camera.main);
             PrototypeSortingConfigurator.Configure();
 
-            var dialogueLog = new DialogueLog(capacity: 4);
+            var dialogueLog = new DialogueLog();
             PrototypeWorldBuildResult worldResult = new PrototypeWorldBuilder(
                     settings.PlayerSpawnPosition,
                     settings.PlayableTileRadius,

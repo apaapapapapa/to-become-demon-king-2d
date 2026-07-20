@@ -6,21 +6,35 @@ namespace DemonKing.Tests.EditMode
     public sealed class DialogueLogTests
     {
         [Test]
-        public void DialogueLog_容量を超えると古い発言から削除する()
+        public void DialogueLog_新しい発言で表示中の1件を置き換える()
         {
-            var dialogueLog = new DialogueLog(capacity: 2);
+            var dialogueLog = new DialogueLog();
             int notifiedCount = 0;
-            dialogueLog.LineAdded += line => notifiedCount++;
+            dialogueLog.Changed += () => notifiedCount++;
 
-            dialogueLog.AddLine("NPC A", "最初の発言");
-            dialogueLog.AddLine("NPC B", "二番目の発言");
-            DialogueLine latest = dialogueLog.AddLine("NPC C", "最新の発言");
+            dialogueLog.ShowLine("NPC A", "最初の発言");
+            DialogueLine latest = dialogueLog.ShowLine("NPC B", "最新の発言");
 
-            Assert.That(dialogueLog.Lines.Count, Is.EqualTo(2));
-            Assert.That(dialogueLog.Lines[0].Speaker, Is.EqualTo("NPC B"));
-            Assert.That(dialogueLog.Lines[1].Text, Is.EqualTo("最新の発言"));
-            Assert.That(latest.Speaker, Is.EqualTo("NPC C"));
-            Assert.That(notifiedCount, Is.EqualTo(3));
+            Assert.That(dialogueLog.HasCurrentLine, Is.True);
+            Assert.That(dialogueLog.CurrentLine?.Speaker, Is.EqualTo("NPC B"));
+            Assert.That(dialogueLog.CurrentLine?.Text, Is.EqualTo("最新の発言"));
+            Assert.That(latest.Speaker, Is.EqualTo("NPC B"));
+            Assert.That(notifiedCount, Is.EqualTo(2));
+        }
+
+        [Test]
+        public void DialogueLog_Clearで表示中の発言を削除する()
+        {
+            var dialogueLog = new DialogueLog();
+            int notifiedCount = 0;
+            dialogueLog.Changed += () => notifiedCount++;
+
+            dialogueLog.ShowLine("NPC", "表示中の発言");
+            dialogueLog.Clear();
+
+            Assert.That(dialogueLog.HasCurrentLine, Is.False);
+            Assert.That(dialogueLog.CurrentLine, Is.Null);
+            Assert.That(notifiedCount, Is.EqualTo(2));
         }
 
         [Test]

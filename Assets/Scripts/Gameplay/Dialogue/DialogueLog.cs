@@ -1,10 +1,9 @@
 using System;
-using System.Collections.Generic;
 
 namespace DemonKing.Gameplay.Dialogue
 {
     /// <summary>
-    /// 画面表示や話者のGameObjectに依存しない、1件の会話ログです。
+    /// 画面表示や話者のGameObjectに依存しない、1件の会話です。
     /// </summary>
     public readonly struct DialogueLine
     {
@@ -21,34 +20,35 @@ namespace DemonKing.Gameplay.Dialogue
     }
 
     /// <summary>
-    /// 現在のプレイセッションで表示する直近の会話を保持します。
-    /// 会話分岐や入力制御は持たず、発言履歴と表示更新通知だけを担当します。
+    /// 現在画面に表示する1件の会話を保持します。
+    /// 会話分岐や入力制御は持たず、表示状態と更新通知だけを担当します。
     /// </summary>
     public sealed class DialogueLog
     {
-        private readonly List<DialogueLine> lines = new();
+        private DialogueLine? currentLine;
 
-        public DialogueLog(int capacity = 4)
-        {
-            Capacity = Math.Max(1, capacity);
-        }
+        public event Action Changed;
 
-        public event Action<DialogueLine> LineAdded;
+        public bool HasCurrentLine => currentLine.HasValue;
+        public DialogueLine? CurrentLine => currentLine;
 
-        public int Capacity { get; }
-        public IReadOnlyList<DialogueLine> Lines => lines;
-
-        public DialogueLine AddLine(string speaker, string text)
+        public DialogueLine ShowLine(string speaker, string text)
         {
             var line = new DialogueLine(speaker, text);
-            if (lines.Count >= Capacity)
+            currentLine = line;
+            Changed?.Invoke();
+            return line;
+        }
+
+        public void Clear()
+        {
+            if (!currentLine.HasValue)
             {
-                lines.RemoveAt(0);
+                return;
             }
 
-            lines.Add(line);
-            LineAdded?.Invoke(line);
-            return line;
+            currentLine = null;
+            Changed?.Invoke();
         }
     }
 }
