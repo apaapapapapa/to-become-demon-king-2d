@@ -8,13 +8,11 @@ relatedContentIds: []
 
 # Skill名
 
-- Status: Draft
-- Skill ID: `skill.category.name`
-- Unity Definition: `Assets/...`
+Unity Definition: `Assets/...`
 
 ## 概要
 
-受動成長としての役割を記載する。能動行動はArtまたは生得Abilityへ分離する。
+このSkillのゲームプレイ上・世界観上の役割を記載する。
 
 ## 効果の意味
 
@@ -23,13 +21,12 @@ relatedContentIds: []
 - 発動条件:
 - 制約:
 
-具体的な補正値はUnity Definitionを正とし、このページへ複製しない。
+補正方式やRuntimeルールを再掲せず、[Skill仕様](../specifications/skill.md) を参照する。
 
 ## 習得
 
 - 主な習得経路:
 - 条件の意味:
-- 関連する報酬・アイテム・Evolution:
 
 ## 関連リンク
 
@@ -38,3 +35,5 @@ relatedContentIds: []
 - Evolution:
 - Items:
 - Quests:
+
+frontmatterのメタデータ規則は [ドキュメント規約](../development/documentation-rules.md) を参照する。

@@ -9,4 +9,4 @@
 - `skill.md`: 受動Skillコンテンツ
 - `adr.md`: Architecture Decision Record
 
-テンプレートをコピーした後、未使用の見出しは削除して構いません。Runtime数値をMarkdownへ二重管理せず、必要に応じてUnity DefinitionやStable Content IDへの参照を記載してください。
+テンプレート利用時も [ドキュメント規約](../development/documentation-rules.md) の情報所有ルールに従い、他文書が所有する情報は再掲せずリンクします。

@@ -1,66 +1,102 @@
 # ドキュメント規約
 
+## 原則
+
+同じ情報を複数の文書へ本文として複製しません。情報には必ず1つの所有文書を決め、他の文書から参照したい場合は所有文書へのリンクだけを置きます。
+
+例外はADRです。ADRは判断当時のContext / Decision / Consequencesを履歴として固定します。現在の仕様や実装状態はADRではなく、下表の所有文書を正とします。
+
+## 情報の所有場所
+
+| 情報 | 所有場所 |
+| --- | --- |
+| ゲームの目的、体験、ゲームプレイの柱 | `docs/game/vision.md` |
+| 現在の実装状況、次の開発優先度、将来候補 | `docs/development/roadmap.md` |
+| ドキュメント配置、Source of Truth、命名、リンク規約 | この文書 |
+| レイヤー責務、依存方向、Composition、Platform境界 | `docs/design/architecture.md` |
+| Unityの基準環境、起動方式、Scene、UI、Resources、Editor、テスト方式 | `docs/design/technical-design.md` |
+| Ability / Art / Skill / Evolution等の概念境界、Feature間の接続規則 | `docs/design/feature-boundaries.md` |
+| 個別Featureのゲーム上・Runtime上の振る舞い | `docs/specifications/` の各仕様書 |
+| 物語固有の設定 | `docs/story/` |
+| 世界固有の設定 | `docs/world/` |
+| コンテンツ固有の役割、意味、関係 | `docs/database/` の各コンテンツページ |
+| 長期的な設計判断の理由と履歴 | `docs/decisions/` |
+| AIが読むべき実装・仕様・テストへの索引 | `docs/ai/context-map.md` |
+| AIエージェント固有の作業手順 | ルートの `AGENTS.md` |
+| リリース運用 | `docs/development/release.md` |
+
 ## 配置
 
 ```text
 docs/
+  ai/               AI向け参照索引
   game/             ゲームビジョン
-  design/           アーキテクチャ・技術設計
-  specifications/   実装と同期する仕様
-  story/            ストーリー・キャラクター・クエスト
-  world/            世界設定
-  database/         モンスター・進化・アイテム・アーツ・スキル
-  development/      開発運用
+  design/           アーキテクチャ、技術設計、Feature間境界
+  specifications/   個別Featureの振る舞い
+  story/            ストーリー、キャラクター、会話の物語情報
+  world/            場所、勢力、歴史、世界固有ルール
+  database/         コンテンツの人間向け索引
+  development/      ロードマップ、リリース、ドキュメント運用
   decisions/        ADR
-  templates/        テンプレート
+  templates/        コンテンツ文書、ADRのテンプレート
 ```
 
-`docs/` 直下へ新しいMarkdownを無秩序に追加しません。
-
-## 命名
-
-- 原則 `kebab-case.md`
-- ADRは `ADR-0001-title.md`
-- 1ファイル1責務
+`docs/` 直下へ新しいMarkdownを追加せず、上表の所有責務に合う場所へ配置します。
 
 ## Source of Truth
 
-Unity側を正にする情報:
+| 情報 | Source of Truth |
+| --- | --- |
+| コンパイルされる処理 | C#コード |
+| Scene / Prefab / Input Actions | Unityアセット |
+| 静的Definition、バランス値、Asset参照 | ScriptableObject Definition |
+| プレイ中の可変状態 | Domain / Runtime State |
+| 保存形式 | Save DTO |
+| ゲームビジョン、物語、世界設定、仕様の意味、設計判断 | 対応するKnowledge Base所有文書 |
+| 自動検証内容 | テストコード |
 
-- ScriptableObject DefinitionのRuntime数値
-- Input Action Binding
-- Scene / Prefab
-- Package / Project Settings
+Runtime数値やUnityアセットの値をMarkdownへ複製しません。Knowledge Baseには意味、制約、責務、安定ID、参照先だけを記載します。
 
-Domain側を正にする情報:
+## コンテンツfrontmatter
 
-- プレイ中に変化するRuntime Stateのルール
-- Save DTO
+Monster、Art、Skill、Evolution等のコンテンツページでは、次のメタデータはfrontmatterだけを正とします。本文へ同じ値を再掲しません。
 
-Knowledge Baseを正にする情報:
+- `title`
+- `contentId`
+- `contentType`
+- `status`
+- `relatedContentIds`
 
-- ゲームビジョン
-- 世界観・物語意図
-- 仕様の意味と制約
-- 設計判断
-- 開発方針
+`relatedContentIds` は相手側にも自分のIDを記載し、双方向にします。VitePress Data LoaderがID重複、存在しない参照、片方向参照を検証します。
 
-## 状態
+Stable Content IDは表示名やAsset名から独立させます。一度Save Dataやコンテンツ間参照へ使用したIDは、表示名変更やAsset移動だけを理由に変更しません。
 
-未確定情報には `Draft`、`Proposed`、`Accepted`、`Deprecated` などの状態を明記します。
+## 状態と将来計画
+
+プロジェクト全体の「実装済み」「次に実装する」「将来候補」は `roadmap.md` だけに記載します。
+
+仕様書や設計書では、そのFeatureを理解するために必要な現在の振る舞いは記載できますが、「現在の実装範囲」一覧や「今後」一覧を持ちません。必要な場合はロードマップへリンクします。
+
+コンテンツ単位の状態は各ページのfrontmatter `status` を正とします。
 
 ## リンク
 
-関連情報は相互リンクします。Monster、Evolution、Art、Skill、Story、Unity Definitionを孤立させません。
+別の所有文書にある説明を引用・要約して再掲せず、その説明へリンクします。
 
-Monster、Art、Skill、Evolutionのコンテンツページはfrontmatterへ `contentId`、`contentType`、`status`、`relatedContentIds` を記載します。`relatedContentIds` は相手側にも自分のIDを記載し、双方向にします。
+- Feature間の責務境界を仕様書で再説明しない。`feature-boundaries.md` へリンクする。
+- Save形式をArt / Skill / Evolution仕様へ再掲しない。`save.md` へリンクする。
+- Input Bindingを各Feature仕様へ再掲しない。`input.md` へリンクする。
+- 実装状況を設計書や仕様書へ再掲しない。`roadmap.md` へリンクする。
+- Source of Truth表をREADMEや各カテゴリページへ再掲しない。この文書へリンクする。
 
-VitePress Data Loaderがカテゴリ一覧と関連リンクを生成し、ビルド時にStable Content IDの重複、存在しない参照、片方向参照を拒否します。Runtime数値はfrontmatterへ複製しません。
+## 命名
+
+- Markdownファイル名は原則 `kebab-case.md`。
+- ADRは `ADR-0001-title.md` 形式。
+- 1ファイル1責務を基本とする。
 
 ## 変更同期
 
-仕様の意味が変わる実装変更では同じPRで関連ドキュメントを確認します。機械的な更新は強制せず、実装と説明が乖離する場合に更新します。
+仕様の意味が変わる実装変更では、その情報を所有する文書だけを更新します。参照元はリンク先が変わらない限り更新しません。
 
-## 履歴
-
-現在の設計は本文へ、重要な意思決定履歴はADRへ記録します。
+長期的な設計判断を変更する場合は、現在の所有文書を更新し、判断理由をADRへ記録します。

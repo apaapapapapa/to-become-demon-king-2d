@@ -12,9 +12,7 @@ relatedContentIds:
 
 # 火炎魔法
 
-- Status: Runtime Implemented
-- Art ID: `art.magic.fire`
-- Unity Definition: `Assets/Resources/Settings/Gameplay/FireMagicArt.asset`
+Unity Definition: `Assets/Resources/Settings/Gameplay/FireMagicArt.asset`
 
 ## 概要
 
@@ -22,21 +20,15 @@ relatedContentIds:
 
 ## 習得
 
-- 主な習得経路: 見習い魔術師との訓練会話を最後まで進める
-- 条件の意味: 魔力を外部へ放出する制御を身につけること
-- 関連Evolution: `evolution.slime.arcane` はこのArtの熟練ランクを条件として参照する
+見習い魔術師との訓練を通じ、魔力を外部へ放出する制御を身につけるArtとして位置づけます。
 
-## Ability解放
+## Ability
 
-| 解放段階 | Ability ID | 役割 |
-| --- | --- | --- |
-| 習得時 | `ability.magic.fire_bolt` | 単体への遠距離攻撃 |
+| Ability ID | 役割 |
+| --- | --- |
+| `ability.magic.fire_bolt` | 単体への遠距離攻撃 |
 
-火炎弾は `K` / Gamepad Button Northで使用し、命中したExecutionごとに熟練します。上位ランク用の追加Abilityは今後のコンテンツタスクです。Definitionの閾値、威力、クールダウンはUnityをSource of Truthとします。
-
-## Skillとの関係
-
-Art熟練補正を持つSkillの対象になり得ます。Skillは火炎Abilityそのものを所有・実行しません。
+Artの習得、熟練、Ability解放のRuntimeルールは [Art仕様](../../specifications/art.md)、具体的なInput Bindingは [入力仕様](../../specifications/input.md) を参照してください。
 
 ## 世界観
 

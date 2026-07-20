@@ -1,10 +1,9 @@
 # 開発
 
-開発の進め方とKnowledge Base運用を管理します。
+- [ロードマップ](./roadmap.md): 現在の実装状況と開発優先度
+- [リリース運用](./release.md): リリース自動化とバージョン運用
+- [ドキュメント規約](./documentation-rules.md): 情報の所有場所、Source of Truth、配置、リンク規約
 
-- [ロードマップ](./roadmap.md)
-- [リリース運用](./release.md)
-- [ドキュメント規約](./documentation-rules.md)
-- [AI開発ガイド](./ai-development.md)
+実装詳細は [設計](../design/)、長期的な設計判断の理由は [ADR](../decisions/) を参照してください。
 
-実装詳細は `design/`、長期的な設計判断は `decisions/` に分離します。
+AIエージェント向けの入口はリポジトリルートの `AGENTS.md`、実装参照索引は `docs/ai/context-map.md` です。

@@ -11,17 +11,17 @@ relatedContentIds:
 
 # 覇王捕食スライム
 
-- Status: Runtime Implemented
-- Evolution Node ID: `evolution.slime.apex_predator`
-- Unity Definition: `Assets/Resources/Settings/Gameplay/ApexPredatorSlimeEvolution.asset`
+Unity Definition: `Assets/Resources/Settings/Gameplay/ApexPredatorSlimeEvolution.asset`
 
 ## 概要
 
-捕食系Tier 1の身体能力を極限まで研ぎ澄ませる上位Evolutionです。前提Node、レベル、捕食者の本能を条件とし、近接中心の与ダメージをさらに伸ばします。
+捕食系Tier 1の身体能力を極限まで研ぎ澄ませる上位Evolutionです。近接中心の戦闘スタイルをさらに強化する経路として位置づけます。
 
 ## 形態
 
-大きな棘冠と装甲状の稜線を持つ専用2フレームSprite Sheetを使用します。具体的な条件値、補正値、表示倍率はUnity DefinitionをSource of Truthとします。
+大きな棘冠と装甲状の稜線を持つ専用2フレームSprite Sheetを使用します。
+
+条件、補正、排他ルールは [Evolution仕様](../../specifications/evolution.md) を参照してください。
 
 ## Stable Content IDでの関連
 

@@ -26,18 +26,22 @@ export default defineConfig({
       '/design/': [{ text: '設計', items: [
         { text: '概要', link: '/design/' },
         { text: 'アーキテクチャ', link: '/design/architecture' },
-        { text: '技術設計', link: '/design/technical-design' }
+        { text: '技術設計', link: '/design/technical-design' },
+        { text: 'Feature間の責務境界', link: '/design/feature-boundaries' }
       ] }],
       '/specifications/': [{ text: '仕様', items: [
         { text: '仕様書一覧', link: '/specifications/' },
         { text: '入力', link: '/specifications/input' },
+        { text: 'Interaction', link: '/specifications/interaction' },
+        { text: 'Dialogue', link: '/specifications/dialogue' },
         { text: 'Ability', link: '/specifications/ability' },
+        { text: '戦闘', link: '/specifications/combat' },
         { text: 'Art', link: '/specifications/art' },
         { text: 'Skill', link: '/specifications/skill' },
         { text: 'Evolution', link: '/specifications/evolution' },
-        { text: '戦闘', link: '/specifications/combat' },
-        { text: 'インタラクション', link: '/specifications/interaction' },
         { text: '成長', link: '/specifications/progression' },
+        { text: 'Quest', link: '/specifications/quest' },
+        { text: 'Spawning', link: '/specifications/spawning' },
         { text: 'セーブ', link: '/specifications/save' }
       ] }],
       '/story/': [{ text: 'ストーリー', items: [
@@ -64,8 +68,7 @@ export default defineConfig({
         { text: '概要', link: '/development/' },
         { text: 'ロードマップ', link: '/development/roadmap' },
         { text: 'リリース運用', link: '/development/release' },
-        { text: 'ドキュメント規約', link: '/development/documentation-rules' },
-        { text: 'AI開発ガイド', link: '/development/ai-development' }
+        { text: 'ドキュメント規約', link: '/development/documentation-rules' }
       ] }],
       '/decisions/': [{ text: 'Architecture Decision Records', items: [
         { text: 'ADR一覧', link: '/decisions/' },
@@ -75,7 +78,7 @@ export default defineConfig({
       ] }]
     },
     socialLinks: [
-      { icon: 'github', link: 'https://github.com/apaapapapa/to-become-demon-king-2d' }
+      { icon: 'github', link: 'https://github.com/apaapapapapa/to-become-demon-king-2d' }
     ],
     search: { provider: 'local' },
     outline: { level: [2, 3], label: 'このページ' },

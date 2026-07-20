@@ -1,10 +1,9 @@
 # アイテム一覧
 
-アイテムの役割、入手方法、用途、関連クエストや進化条件を管理します。
+アイテムごとの役割、入手方法、用途、関連コンテンツを管理します。
 
-- Stable Content IDを持たせる。
-- Runtime数値はUnity側のDefinitionを正とする。
-- 物語上重要なアイテムは `story/` から参照する。
-- 進化条件に使う場合は `database/evolutions/` と相互リンクする。
+コンテンツページの共通メタデータ規則とRuntime値のSource of Truthは [ドキュメント規約](../../development/documentation-rules.md) を参照してください。
 
-現在、正式なアイテムデータは未登録です。
+## 登録ページ
+
+<ContentCatalog content-type="item" />

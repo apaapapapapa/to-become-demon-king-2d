@@ -1,10 +1,8 @@
 # 機能名 仕様
 
-- Status: Draft
-
 ## 目的
 
-この機能がプレイヤー体験上なぜ必要か。
+この機能がプレイヤー体験またはRuntime上なぜ必要か。
 
 ## 対象範囲
 
@@ -36,23 +34,10 @@ Start
 
 - 
 
-## Source of Truth
-
-- Unity Definition:
-- Domain Runtime State:
-- Save DTO:
-
-## 関連実装
-
-- Scripts:
-- Tests:
-
 ## 関連ドキュメント
 
-- Architecture:
-- Technical Design:
-- Story / World:
+- Feature間の接続がある場合: `docs/design/feature-boundaries.md`
+- 保存対象がある場合: `docs/specifications/save.md`
+- Input Bindingがある場合: `docs/specifications/input.md`
 
-## 未実装
-
-- 
+実装ファイルとテストの索引は `docs/ai/context-map.md`、実装状況と将来計画は `docs/development/roadmap.md` に記載し、この仕様書へ重複させない。

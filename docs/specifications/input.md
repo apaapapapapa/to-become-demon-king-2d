@@ -31,8 +31,10 @@ GameplayとUIを同時に有効化しません。Pause開始時はUI、Resume時
 
 Evolutionメニューを開くとUI Contextへ切り替えて時間を停止し、確定またはキャンセルで直前のGameplay ContextとTime Scaleへ戻します。別のモーダルUIがUI Contextを所有している間はPause画面を重ねません。
 
-将来の会話・メニュー・カットシーンでも、個別コンポーネントの場当たり的なEnable/DisableではなくInput Contextで制御します。
+将来の会話、メニュー、カットシーンも、個別コンポーネントの場当たり的なEnable / DisableではなくInput Contextで制御します。
 
-Attack入力は `PlayerAbilityInput` が `ability.basic_melee` の実行要求へ変換します。入力コンポーネントは使用可否やダメージ処理を行いません。
+## Ability入力
 
-Art入力は、習得済みなら `ability.magic.fire_bolt` の実行要求へ変換します。未習得時は `AbilityController` が要求を拒否し、入力側はArt進捗を参照しません。複数Artの選択UIと入力割当は後続タスクです。
+Attack入力は `PlayerAbilityInput` が `ability.basic_melee` の実行要求へ変換します。Art入力は現在 `ability.magic.fire_bolt` の実行要求へ変換します。
+
+入力側はAbilityの使用可否やArt進捗を判定しません。Ability実行との責務境界は [Feature間の責務境界](../design/feature-boundaries.md) を参照してください。

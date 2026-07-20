@@ -1,22 +1,7 @@
 # 世界設定
 
-ゲーム世界に関する設定を管理します。
+ゲーム世界固有の地域、勢力、歴史、文化、魔法体系等を管理します。
 
-推奨構成:
+Runtime上の機能ルールは [仕様書](../specifications/)、物語上の出来事は [ストーリー](../story/) を参照してください。
 
-```text
-world/
-  locations/
-  factions/
-  history/
-  rules/
-```
-
-管理対象:
-
-- 地域・町・ダンジョン
-- 組織・勢力
-- 世界の歴史
-- 魔法や進化など世界固有のルール
-
-ストーリー上の出来事は `story/`、Runtimeの機能仕様は `specifications/` と相互リンクします。
+文書の配置規則は [ドキュメント規約](../development/documentation-rules.md) を参照してください。

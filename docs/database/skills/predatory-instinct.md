@@ -12,35 +12,26 @@ relatedContentIds:
 
 # 捕食者の本能
 
-- Status: Runtime Acquisition Implemented
-- Skill ID: `skill.combat.predatory_instinct`
-- Unity Definition: `Assets/Resources/Settings/Gameplay/PredatoryInstinctSkill.asset`
+Unity Definition: `Assets/Resources/Settings/Gameplay/PredatoryInstinctSkill.asset`
 
 ## 概要
 
-相手を捕食対象として捉えることで、使用者が与えるダメージを高める受動Skillです。実行可能な攻撃を追加せず、生得AbilityとArt由来Abilityの双方へ作用します。
+相手を捕食対象として捉えることで、使用者の攻撃性能を高める受動Skillです。実行可能な攻撃そのものは追加しません。
 
 ## 効果の意味
 
-- 対象: 使用者がAbilityで与えるダメージ
-- 方式: 対象Abilityを限定しない常時補正
-- 制約: Skill自体は入力、Ability付与、攻撃発生を行わない
+対象Abilityを限定しない常時補正として、捕食を軸にした戦闘成長を表現します。
 
-具体的な補正値はUnity DefinitionをSource of Truthとします。
+具体的な補正方式とRuntimeルールは [Skill仕様](../../specifications/skill.md) を参照してください。
 
 ## 習得
 
-Prototypeでは訓練用ダミーの初回撃破報酬から取得します。報酬側の `ProgressionGrantDefinition` が汎用 `ProgressionAcquisitionService` へ要求し、ダミーやCombat処理はSkill状態を直接変更しません。
-
-## Art / Evolutionとの関係
-
-- Art: 火炎魔法を含む攻撃Abilityにも、別途制限しない限り作用する
-- Evolution: [スライム進化系列](../evolutions/slime-lineage.md)の捕食系分岐と関連づける候補
+Prototypeでは訓練用ダミーの撃破報酬を通じて取得します。RewardとProgressionの接続方向は [Feature間の責務境界](../../design/feature-boundaries.md#ability--combat--reward--progression) を参照してください。
 
 ## 関連リンク
 
 - [プレイヤースライム](../monsters/player-slime.md)
-- [Skill仕様](../../specifications/skill.md)
+- [スライム進化系列](../evolutions/slime-lineage.md)
 - [覇王捕食スライム](../evolutions/apex-predator-slime.md)
 
 ## Stable Content IDでの関連

@@ -1,15 +1,9 @@
 # 戦闘仕様
 
-## 現在のフロー
+## ダメージ適用
 
 ```text
-Attack入力
-  ↓
-PlayerAbilityInput
-  ↓
-AbilityController
-  ↓
-MeleeAttackExecutor
+Ability Executor
   ↓
 DamageRequest
   ↓
@@ -18,70 +12,43 @@ IDamageable / Health
 DamageResult
   ↓ 撃破時
 DefeatContext
-  ↓
-RewardService
 ```
 
-## 責務
+- `DamageRequest`: ダメージ適用要求と発生元情報を渡す。
+- `IDamageable`: ダメージを受け取れる対象の契約。
+- `Health`: HPと生存状態を管理し、`DamageResult` を返す。
+- `DamageResult`: 1回のダメージ適用結果を表す。
+- `DefeatContext`: 撃破事実と発生元情報をCombat外へ渡す。
 
-- `PlayerAbilityInput`: Attack入力をAbility実行要求へ変換
-- `AbilityController`: 使用可能性とクールダウンを判定し、Executorへ委譲
-- `MeleeAttackExecutor`: 攻撃範囲を評価し、DamageRequestを生成
-- `IDamageable`: ダメージを受け取れる対象の契約
-- `Health`: HP、生存状態、DamageResult生成
-- `DamageResult`: 1回のダメージ適用結果
-- `DefeatContext`: 撃破事実と攻撃者・Ability・対象・報酬参照をCombat外へ渡す
-
-経験値、ドロップ、進化処理をHealthや攻撃コンポーネントへ直接埋め込みません。
+経験値、ドロップ、Art / Skill取得、Evolution処理はCombatへ埋め込みません。RewardやProgressionへの接続方向は [Feature間の責務境界](../design/feature-boundaries.md#ability--combat--reward--progression) を参照してください。
 
 ## 戦闘演出
 
-- `MeleeAttackExecutor.AttackPerformed` が攻撃位置、向き、範囲、命中数を通知し、`PrototypeMeleeAttackEffect` が斬撃を表示する
-- `Health.Died` を `PrototypeMonsterDefeatEffect` が購読し、撃破位置へ破裂・消滅表現を表示する
-- 訓練用スライムは撃破時に削除し、見習い魔術師への次のInteract入力で同じ位置へ再生成する
-- 訓練用スライムが生存中にInteract入力した場合は、同じ個体のHPを全回復する
-- 撃破エフェクトは対象の子にせず独立したGameObjectとして生成し、対象が同じフレームで破棄されても最後まで再生する
-- 現在の図形生成エフェクトはPrototype境界とし、本番アート確定後はPrefab、Animator、Particle Systemなどへ差し替える
-
 演出コンポーネントはCombatの通知を購読するだけとし、ダメージ量、死亡判定、報酬付与を変更しません。
 
-## Definition
+- 攻撃成立通知から攻撃エフェクトを表示する。
+- `Health.Died` から撃破エフェクトを表示する。
+- 撃破エフェクトは対象の破棄後も再生できる独立したGameObjectとして生成する。
+- Prototypeの図形生成演出は本番アート確定後にPrefab、Animator、Particle System等へ差し替え可能な境界とする。
 
-`AbilityDefinition` がStable Ability ID、表示情報、実行方式、クールダウン、コストを持ちます。`MeleeAttackDefinition` は近接範囲固有値を、`ProjectileAttackDefinition` はダメージ、速度、到達距離、衝突半径など飛翔体固有値を持ちます。
+訓練用スライムの再生成・復元はCombatではなく [Spawning仕様](./spawning.md) を参照してください。
 
-基本近接攻撃のStable Content IDは `ability.basic_melee` です。DamageRequestには実行したAbility IDを必ず渡します。
+## 攻撃Definition
 
-火炎魔法Artの `ability.magic.fire_bolt` は `ProjectileAttackExecutor` が実行します。飛翔体は命中または最大距離到達までAbilityを実行中に保ち、終了時に同じExecution IDで効果成立結果と完了を通知します。
+Ability共通情報は `AbilityDefinition`、近接固有情報は `MeleeAttackDefinition`、飛翔体固有情報は `ProjectileAttackDefinition` が保持します。
 
-Runtime数値はScriptableObjectを正とし、Markdownへ複製しません。
+具体的なダメージ、速度、範囲等はUnity Definitionを正とします。Ability実行側の責務は [Ability仕様](./ability.md) を参照してください。
 
-## Art熟練度との接続
+## 効果成立通知
 
-命中などの実効果が成立したとき、共通の `AbilityEffectResolved` を通知します。通知にはExecution ID、使用者、Ability ID、効果種別、成立結果を含めます。現在は `MeleeAttackExecutor` のダメージ適用結果まで接続済みです。
+命中等の実効果が成立した場合、Ability実行系は `AbilityEffectResolved` を通知します。CombatはArt熟練度を直接変更しません。
 
-Art成長側がAbility IDから所属Artを逆引きし、同じ使用者とExecution IDへ1回だけ熟練ポイントを加算します。範囲攻撃、多段攻撃、継続効果が複数の結果を生成しても、CombatやExecutorは熟練度を直接変更しません。
+Art熟練との接続は [Feature間の責務境界](../design/feature-boundaries.md#art熟練とability効果) を参照してください。
 
-`DamageTags.Art` は従来の `DamageTags.Skill` と同じビット値を維持します。`Skill` はObsoleteな互換Aliasとし、新規実装では使用しません。受動Skillによる補正は攻撃の発生元を意味しないため、Skillタグとして付与しません。
+## Passive Modifier
 
-## 受動補正
+Combatは汎用Modifier Sourceから補正を受け取り、SkillやEvolutionの取得状態を直接参照しません。
 
-`MeleeAttackExecutor` は使用者上の `IOutgoingDamageModifierSource` を集約し、補正後の値を `DamageRequest` へ渡します。補正取得元はSkillやEvolutionに限定せず、Executorは取得済みIDを直接参照しません。現在の正式Skill `skill.combat.predatory_instinct` と捕食系Evolution Nodeはこの境界を通じて与ダメージへ作用します。
+Modifierの接続方針は [Feature間の責務境界](../design/feature-boundaries.md#受動modifier) を参照してください。
 
-受けるダメージ、属性、耐性への補正は未実装です。
-
-## Reward接続
-
-`RewardService` は `DefeatContext` と `RewardDefinition` を使って報酬を適用します。現在は訓練用ダミー撃破からプレイヤーの経験値加算まで接続済みです。
-
-同一Defeat IDへの報酬重複付与を防ぎます。
-
-## 今後
-
-- プレイヤー被弾の完成版ルール
-- 無敵時間
-- ノックバック
-- 攻撃アニメーション同期
-- 回復、バフ、デバフなど非ダメージ効果の成立通知
-- 受動Skillによる被ダメージ・属性・耐性補正
-- ドロップ
-- 属性・耐性
+現在の実装状況と今後の対象は [ロードマップ](../development/roadmap.md) を参照してください。

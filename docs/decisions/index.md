@@ -1,11 +1,6 @@
 # Architecture Decision Records
 
-長期的に影響する設計判断をADRとして記録します。
-
-- ファイル名: `ADR-0001-title.md`
-- Status: Proposed / Accepted / Superseded / Deprecated
-- 現在の設計は設計書へ書く。
-- 判断理由はADRへ残す。
+長期的に影響する設計判断の理由と履歴をADRとして記録します。現在の設計は `docs/design/`、ADRの命名・配置規則は [ドキュメント規約](../development/documentation-rules.md) を参照してください。
 
 ## 一覧
 

@@ -8,9 +8,6 @@ relatedContentIds: []
 
 # 進化系列名
 
-- Status: Draft
-- ID: `evolution-series-id`
-
 ## 概要
 
 この進化系列がゲーム上・世界観上で何を表すか。
@@ -23,35 +20,17 @@ Base Monster
   └ Condition B -> Evolution B
 ```
 
-## 分岐条件
+## 分岐の意味
 
 ### Evolution A
 
-- 条件の意味:
-- 必要な行動:
-- 関連アイテム:
-- 関連クエスト:
+この分岐が表す成長方針と関連コンテンツを記載する。
 
 ### Evolution B
 
-- 条件の意味:
-- 必要な行動:
-- 関連アイテム:
-- 関連クエスト:
+この分岐が表す成長方針と関連コンテンツを記載する。
 
-## 排他・再進化ルール
-
-- Evolution Node ID:
-- 排他グループID:
-- 前提Node:
-- 取り消し可否:
-
-## Runtimeデータ
-
-具体的な閾値や数値はUnity側のDefinitionを正とし、このページには意味と制約を記載する。
-
-- Evolution Definition:
-- 視覚形態の実装状態:
+条件評価、排他、Save、補正等のRuntimeルールを再掲せず、[Evolution仕様](../specifications/evolution.md) を参照する。
 
 ## 関連リンク
 
@@ -60,3 +39,5 @@ Base Monster
 - Skills:
 - Arts:
 - Story:
+
+frontmatterのメタデータ規則は [ドキュメント規約](../development/documentation-rules.md) を参照する。

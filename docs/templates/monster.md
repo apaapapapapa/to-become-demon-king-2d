@@ -8,9 +8,7 @@ relatedContentIds: []
 
 # モンスター名
 
-- Status: Draft
-- ID: `monster-id`
-- Unity Definition: `Assets/...`
+Unity Definition: `Assets/...`
 
 ## 概要
 
@@ -26,33 +24,11 @@ relatedContentIds: []
 
 生態、背景、物語上の位置づけ。
 
-## 進化
+## 関連コンテンツ
 
-- 進化元:
-- 進化先:
-- 関連進化ページ:
-
-## Skill
-
-- 
-
-## Art / Ability
-
-- 生得Ability:
-- 習得可能Art:
-
-## ドロップ・関連アイテム
-
-- 
-
-## 実装参照
-
-Runtime数値はUnity側のDefinitionを参照し、このページへ全数値を複製しない。
-
-## 関連リンク
-
-- Story:
-- World:
 - Evolution:
 - Arts:
 - Skills:
+- Items:
+
+Runtimeルールは対応する仕様書へリンクし、frontmatterのメタデータ規則は [ドキュメント規約](../development/documentation-rules.md) を参照する。
