@@ -1,0 +1,20 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d140532d38964405895ec5747543d001, type: 3}
+  m_Name: ApprenticeMageTurnInDialogue
+  m_EditorClassIdentifier:
+  dialogueId: dialogue.training.apprentice_mage.turn_in
+  speaker: 見習い魔術師
+  lines:
+  - 訓練の目標を達成できたんだね。よくできました。
+  - 約束どおり、次は火炎魔法の基礎を教えるね。
+  - この報告を終えたら新しい魔法が使えるようになるよ。
