@@ -9,6 +9,7 @@ namespace DemonKing.Field.Prototype
     /// <summary>
     /// Interaction機能を確認するための試作NPCです。
     /// 話しかけるたびに会話を進め、最終発言の次の入力で表示を閉じます。
+    /// 会話の進行位置はUnity非依存のLinearDialogueSequenceへ委譲します。
     /// </summary>
     [DisallowMultipleComponent]
     [RequireComponent(typeof(CircleCollider2D))]
@@ -25,13 +26,15 @@ namespace DemonKing.Field.Prototype
         };
 
         private DialogueLog dialogueLog;
-        private int nextDialogueIndex;
+        private LinearDialogueSequence dialogueSequence;
 
         public event Action Interacted;
         public event Action<GameObject> DialogueCompleted;
 
         private void Awake()
         {
+            dialogueSequence = new LinearDialogueSequence(dialogueTexts);
+
             CircleCollider2D interactionCollider = GetComponent<CircleCollider2D>();
             interactionCollider.isTrigger = true;
             interactionCollider.radius = 0.55f;
@@ -68,11 +71,11 @@ namespace DemonKing.Field.Prototype
                 return;
             }
 
-            string dialogueText = GetNextDialogueText();
-            if (dialogueText == null)
+            dialogueSequence ??= new LinearDialogueSequence(dialogueTexts);
+            if (!dialogueSequence.TryAdvance(out string dialogueText))
             {
                 dialogueLog.Clear();
-                nextDialogueIndex = 0;
+                dialogueSequence.Reset();
                 DialogueCompleted?.Invoke(interactor);
                 Debug.Log($"{displayName}との会話を終了しました。", this);
                 return;
@@ -80,21 +83,6 @@ namespace DemonKing.Field.Prototype
 
             dialogueLog.ShowLine(displayName, dialogueText);
             Debug.Log($"{displayName}：『{dialogueText}』", this);
-        }
-
-        private string GetNextDialogueText()
-        {
-            while (dialogueTexts != null && nextDialogueIndex < dialogueTexts.Length)
-            {
-                string dialogueText = dialogueTexts[nextDialogueIndex];
-                nextDialogueIndex++;
-                if (!string.IsNullOrWhiteSpace(dialogueText))
-                {
-                    return dialogueText.Trim();
-                }
-            }
-
-            return null;
         }
 
         private void CreateVisuals()
