@@ -26,6 +26,7 @@ namespace DemonKing.Core.Input
         private InputAction attackAction;
         private InputAction interactAction;
         private InputAction dodgeAction;
+        private InputAction evolutionAction;
         private InputAction gameplayPauseAction;
 
         private InputAction navigateAction;
@@ -38,6 +39,7 @@ namespace DemonKing.Core.Input
         public event Action AttackPressed;
         public event Action InteractPressed;
         public event Action DodgePressed;
+        public event Action EvolutionPressed;
         public event Action PausePressed;
         public event Action SubmitPressed;
         public event Action CancelPressed;
@@ -147,6 +149,7 @@ namespace DemonKing.Core.Input
             attackAction = FindAction(gameplayActionMap, "Attack");
             interactAction = FindAction(gameplayActionMap, "Interact");
             dodgeAction = FindAction(gameplayActionMap, "Dodge");
+            evolutionAction = FindAction(gameplayActionMap, "Evolution");
             gameplayPauseAction = FindAction(gameplayActionMap, "Pause");
 
             navigateAction = FindAction(uiActionMap, "Navigate");
@@ -209,6 +212,7 @@ namespace DemonKing.Core.Input
             if (attackAction != null) attackAction.performed += OnAttackPerformed;
             if (interactAction != null) interactAction.performed += OnInteractPerformed;
             if (dodgeAction != null) dodgeAction.performed += OnDodgePerformed;
+            if (evolutionAction != null) evolutionAction.performed += OnEvolutionPerformed;
             if (gameplayPauseAction != null) gameplayPauseAction.performed += OnPausePerformed;
             if (submitAction != null) submitAction.performed += OnSubmitPerformed;
             if (cancelAction != null) cancelAction.performed += OnCancelPerformed;
@@ -220,6 +224,7 @@ namespace DemonKing.Core.Input
             if (attackAction != null) attackAction.performed -= OnAttackPerformed;
             if (interactAction != null) interactAction.performed -= OnInteractPerformed;
             if (dodgeAction != null) dodgeAction.performed -= OnDodgePerformed;
+            if (evolutionAction != null) evolutionAction.performed -= OnEvolutionPerformed;
             if (gameplayPauseAction != null) gameplayPauseAction.performed -= OnPausePerformed;
             if (submitAction != null) submitAction.performed -= OnSubmitPerformed;
             if (cancelAction != null) cancelAction.performed -= OnCancelPerformed;
@@ -229,6 +234,7 @@ namespace DemonKing.Core.Input
         private void OnAttackPerformed(InputAction.CallbackContext context) => AttackPressed?.Invoke();
         private void OnInteractPerformed(InputAction.CallbackContext context) => InteractPressed?.Invoke();
         private void OnDodgePerformed(InputAction.CallbackContext context) => DodgePressed?.Invoke();
+        private void OnEvolutionPerformed(InputAction.CallbackContext context) => EvolutionPressed?.Invoke();
         private void OnPausePerformed(InputAction.CallbackContext context) => PausePressed?.Invoke();
         private void OnSubmitPerformed(InputAction.CallbackContext context) => SubmitPressed?.Invoke();
         private void OnCancelPerformed(InputAction.CallbackContext context) => CancelPressed?.Invoke();

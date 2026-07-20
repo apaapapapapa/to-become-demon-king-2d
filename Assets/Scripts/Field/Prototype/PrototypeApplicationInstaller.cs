@@ -2,6 +2,7 @@ using DemonKing.Core.Application;
 using DemonKing.Core.Input;
 using DemonKing.Field.Prototype.Configuration;
 using DemonKing.Gameplay.Dialogue;
+using DemonKing.Gameplay.Progression;
 using UnityEngine;
 
 namespace DemonKing.Field.Prototype
@@ -52,7 +53,30 @@ namespace DemonKing.Field.Prototype
             }
 
             pauseController.Initialize(inputReader, settings.PausedTimeScale);
-            PrototypeUiInstaller.Create(projectAssets.UiFont, pauseController, dialogueLog);
+
+            EvolutionSelectionController evolutionSelectionController = null;
+            EvolutionProgressionController evolutionProgressionController =
+                worldResult.Player == null
+                    ? null
+                    : worldResult.Player.GetComponent<EvolutionProgressionController>();
+            if (inputReader != null && evolutionProgressionController != null)
+            {
+                evolutionSelectionController =
+                    applicationRoot.AddComponent<EvolutionSelectionController>();
+                evolutionSelectionController.Initialize(
+                    inputReader,
+                    evolutionProgressionController);
+            }
+            else
+            {
+                Debug.LogError("Evolution選択を初期化するためのPlayerコンポーネントが見つかりません。");
+            }
+
+            PrototypeUiInstaller.Create(
+                projectAssets.UiFont,
+                pauseController,
+                dialogueLog,
+                evolutionSelectionController);
             return applicationRoot;
         }
     }

@@ -2,7 +2,7 @@
 title: スライム進化系列
 contentId: evolution.slime.lineage
 contentType: evolution
-status: Runtime Nodes Registered / Visual Forms Not Implemented
+status: Prototype Selection and Visual Forms Implemented
 relatedContentIds:
   - character.player.slime
   - art.magic.fire
@@ -11,7 +11,7 @@ relatedContentIds:
 
 # スライム進化系列
 
-- Status: Runtime Nodes Registered / Visual Forms Not Implemented
+- Status: Prototype Selection and Visual Forms Implemented
 - Evolution Series ID: `evolution.slime.lineage`
 - Base Character ID: `character.player.slime`
 
@@ -47,9 +47,9 @@ character.player.slime
 
 ## Runtimeデータ
 
-両分岐のEvolution Definition、条件評価、排他選択、Save復元、Gameplay補正は実装済みです。具体的な閾値や変化量はUnity DefinitionをSource of Truthとします。
+両分岐のEvolution Definition、条件評価、排他選択、Save復元、Gameplay補正、選択UI、Prototype形態表示は実装済みです。具体的な閾値、変化量、外見色はUnity DefinitionをSource of Truthとします。
 
-専用Sprite、Prefab、Animator、進化演出、選択UIは未実装です。魔術系分岐が参照する火炎魔法ArtもRuntime未登録のため、現在のPrototypeでは魔術系条件を満たせません。
+捕食系は暖色の大型形態と角状エフェクト、魔術系は青紫の形態と周回する魔力光で区別します。現在は既存ピクセルフレームのデータ駆動再着色であり、本番用の専用Sprite、Prefab、Animator Controllerは未制作です。魔術系分岐が参照する火炎魔法ArtもRuntime未登録のため、現在のPrototypeでは魔術系条件を満たせません。
 
 ## 関連リンク
 

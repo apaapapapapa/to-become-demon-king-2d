@@ -101,6 +101,7 @@ namespace DemonKing.Gameplay.Progression
         private readonly EvolutionArtRankResolver artRankResolver;
         private readonly Dictionary<string, EvolutionDefinition> definitions =
             new(StringComparer.Ordinal);
+        private readonly List<EvolutionDefinition> definitionOrder = new();
 
         public EvolutionProgressionService(
             CharacterProgressionState progressionState,
@@ -117,6 +118,19 @@ namespace DemonKing.Gameplay.Progression
         }
 
         public event Action<EvolutionApplyResult> EvolutionApplied;
+
+        public IReadOnlyList<EvolutionDefinition> Definitions => definitionOrder;
+        public IReadOnlyList<string> UnlockedEvolutionNodeIds =>
+            progressionState.UnlockedEvolutionNodeIds;
+
+        public bool TryGetDefinition(
+            string evolutionNodeId,
+            out EvolutionDefinition definition)
+        {
+            return definitions.TryGetValue(
+                StableContentId.Normalize(evolutionNodeId),
+                out definition);
+        }
 
         public EvolutionEvaluationResult Evaluate(string evolutionNodeId)
         {
@@ -312,6 +326,8 @@ namespace DemonKing.Gameplay.Progression
                         $"Evolution Node IDが重複しています: {definition.EvolutionNodeId}",
                         nameof(evolutionDefinitions));
                 }
+
+                definitionOrder.Add(definition);
             }
         }
 

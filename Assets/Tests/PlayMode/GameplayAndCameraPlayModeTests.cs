@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Reflection;
 using DemonKing.Domain.Progression;
+using DemonKing.Core.Input;
 using DemonKing.Field.Prototype;
 using DemonKing.Gameplay.Abilities;
 using DemonKing.Gameplay.Abilities.Configuration;
@@ -14,9 +15,12 @@ using DemonKing.Gameplay.Modifiers;
 using DemonKing.Gameplay.Modifiers.Configuration;
 using DemonKing.Gameplay.Rewards;
 using DemonKing.Presentation.CameraSystem;
+using DemonKing.Presentation.Characters;
+using DemonKing.Presentation.UI;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.TestTools;
+using UnityEngine.UI;
 using Object = UnityEngine.Object;
 
 namespace DemonKing.Tests.PlayMode
@@ -451,6 +455,92 @@ namespace DemonKing.Tests.PlayMode
             Object.Destroy(attacker);
             Object.Destroy(target);
             Object.Destroy(ability);
+        }
+
+        [UnityTest]
+        public IEnumerator Evolution選択UI_進化確定で外見を変更しGameplayへ戻る()
+        {
+            PrototypeProjectAssets projectAssets =
+                Resources.Load<PrototypeProjectAssets>("Settings/PrototypeProjectAssets");
+            CharacterProgressionState progressionState = CharacterProgressionState.Restore(
+                "character.player.slime",
+                level: 2,
+                currentExperience: 5,
+                unlockedSkillIds: new[] { "skill.combat.predatory_instinct" },
+                unlockedEvolutionNodeIds: null);
+
+            GameObject player = new("Evolution Presentation Player");
+            PlayerInputReader inputReader = player.AddComponent<PlayerInputReader>();
+            PrototypeSlimeSpriteAnimator spriteAnimator =
+                player.AddComponent<PrototypeSlimeSpriteAnimator>();
+            EvolutionProgressionController evolutionController =
+                player.AddComponent<EvolutionProgressionController>();
+            evolutionController.Initialize(
+                progressionState,
+                projectAssets.PlayerCharacter.EvolutionDefinitions);
+            PrototypeSlimeEvolutionPresenter presenter =
+                player.AddComponent<PrototypeSlimeEvolutionPresenter>();
+            presenter.Initialize(evolutionController);
+
+            GameObject application = new("Evolution Selection Test");
+            EvolutionSelectionController selectionController =
+                application.AddComponent<EvolutionSelectionController>();
+            selectionController.Initialize(inputReader, evolutionController);
+
+            GameObject uiRoot = new("Evolution UI Test");
+            uiRoot.AddComponent<Canvas>();
+            EvolutionMenuView menuView = uiRoot.AddComponent<EvolutionMenuView>();
+            menuView.Initialize(
+                Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf"),
+                selectionController);
+
+            Assert.That(selectionController.OpenMenu(), Is.True);
+            Assert.That(Time.timeScale, Is.Zero);
+            Assert.That(inputReader.CurrentContext, Is.EqualTo(PlayerInputContext.UI));
+            Assert.That(
+                selectionController.SelectedEntry.Value.Evaluation.Status,
+                Is.EqualTo(EvolutionEvaluationStatus.Available));
+            Transform menuRoot = uiRoot.transform.Find("Evolution Menu");
+            Assert.That(menuRoot, Is.Not.Null);
+            Assert.That(menuRoot.gameObject.activeSelf, Is.True);
+            Text choices = menuRoot.Find("Evolution Panel/Choices").GetComponent<Text>();
+            Assert.That(choices.text, Does.Contain("捕食スライム"));
+
+            Assert.That(selectionController.ConfirmSelection(), Is.True);
+            Assert.That(Time.timeScale, Is.EqualTo(1f));
+            Assert.That(inputReader.CurrentContext, Is.EqualTo(PlayerInputContext.Gameplay));
+            Assert.That(menuRoot.gameObject.activeSelf, Is.False);
+            Assert.That(
+                presenter.CurrentEvolutionNodeId,
+                Is.EqualTo("evolution.slime.predator"));
+            Assert.That(presenter.EffectRendererCount, Is.EqualTo(2));
+            Assert.That(
+                spriteAnimator.Appearance,
+                Is.SameAs(projectAssets.PlayerCharacter.EvolutionDefinitions[0].Appearance));
+            Assert.That(
+                spriteAnimator.SpriteRenderer.transform.localScale.x,
+                Is.EqualTo(1.14f).Within(0.001f));
+
+            GameObject restoredPlayer = new("Restored Evolution Player");
+            restoredPlayer.AddComponent<PrototypeSlimeSpriteAnimator>();
+            EvolutionProgressionController restoredController =
+                restoredPlayer.AddComponent<EvolutionProgressionController>();
+            restoredController.Initialize(
+                progressionState,
+                projectAssets.PlayerCharacter.EvolutionDefinitions);
+            PrototypeSlimeEvolutionPresenter restoredPresenter =
+                restoredPlayer.AddComponent<PrototypeSlimeEvolutionPresenter>();
+            restoredPresenter.Initialize(restoredController);
+            Assert.That(
+                restoredPresenter.CurrentEvolutionNodeId,
+                Is.EqualTo("evolution.slime.predator"));
+            Assert.That(restoredPresenter.EffectRendererCount, Is.EqualTo(2));
+
+            Object.Destroy(uiRoot);
+            Object.Destroy(application);
+            Object.Destroy(player);
+            Object.Destroy(restoredPlayer);
+            yield return null;
         }
 
         [UnityTest]

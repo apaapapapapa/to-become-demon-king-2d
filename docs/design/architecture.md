@@ -70,6 +70,7 @@ Gameplay/
     ArtProgressionService
     EvolutionProgressionController
     EvolutionProgressionService
+    EvolutionSelectionController
     SkillProgressionController
     SkillProgressionService
   Modifiers/
@@ -210,7 +211,9 @@ Art進捗はDomain、静的なランク閾値とAbility対応はDefinition、習
 
 Skillは `CharacterProgressionState.UnlockedSkillIds` と `SkillDefinition` から受動補正を導出します。`SkillProgressionController` が補正を汎用Modifier Source契約として公開し、Ability、Combat、Artは補正取得元がSkill、装備、バフのどれであるかを知りません。
 
-EvolutionはNode Definitionと `UnlockedEvolutionNodeIds` を組み合わせ、レベル、Skill、Artランク、前提Node、排他グループを `EvolutionProgressionService` で評価します。選択済みNodeの永続補正はSkillと同じModifier Source境界へ公開し、見た目の形態変更は `EvolutionApplied` 通知の外側へ分離します。
+EvolutionはNode Definitionと `UnlockedEvolutionNodeIds` を組み合わせ、レベル、Skill、Artランク、前提Node、排他グループを `EvolutionProgressionService` で評価します。選択済みNodeの永続補正はSkillと同じModifier Source境界へ公開します。
+
+`EvolutionSelectionController` はInput Context、選択位置、確定要求を管理します。uGUIの `EvolutionMenuView` は評価結果を表示するだけで、進捗状態を直接変更しません。形態変更は `EvolutionApplied` 通知の外側にある `PrototypeSlimeEvolutionPresenter` が担当し、Save復元時も選択済みNodeから外見を導出します。
 
 ## Save境界
 
@@ -257,6 +260,7 @@ ISaveService
 - Save DTO Version 2 / Version 1 Migration
 - 受動Skill Definition / 取得 / 汎用補正接続
 - Evolution Node Definition / 条件評価 / 排他選択 / 永続補正
+- Evolution選択UI / Prototype形態表示・演出
 - EditMode / PlayModeテスト
 
 ## 直近の拡張方針
@@ -264,8 +268,8 @@ ISaveService
 1. NPC会話
 2. 敵AI
 3. クエスト・目的管理
-4. Art / Skill / Evolution入力・UIと正式Runtimeコンテンツ
-5. Evolutionの見た目・演出と上位Node
+4. Art / Skill入力・UIと正式Runtimeコンテンツ
+5. Evolutionの本番用アートと上位Node
 6. 実際のセーブ保存実装
 
 ## リアーキテクチャ判断基準

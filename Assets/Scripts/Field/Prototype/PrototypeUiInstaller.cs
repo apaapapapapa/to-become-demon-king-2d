@@ -1,5 +1,6 @@
 using DemonKing.Core.Application;
 using DemonKing.Gameplay.Dialogue;
+using DemonKing.Gameplay.Progression;
 using DemonKing.Presentation.UI;
 using UnityEngine;
 using UnityEngine.UI;
@@ -15,7 +16,8 @@ namespace DemonKing.Field.Prototype
         public static GameObject Create(
             Font uiFont,
             GamePauseController pauseController,
-            DialogueLog dialogueLog)
+            DialogueLog dialogueLog,
+            EvolutionSelectionController evolutionSelectionController)
         {
             GameObject uiRoot = new("UI Root", typeof(RectTransform));
 
@@ -40,6 +42,9 @@ namespace DemonKing.Field.Prototype
 
             PauseMenuView pauseMenuView = uiRoot.AddComponent<PauseMenuView>();
             pauseMenuView.Initialize(uiFont, pauseController);
+
+            EvolutionMenuView evolutionMenuView = uiRoot.AddComponent<EvolutionMenuView>();
+            evolutionMenuView.Initialize(uiFont, evolutionSelectionController);
             return uiRoot;
         }
     }

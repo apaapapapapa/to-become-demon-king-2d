@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using DemonKing.Core.Input;
+using DemonKing.Gameplay.Progression.Configuration;
 using DemonKing.Presentation.Rendering;
 using UnityEngine;
 
@@ -29,6 +30,10 @@ namespace DemonKing.Presentation.Characters
         private float elapsed;
         private int frameIndex;
         private bool previousMoving;
+        private EvolutionAppearanceProfile appearance;
+
+        public SpriteRenderer SpriteRenderer => spriteRenderer;
+        public EvolutionAppearanceProfile Appearance => appearance;
 
         private void Awake()
         {
@@ -76,6 +81,34 @@ namespace DemonKing.Presentation.Characters
 
         private void OnDestroy()
         {
+            ReleaseGeneratedSprites();
+        }
+
+        public void ApplyEvolutionAppearance(EvolutionAppearanceProfile profile)
+        {
+            if (profile == null)
+            {
+                throw new ArgumentNullException(nameof(profile));
+            }
+
+            appearance = profile;
+            if (spriteRenderer == null)
+            {
+                return;
+            }
+
+            ReleaseGeneratedSprites();
+            idleFrames = LoadFrames("IdleA", "IdleB");
+            moveFrames = LoadFrames("MoveA", "MoveB");
+            spriteRenderer.transform.localScale = new Vector3(
+                profile.VisualScale.x,
+                profile.VisualScale.y,
+                1f);
+            ApplyFrame(previousMoving, frameIndex);
+        }
+
+        private void ReleaseGeneratedSprites()
+        {
             foreach (Sprite sprite in generatedSprites)
             {
                 if (sprite == null)
@@ -90,6 +123,8 @@ namespace DemonKing.Presentation.Characters
                     Destroy(texture);
                 }
             }
+
+            generatedSprites.Clear();
         }
 
         private SpriteRenderer ResolveRenderer()
@@ -133,7 +168,7 @@ namespace DemonKing.Presentation.Characters
             return sprite;
         }
 
-        private static Sprite CreateSprite(string name, string frameText)
+        private Sprite CreateSprite(string name, string frameText)
         {
             string[] rows = frameText
                 .Replace("\r", string.Empty)
@@ -172,8 +207,24 @@ namespace DemonKing.Presentation.Characters
                 PixelsPerUnit);
         }
 
-        private static Color ResolveColor(char token)
+        private Color ResolveColor(char token)
         {
+            if (appearance != null)
+            {
+                Color outlineShadow = appearance.OutlineColor;
+                outlineShadow.a = 0.47f;
+                return token switch
+                {
+                    's' => outlineShadow,
+                    'o' => appearance.OutlineColor,
+                    'g' => appearance.BodyColor,
+                    'd' => appearance.ShadowColor,
+                    'h' => appearance.HighlightColor,
+                    'e' => appearance.EyeColor,
+                    _ => Color.clear
+                };
+            }
+
             return token switch
             {
                 's' => new Color32(14, 45, 40, 120),
