@@ -78,6 +78,7 @@ namespace DemonKing.Field.Prototype
             questDefinitions != null &&
             questDefinitions.Length > 0 &&
             questDefinitions.All(definition => definition != null && definition.IsConfigured) &&
+            questDefinitions.Select(definition => definition.QuestId).Distinct(StringComparer.Ordinal).Count() == questDefinitions.Length &&
             trainingDummyReward != null &&
             trainingDummyReward.IsConfigured &&
             fireMagicTrainingGrant != null &&
