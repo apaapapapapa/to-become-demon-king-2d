@@ -1,18 +1,10 @@
 ---
-title: 捕食者の本能
-contentId: skill.combat.predatory_instinct
-contentType: skill
-status: Runtime Acquisition Implemented
+runtimeSource: Assets/Resources/Settings/Gameplay/PredatoryInstinctSkill.asset
 relatedContentIds:
-  - character.player.slime
   - art.magic.fire
-  - evolution.slime.lineage
-  - evolution.slime.apex_predator
 ---
 
-# 捕食者の本能
-
-Unity Definition: `Assets/Resources/Settings/Gameplay/PredatoryInstinctSkill.asset`
+<RuntimeContentHeader />
 
 ## 概要
 
@@ -28,12 +20,6 @@ Unity Definition: `Assets/Resources/Settings/Gameplay/PredatoryInstinctSkill.ass
 
 Prototypeでは訓練用ダミーの撃破報酬を通じて取得します。RewardとProgressionの接続方向は [Feature間の責務境界](../../design/feature-boundaries.md#ability--combat--reward--progression) を参照してください。
 
-## 関連リンク
+## 関連コンテンツ
 
-- [プレイヤースライム](../monsters/player-slime.md)
-- [スライム進化系列](../evolutions/slime-lineage.md)
-- [覇王捕食スライム](../evolutions/apex-predator-slime.md)
-
-## Stable Content IDでの関連
-
-<ContentRelations content-id="skill.combat.predatory_instinct" />
+<ContentRelations />
