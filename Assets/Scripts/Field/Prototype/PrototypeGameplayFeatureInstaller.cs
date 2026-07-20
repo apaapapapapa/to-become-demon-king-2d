@@ -1,4 +1,5 @@
 using System;
+using DemonKing.Gameplay.Dialogue;
 using DemonKing.Gameplay.Rewards;
 using DemonKing.Gameplay.Rewards.Configuration;
 using UnityEngine;
@@ -14,7 +15,8 @@ namespace DemonKing.Field.Prototype
         public void Install(
             Transform parent,
             RewardService rewardService,
-            RewardDefinition trainingDummyReward)
+            RewardDefinition trainingDummyReward,
+            DialogueLog dialogueLog)
         {
             if (rewardService == null)
             {
@@ -28,7 +30,12 @@ namespace DemonKing.Field.Prototype
                     nameof(trainingDummyReward));
             }
 
-            CreateNpc(parent);
+            if (dialogueLog == null)
+            {
+                throw new ArgumentNullException(nameof(dialogueLog));
+            }
+
+            CreateNpc(parent, dialogueLog);
             PrototypeCombatDummy dummy = CreateCombatDummy(parent);
             dummy.ConfigureReward(trainingDummyReward);
             dummy.gameObject.AddComponent<PrototypeMonsterDefeatEffect>();
@@ -46,12 +53,13 @@ namespace DemonKing.Field.Prototype
             rewardService.RewardGranted += LogGrantedReward;
         }
 
-        private static void CreateNpc(Transform parent)
+        private static void CreateNpc(Transform parent, DialogueLog dialogueLog)
         {
             GameObject npc = new("見習い魔術師");
             npc.transform.SetParent(parent, false);
             npc.transform.localPosition = new Vector3(-0.85f, 0.35f, 0f);
-            npc.AddComponent<PrototypeNpcInteractable>();
+            PrototypeNpcInteractable interactable = npc.AddComponent<PrototypeNpcInteractable>();
+            interactable.ConfigureDialogueLog(dialogueLog);
         }
 
         private static PrototypeCombatDummy CreateCombatDummy(Transform parent)

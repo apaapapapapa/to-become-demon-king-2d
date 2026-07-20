@@ -1,4 +1,5 @@
 using DemonKing.Gameplay.Characters;
+using DemonKing.Gameplay.Dialogue;
 using DemonKing.Gameplay.Rewards;
 using UnityEngine;
 
@@ -13,15 +14,18 @@ namespace DemonKing.Field.Prototype
         private readonly Vector3 playerSpawnPosition;
         private readonly int playableTileRadius;
         private readonly PrototypeProjectAssets projectAssets;
+        private readonly DialogueLog dialogueLog;
 
         public PrototypeWorldBuilder(
             Vector3 playerSpawnPosition,
             int playableTileRadius,
-            PrototypeProjectAssets projectAssets)
+            PrototypeProjectAssets projectAssets,
+            DialogueLog dialogueLog)
         {
             this.playerSpawnPosition = playerSpawnPosition;
             this.playableTileRadius = Mathf.Max(4, playableTileRadius);
             this.projectAssets = projectAssets;
+            this.dialogueLog = dialogueLog;
         }
 
         public PrototypeWorldBuildResult Build()
@@ -53,7 +57,8 @@ namespace DemonKing.Field.Prototype
                 new PrototypeGameplayFeatureInstaller().Install(
                     world,
                     rewardService,
-                    projectAssets.TrainingDummyReward);
+                    projectAssets.TrainingDummyReward,
+                    dialogueLog);
             }
 
             terrain.BuildForeground(world);
