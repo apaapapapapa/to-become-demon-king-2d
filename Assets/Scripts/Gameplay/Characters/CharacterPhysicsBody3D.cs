@@ -112,7 +112,11 @@ namespace DemonKing.Gameplay.Characters
 
             Vector3 position = Body.position;
             position.z = elevation;
+
+            // 直前のMovePosition予約が次のPhysics stepで再適用されないよう、
+            // 現在Poseと次回移動ターゲットの両方を同じElevationへ揃えます。
             Body.position = position;
+            Body.MovePosition(position);
         }
 
         public void SetElevationLocked(bool locked)
