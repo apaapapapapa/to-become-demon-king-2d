@@ -295,7 +295,7 @@ namespace DemonKing.Tests.PlayMode
         }
 
         [UnityTest]
-        public IEnumerator Evolution_永続補正が3D Ability実行へ反映される()
+        public IEnumerator Evolution_永続補正が3DAbility実行へ反映される()
         {
             PrototypeProjectAssets projectAssets =
                 Resources.Load<PrototypeProjectAssets>("Settings/PrototypeProjectAssets");
