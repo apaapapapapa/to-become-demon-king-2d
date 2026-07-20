@@ -14,7 +14,7 @@ namespace DemonKing.Gameplay.Characters.Configuration
     /// 図鑑で表示する静的説明もこのDefinitionをSource of Truthとします。
     /// </summary>
     [CreateAssetMenu(fileName = "CharacterDefinition", menuName = "Demon King/Gameplay/Character Definition")]
-    public sealed class CharacterDefinition : ScriptableObject, IGameContentDefinition
+    public sealed class CharacterDefinition : ScriptableObject, IGameContentDefinition, IGameContentContainer
     {
         [Header("Identity")]
         [SerializeField] private string characterId = string.Empty;
@@ -53,6 +53,32 @@ namespace DemonKing.Gameplay.Characters.Configuration
             evolutionDefinitions ?? Array.Empty<EvolutionDefinition>();
         public DodgeDefinition DodgeDefinition => dodgeDefinition;
         public ExperienceTableDefinition ExperienceTableDefinition => experienceTableDefinition;
+
+        public IEnumerable<IGameContentDefinition> ChildContentDefinitions
+        {
+            get
+            {
+                foreach (AbilityDefinition definition in AbilityDefinitions)
+                {
+                    yield return definition;
+                }
+
+                foreach (ArtDefinition definition in ArtDefinitions)
+                {
+                    yield return definition;
+                }
+
+                foreach (SkillDefinition definition in SkillDefinitions)
+                {
+                    yield return definition;
+                }
+
+                foreach (EvolutionDefinition definition in EvolutionDefinitions)
+                {
+                    yield return definition;
+                }
+            }
+        }
 
         public bool IsConfigured
         {
