@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier:
   applicationSettings: {fileID: 11400000, guid: 2e6b9d1f4a8c43e7b0d5f2196c3a7e84, type: 2}
   playerCharacter: {fileID: 11400000, guid: 1a1a71944c52407c875514f165112f28, type: 2}
+  trainingSlimeAi: {fileID: 11400000, guid: 71b1f104a2d54815a09f6c3b1e8d9005, type: 2}
   apprenticeMageDialogue: {fileID: 11400000, guid: d140532d38964405895ec5747543a001, type: 2}
   questDefinitions:
   - {fileID: 11400000, guid: e240532d38964405895ec5747543a001, type: 2}
