@@ -72,10 +72,11 @@ Markdownへ同じ数値を複製して二重管理しないでください。
 - `CharacterProgressionState`
 - `ExperienceTable` / `LevelUpResult`
 - `GameSaveData` / `PlayerSaveData`
-- `DamageRequest` / `DamageResult` / `DefeatContext`
 - Stable Content ID関連
 
-Unity Scene、MonoBehaviour、ScriptableObject参照をDomainへ持ち込みません。
+Unity Scene、`GameObject`、MonoBehaviour、ScriptableObjectなどのUnity依存型をDomainへ持ち込みません。
+
+`DamageRequest` / `DamageResult` / `DefeatContext` は `UnityEngine.GameObject` を参照するため、Domainではなく `Gameplay/Combat` に置きます。
 
 ### Definition
 
@@ -178,7 +179,7 @@ C#コメントは日本語で記述します。
 
 Combatコンポーネントへ経験値・ドロップ・進化処理を直接埋め込まないでください。
 
-`DamageResult` / `DefeatContext` を境界として `RewardService` へ接続し、経験値加算などを処理します。同じDefeatに対する重複報酬を許可しない現在の境界を維持します。
+`DamageRequest` / `DamageResult` / `DefeatContext` は `Gameplay/Combat` のUnity依存境界として扱います。`DamageResult` / `DefeatContext` から `RewardService` へ接続し、経験値加算などを処理します。同じDefeatに対する重複報酬を許可しない現在の境界を維持します。
 
 ## Platform対応
 

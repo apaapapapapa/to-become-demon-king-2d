@@ -28,12 +28,10 @@ Progression/
 Save/
   GameSaveData
   PlayerSaveData
-Combat/
-  DamageRequest
-  DamageResult
-  DefeatContext
 StableContentId
 ```
+
+`UnityEngine`、Scene、GameObject、MonoBehaviour、ScriptableObjectなどのUnity依存型をDomainへ持ち込みません。
 
 ### Core
 
@@ -57,10 +55,15 @@ Unity上で動くゲームルールとキャラクター挙動を置きます。
 Gameplay/
   Characters/
   Combat/
+    DamageRequest
+    DamageResult
+    DefeatContext
   Interaction/
   Progression/
   Rewards/
 ```
+
+`DamageRequest`、`DamageResult`、`DefeatContext` は `UnityEngine.GameObject` を参照するため、Unity非依存のDomainではなくGameplay/Combatの責務です。
 
 GameplayはDomain/Coreを利用できますが、Prototype固有クラスやuGUI Viewへ依存しません。
 
