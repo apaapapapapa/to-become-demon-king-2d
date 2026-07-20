@@ -62,6 +62,12 @@ namespace DemonKing.Tests.PlayMode
             }
 
             Assert.That(elevationMotor.IsGrounded, Is.True);
+
+            // Groundedへの状態遷移とRigidbody poseの更新は同じFixedUpdateで行われるため、
+            // 次のPhysics stepまで待って確定後のElevationを検証します。
+            yield return new WaitForFixedUpdate();
+
+            Assert.That(elevationMotor.IsGrounded, Is.True);
             Assert.That(elevationMotor.Elevation, Is.EqualTo(0f).Within(0.001f));
             Assert.That(elevationMotor.VerticalVelocity, Is.Zero.Within(0.001f));
 
