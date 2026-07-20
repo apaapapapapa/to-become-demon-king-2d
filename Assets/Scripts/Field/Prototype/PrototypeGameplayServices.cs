@@ -78,6 +78,10 @@ namespace DemonKing.Field.Prototype
             var rewardService = new RewardService(contextHost.Context, acquisitionService);
             var gameplayEventHub = new GameplayEventHub();
             var questProgressionService = new QuestProgressionService(questDefinitions);
+
+            // Gameplay Event -> Quest ProgressionはTraining Area固有ではない共通Application配線です。
+            gameplayEventHub.Published += questProgressionService.Handle;
+
             services = new PrototypeGameplayServices(
                 acquisitionService,
                 rewardService,
