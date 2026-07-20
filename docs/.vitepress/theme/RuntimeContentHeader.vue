@@ -22,6 +22,11 @@ const entry = computed(() => {
       <code>{{ entry.contentId }}</code>
       · {{ entry.sourceKind }}
     </p>
+    <p v-if="entry.description">{{ entry.description }}</p>
+    <template v-if="entry.encyclopediaDescription">
+      <h2>図鑑解説</h2>
+      <p>{{ entry.encyclopediaDescription }}</p>
+    </template>
     <p v-if="entry.runtimeSource">
       Runtime Source: <code>{{ entry.runtimeSource }}</code>
     </p>

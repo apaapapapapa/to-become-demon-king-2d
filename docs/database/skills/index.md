@@ -1,9 +1,9 @@
-# スキル一覧
+# Skill図鑑
 
-Skillごとのゲームプレイ上・世界観上の役割、習得経路、関連コンテンツを管理します。
+図鑑公開対象の `SkillDefinition` をVitePressビルド時に自動列挙します。
 
-SkillのRuntimeルールは [Skill仕様](../../specifications/skill.md)、コンテンツページの共通メタデータ規則は [ドキュメント規約](../../development/documentation-rules.md) を参照してください。
+名称、概要、図鑑解説、Stable Content ID、関連DefinitionはUnity側をSource of Truthとします。SkillのRuntimeルールは [Skill仕様](../../specifications/skill.md)、図鑑データの所有ルールは [ドキュメント規約](../../development/documentation-rules.md) を参照してください。
 
-## 登録ページ
+## 登録Skill
 
 <ContentCatalog content-type="skill" />

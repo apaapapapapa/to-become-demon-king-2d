@@ -40,9 +40,9 @@
 | Feature間境界 | `docs/design/feature-boundaries.md` |
 | Unity実装方式・テスト方式 | `docs/design/technical-design.md` |
 | 文書配置・Source of Truth・Stable Content ID | `docs/development/documentation-rules.md` |
+| 図鑑・コンテンツDefinition | `docs/ai/context-map.md` の `Content / Encyclopedia` |
 | 長期的な判断理由 | `docs/decisions/` |
 | ストーリー / 世界設定 | `docs/story/` / `docs/world/` |
-| コンテンツ固有情報 | `docs/database/` |
 | リリース | `docs/development/release.md` |
 
 Context Mapは索引であり、仕様や設計のSource of Truthではありません。

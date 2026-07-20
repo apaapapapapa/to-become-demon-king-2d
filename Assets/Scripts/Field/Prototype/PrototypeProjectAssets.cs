@@ -1,7 +1,9 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using DemonKing.Field.Prototype.Configuration;
 using DemonKing.Gameplay.Characters.Configuration;
+using DemonKing.Gameplay.Content;
 using DemonKing.Gameplay.Dialogue.Configuration;
 using DemonKing.Gameplay.Progression.Configuration;
 using DemonKing.Gameplay.Quests.Configuration;
@@ -64,6 +66,43 @@ namespace DemonKing.Field.Prototype
         public Sprite LamppostSprite => lamppostSprite;
         public Sprite GrassTileSprite => grassTileSprite;
         public Sprite PathTileSprite => pathTileSprite;
+
+        public GameContentCatalog CreateGameContentCatalog()
+        {
+            if (playerCharacter == null)
+            {
+                throw new InvalidOperationException(
+                    "GameContentCatalogを作成するためのPlayerCharacterが設定されていません。");
+            }
+
+            var definitions = new List<IGameContentDefinition> { playerCharacter };
+
+            foreach (var abilityDefinition in playerCharacter.AbilityDefinitions)
+            {
+                definitions.Add(abilityDefinition);
+            }
+
+            foreach (ArtDefinition artDefinition in playerCharacter.ArtDefinitions)
+            {
+                definitions.Add(artDefinition);
+                foreach (ArtAbilityUnlockEntry unlockEntry in artDefinition.AbilityUnlocks)
+                {
+                    definitions.Add(unlockEntry.AbilityDefinition);
+                }
+            }
+
+            foreach (SkillDefinition skillDefinition in playerCharacter.SkillDefinitions)
+            {
+                definitions.Add(skillDefinition);
+            }
+
+            foreach (EvolutionDefinition evolutionDefinition in playerCharacter.EvolutionDefinitions)
+            {
+                definitions.Add(evolutionDefinition);
+            }
+
+            return new GameContentCatalog(definitions);
+        }
 
         /// <summary>
         /// ゲーム進行に必須の参照が揃っているかを返します。

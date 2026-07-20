@@ -15,7 +15,9 @@ MonoBehaviour:
   evolutionNodeId: evolution.slime.archmage
   displayName: 大魔導スライム
   description: 火炎魔法の熟練を礎に、魔力制御を完成させた魔法系統の上位進化。
+  encyclopediaDescription: 魔導系統で磨いたArt熟練を礎に、魔力制御を完成させた上位進化。三日月と魔力炎の意匠をまとい、魔法Abilityを中心とした戦闘スタイルを大きく強化する。
   icon: {fileID: 0}
+  visibleInEncyclopedia: 1
   characterDefinitionId: character.player.slime
   exclusiveGroupId: evolution-group.slime.tier2
   requiredLevel: 4

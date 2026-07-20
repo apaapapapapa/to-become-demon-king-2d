@@ -1,3 +1,4 @@
+using DemonKing.Gameplay.Content;
 using DemonKing.Gameplay.Rewards;
 using UnityEngine;
 
@@ -11,15 +12,18 @@ namespace DemonKing.Field.Prototype
         public PrototypeWorldBuildResult(
             Transform worldRoot,
             GameObject player,
-            RewardService rewardService)
+            RewardService rewardService,
+            GameContentCatalog gameContentCatalog)
         {
             WorldRoot = worldRoot;
             Player = player;
             RewardService = rewardService;
+            GameContentCatalog = gameContentCatalog;
         }
 
         public Transform WorldRoot { get; }
         public GameObject Player { get; }
         public RewardService RewardService { get; }
+        public GameContentCatalog GameContentCatalog { get; }
     }
 }

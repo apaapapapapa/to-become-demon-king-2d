@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using DemonKing.Domain;
 using DemonKing.Domain.Progression;
 using DemonKing.Gameplay.Abilities.Configuration;
+using DemonKing.Gameplay.Content;
 using UnityEngine;
 
 namespace DemonKing.Gameplay.Progression.Configuration
@@ -42,7 +43,7 @@ namespace DemonKing.Gameplay.Progression.Configuration
     /// 習得状態や熟練ポイントはArtProgressStateへ分離します。
     /// </summary>
     [CreateAssetMenu(fileName = "Art", menuName = "Demon King/Gameplay/Progression/Art")]
-    public sealed class ArtDefinition : ScriptableObject
+    public sealed class ArtDefinition : ScriptableObject, IGameContentDefinition
     {
         private const string ArtIdPrefix = "art.";
 
@@ -50,7 +51,9 @@ namespace DemonKing.Gameplay.Progression.Configuration
         [SerializeField] private string artId = string.Empty;
         [SerializeField] private string displayName = string.Empty;
         [SerializeField, TextArea] private string description = string.Empty;
+        [SerializeField, TextArea] private string encyclopediaDescription = string.Empty;
         [SerializeField] private Sprite icon;
+        [SerializeField] private bool visibleInEncyclopedia = true;
         [SerializeField] private string category = string.Empty;
 
         [Header("Mastery")]
@@ -58,10 +61,13 @@ namespace DemonKing.Gameplay.Progression.Configuration
         [SerializeField] private ArtAbilityUnlockEntry[] abilityUnlocks =
             Array.Empty<ArtAbilityUnlockEntry>();
 
+        public string ContentId => artId;
         public string ArtId => artId;
         public string DisplayName => displayName;
         public string Description => description;
+        public string EncyclopediaDescription => encyclopediaDescription;
         public Sprite Icon => icon;
+        public bool VisibleInEncyclopedia => visibleInEncyclopedia;
         public string Category => category;
         public IReadOnlyList<long> CumulativeMasteryPointsByRank =>
             cumulativeMasteryPointsByRank ?? Array.Empty<long>();
@@ -138,6 +144,7 @@ namespace DemonKing.Gameplay.Progression.Configuration
             artId = StableContentId.Normalize(artId);
             displayName = displayName?.Trim() ?? string.Empty;
             description = description?.Trim() ?? string.Empty;
+            encyclopediaDescription = encyclopediaDescription?.Trim() ?? string.Empty;
             category = category?.Trim() ?? string.Empty;
 
             if (cumulativeMasteryPointsByRank == null ||

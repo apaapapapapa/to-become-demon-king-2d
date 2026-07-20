@@ -4,7 +4,7 @@ export default defineConfig({
   base: '/to-become-demon-king-2d/',
   lang: 'ja-JP',
   title: 'To Become Demon King Knowledge Base',
-  description: 'ゲーム設計・仕様・ストーリー・世界設定・データベース・開発判断を一元管理するKnowledge Base',
+  description: 'ゲーム設計・仕様・ストーリー・世界設定・図鑑・開発判断を一元管理するKnowledge Base',
   cleanUrls: true,
   lastUpdated: true,
   themeConfig: {
@@ -14,7 +14,7 @@ export default defineConfig({
       { text: '仕様', link: '/specifications/' },
       { text: 'ストーリー', link: '/story/' },
       { text: '世界', link: '/world/' },
-      { text: 'データベース', link: '/database/' },
+      { text: '図鑑', link: '/database/' },
       { text: '開発', link: '/development/' },
       { text: 'ADR', link: '/decisions/' }
     ],
@@ -51,13 +51,14 @@ export default defineConfig({
       '/world/': [{ text: '世界設定', items: [
         { text: '概要', link: '/world/' }
       ] }],
-      '/database/': [{ text: 'ゲームデータベース', items: [
-        { text: '概要', link: '/database/' },
+      '/database/': [{ text: '図鑑', items: [
+        { text: '図鑑一覧', link: '/database/' },
         { text: 'モンスター', link: '/database/monsters/' },
-        { text: '進化', link: '/database/evolutions/' },
-        { text: 'アイテム', link: '/database/items/' },
-        { text: 'アーツ', link: '/database/arts/' },
-        { text: 'スキル', link: '/database/skills/' }
+        { text: 'Ability', link: '/database/abilities/' },
+        { text: 'Art', link: '/database/arts/' },
+        { text: 'Skill', link: '/database/skills/' },
+        { text: 'Evolution', link: '/database/evolutions/' },
+        { text: 'アイテム', link: '/database/items/' }
       ] }],
       '/development/': [{ text: '開発', items: [
         { text: '概要', link: '/development/' },

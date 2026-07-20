@@ -14,8 +14,10 @@ MonoBehaviour:
   m_EditorClassIdentifier:
   artId: art.magic.fire
   displayName: 火炎魔法
-  description: 火の魔力を外へ放つ能動Art。命中を重ねることで熟練する。
+  description: 火の魔力を外へ放ち、遠距離攻撃へ発展する能動Art。
+  encyclopediaDescription: 見習い魔術師との訓練を通じて魔力を外部へ放出する制御を身につける技法。近接中心の初期スライムに異なる間合いの選択肢を与え、熟練によってより高度な火炎Abilityへ発展する。
   icon: {fileID: 0}
+  visibleInEncyclopedia: 1
   category: magic
   cumulativeMasteryPointsByRank:
   - 0

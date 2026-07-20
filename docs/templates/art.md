@@ -4,20 +4,11 @@ runtimeSource: Assets/Resources/Settings/Gameplay/ExampleArt.asset
 
 <RuntimeContentHeader />
 
-## 概要
+## 開発者向け参照
 
-このArtのゲームプレイ上・世界観上の役割を記載する。
+名称、概要、図鑑解説、Icon、解放Ability、ランク閾値、熟練ポイントは `ArtDefinition` をSource of Truthとする。
 
-## 習得
-
-- 主な習得経路:
-- 条件の意味:
-
-解放Ability、ランク閾値、熟練ポイント等のRuntimeデータは `runtimeSource` のUnity Definitionを正とし、このページへ複製しない。[Art仕様](../specifications/art.md) を参照する。
-
-## 世界観
-
-技法の由来、使用者、流派、魔法体系上の位置づけなどを記載する。
+Art共通の習得・熟練・Ability解放ルールは [Art仕様](../specifications/art.md) を参照し、このページへ再掲しない。
 
 ## 関連コンテンツ
 

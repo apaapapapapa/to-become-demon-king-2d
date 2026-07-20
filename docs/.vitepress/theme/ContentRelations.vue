@@ -29,7 +29,8 @@ const relatedEntries = computed(() => (currentEntry.value?.relatedContentIds ?? 
 <template>
   <ul>
     <li v-for="entry in relatedEntries" :key="entry.contentId">
-      <a :href="withBase(entry.url)">{{ entry.title }}</a>
+      <a v-if="entry.url" :href="withBase(entry.url)">{{ entry.title }}</a>
+      <span v-else>{{ entry.title }}</span>
       — <code>{{ entry.contentId }}</code>
     </li>
   </ul>

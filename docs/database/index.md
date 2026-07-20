@@ -1,15 +1,18 @@
-# ゲームデータベース
+# 図鑑
 
-ゲーム内コンテンツの人間向け索引です。
+ゲーム内図鑑と同じRuntime Definitionを参照するWeb図鑑です。
+
+一覧の名称、概要、Stable Content ID、関連DefinitionはUnityのScriptableObject DefinitionをSource of Truthとし、VitePressビルド時に自動生成します。Markdownは図鑑データを複製せず、開発者向け補足やRuntimeに存在しない概念ページだけを保持します。
 
 - [モンスター](./monsters/)
-- [進化テーブル](./evolutions/)
+- [Ability](./abilities/)
+- [Art](./arts/)
+- [Skill](./skills/)
+- [Evolution](./evolutions/)
 - [アイテム](./items/)
-- [アーツ](./arts/)
-- [スキル](./skills/)
 
-コンテンツページのfrontmatter、Stable Content ID、Runtime値のSource of Truthは [ドキュメント規約](../development/documentation-rules.md) を参照してください。
+情報所有ルールは [ドキュメント規約](../development/documentation-rules.md) を参照してください。
 
-## コンテンツ一覧
+## 図鑑一覧
 
 <ContentCatalog />

@@ -15,7 +15,9 @@ MonoBehaviour:
   evolutionNodeId: evolution.slime.predator
   displayName: 捕食スライム
   description: 捕食と直接戦闘へ成長を集中する、スライムの第一進化。
+  encyclopediaDescription: 魔物としての捕食と近接戦闘を重ね、身体能力へ成長を集中した進化形態。捕食者の本能と相性がよく、直接戦闘を軸にした上位進化へつながる。
   icon: {fileID: 0}
+  visibleInEncyclopedia: 1
   characterDefinitionId: character.player.slime
   exclusiveGroupId: evolution-group.slime.tier1
   requiredLevel: 2

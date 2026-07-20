@@ -15,7 +15,9 @@ MonoBehaviour:
   evolutionNodeId: evolution.slime.apex_predator
   displayName: 覇王捕食スライム
   description: 捕食者の資質を極限まで研ぎ澄ませた、近接戦闘系統の上位進化。
+  encyclopediaDescription: 捕食系統で鍛えた身体能力を極限まで高めた上位進化。大きな棘冠と装甲状の稜線を持ち、近接中心の戦闘スタイルをさらに強化する。
   icon: {fileID: 0}
+  visibleInEncyclopedia: 1
   characterDefinitionId: character.player.slime
   exclusiveGroupId: evolution-group.slime.tier2
   requiredLevel: 4

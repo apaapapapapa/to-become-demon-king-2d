@@ -13,6 +13,11 @@ MonoBehaviour:
   m_Name: PlayerCharacter
   m_EditorClassIdentifier:
   characterId: character.player.slime
+  displayName: プレイヤースライム
+  description: 魔王を目指して成長する主人公の初期形態。
+  encyclopediaDescription: 小さく単純な身体から始まり、捕食、学習、Art、Skill、Evolutionを通じて戦い方と形態を分岐させる。現時点では最弱に近い魔物だが、成長によって魔王へ至る可能性を持つ。
+  icon: {fileID: 0}
+  visibleInEncyclopedia: 1
   prefab: {fileID: 100000, guid: e5142937c364939cfb3bc4a0129f1d56, type: 3}
   statsDefinition: {fileID: 11400000, guid: 40111111111111111111111111111101, type: 2}
   abilityDefinitions:

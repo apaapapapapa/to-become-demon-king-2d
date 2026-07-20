@@ -1,3 +1,4 @@
+using DemonKing.Gameplay.Content;
 using DemonKing.Gameplay.Dialogue;
 using UnityEngine;
 
@@ -49,10 +50,12 @@ namespace DemonKing.Field.Prototype
                     projectAssets.PlayerCharacter)
                 .Spawn(world);
 
+            GameContentCatalog gameContentCatalog = projectAssets.CreateGameContentCatalog();
             PrototypeGameplayServices gameplayServices = null;
             if (PrototypeGameplayServicesFactory.TryCreate(
                     player,
                     projectAssets.QuestDefinitions,
+                    gameContentCatalog,
                     out gameplayServices))
             {
                 new PrototypeGameplayFeatureInstaller().Install(
@@ -67,7 +70,11 @@ namespace DemonKing.Field.Prototype
             terrain.BuildForeground(world);
 
             PrototypeCameraInstaller.Configure(Camera.main, player == null ? null : player.transform);
-            return new PrototypeWorldBuildResult(world, player, gameplayServices?.RewardService);
+            return new PrototypeWorldBuildResult(
+                world,
+                player,
+                gameplayServices?.RewardService,
+                gameplayServices?.GameContentCatalog);
         }
     }
 }

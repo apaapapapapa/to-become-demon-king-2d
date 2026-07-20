@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using DemonKing.Domain;
+using DemonKing.Gameplay.Content;
 using DemonKing.Gameplay.Modifiers.Configuration;
 using UnityEngine;
 
@@ -88,7 +89,7 @@ namespace DemonKing.Gameplay.Progression.Configuration
     /// 選択状態と条件の現在値はCharacterProgressionStateへ分離します。
     /// </summary>
     [CreateAssetMenu(fileName = "Evolution", menuName = "Demon King/Gameplay/Progression/Evolution")]
-    public sealed class EvolutionDefinition : ScriptableObject
+    public sealed class EvolutionDefinition : ScriptableObject, IGameContentDefinition
     {
         private const string EvolutionIdPrefix = "evolution.";
         private const string ExclusiveGroupIdPrefix = "evolution-group.";
@@ -97,7 +98,9 @@ namespace DemonKing.Gameplay.Progression.Configuration
         [SerializeField] private string evolutionNodeId = string.Empty;
         [SerializeField] private string displayName = string.Empty;
         [SerializeField, TextArea] private string description = string.Empty;
+        [SerializeField, TextArea] private string encyclopediaDescription = string.Empty;
         [SerializeField] private Sprite icon;
+        [SerializeField] private bool visibleInEncyclopedia = true;
         [SerializeField] private string characterDefinitionId = string.Empty;
         [SerializeField] private string exclusiveGroupId = string.Empty;
 
@@ -115,10 +118,13 @@ namespace DemonKing.Gameplay.Progression.Configuration
         [Header("Appearance")]
         [SerializeField] private EvolutionAppearanceProfile appearance = new();
 
+        public string ContentId => evolutionNodeId;
         public string EvolutionNodeId => evolutionNodeId;
         public string DisplayName => displayName;
         public string Description => description;
+        public string EncyclopediaDescription => encyclopediaDescription;
         public Sprite Icon => icon;
+        public bool VisibleInEncyclopedia => visibleInEncyclopedia;
         public string CharacterDefinitionId => characterDefinitionId;
         public string ExclusiveGroupId => exclusiveGroupId;
         public int RequiredLevel => requiredLevel;
@@ -220,6 +226,7 @@ namespace DemonKing.Gameplay.Progression.Configuration
             evolutionNodeId = StableContentId.Normalize(evolutionNodeId);
             displayName = displayName?.Trim() ?? string.Empty;
             description = description?.Trim() ?? string.Empty;
+            encyclopediaDescription = encyclopediaDescription?.Trim() ?? string.Empty;
             characterDefinitionId = StableContentId.Normalize(characterDefinitionId);
             exclusiveGroupId = StableContentId.Normalize(exclusiveGroupId);
             requiredLevel = Mathf.Max(1, requiredLevel);
