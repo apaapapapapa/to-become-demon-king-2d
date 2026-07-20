@@ -1,3 +1,20 @@
+## [1.10.0](https://github.com/apaapapapapa/to-become-demon-king-2d/compare/v1.9.0...v1.10.0) (2026-07-20)
+
+### Features
+
+* accept training quest on npc interaction ([d2096cc](https://github.com/apaapapapapa/to-become-demon-king-2d/commit/d2096cc79fbbba7d28d93feba7a4acf684945fe8))
+* add quest accept and lifecycle events ([cd79282](https://github.com/apaapapapapa/to-become-demon-king-2d/commit/cd792828b67340ab459025ae10ac8646a01e8b5d))
+* add quest acceptance lifecycle ([c810759](https://github.com/apaapapapapa/to-become-demon-king-2d/commit/c810759ee8075939be25a395b0dbc0f73b533eb1))
+* add quest objective display names ([1dd9b77](https://github.com/apaapapapapa/to-become-demon-king-2d/commit/1dd9b77d3bd175463544ca686fe1d4522305c374))
+* add quest tracker and notifications ([ecb4dc7](https://github.com/apaapapapapa/to-become-demon-king-2d/commit/ecb4dc716dfda06d70430b108fda97ea843b9ca4))
+* add training quest objective label ([2f74b3d](https://github.com/apaapapapapa/to-become-demon-king-2d/commit/2f74b3d831ce259fac63ce09bc2a94e9a5efc35f))
+* connect quest runtime to prototype ui ([1398575](https://github.com/apaapapapapa/to-become-demon-king-2d/commit/1398575baffdfcdfd4155c4e6682bb82cceb6361))
+* expose prototype training quest definition ([b8e66ad](https://github.com/apaapapapapa/to-become-demon-king-2d/commit/b8e66ad00db9e2c4292d101ad54cd0786e74acb0))
+* expose quest service from world composition ([39034b8](https://github.com/apaapapapapa/to-become-demon-king-2d/commit/39034b8b64f07b23f1256496c3a8649a9c90f041))
+* include quest service in world build result ([5346ffd](https://github.com/apaapapapapa/to-become-demon-king-2d/commit/5346ffd5abbdf9e0fe497ddbd5c2ff77e8575027))
+* install quest tracker in prototype ui ([38c92c0](https://github.com/apaapapapapa/to-become-demon-king-2d/commit/38c92c05f7a6a1a3f774aeae47f8b43a2a951da3))
+* pass training quest into prototype flow ([e9f0f9e](https://github.com/apaapapapapa/to-become-demon-king-2d/commit/e9f0f9e8d888d28822cba44ecc4c9295679ccd01))
+
 ## [1.9.0](https://github.com/apaapapapapa/to-become-demon-king-2d/compare/v1.8.0...v1.9.0) (2026-07-20)
 
 ### Features
