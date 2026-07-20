@@ -33,6 +33,11 @@ namespace DemonKing.Gameplay.Characters
         {
             inputReader = GetComponent<MoveInputReader>();
             CharacterPhysicsBody3D physicsBody = GetComponent<CharacterPhysicsBody3D>();
+            if (physicsBody == null)
+            {
+                physicsBody = gameObject.AddComponent<CharacterPhysicsBody3D>();
+            }
+
             physicsBody.EnsureConfigured();
             body = physicsBody.Body;
         }
