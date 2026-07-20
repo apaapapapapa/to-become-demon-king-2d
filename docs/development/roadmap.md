@@ -27,6 +27,10 @@
 - 与ダメージ / Abilityクールダウン / Art熟練ポイント補正
 - Evolution Node Definition / 条件評価 / 排他選択 / Save / 永続補正
 - Evolution選択UI / Input Context / Prototype形態表示・演出
+- 汎用Progression Grant / NPC訓練による火炎魔法Art取得
+- 訓練用ダミー撃破報酬による捕食者の本能Skill取得
+- 火炎弾Projectile Ability / Art入力 / 効果成立による熟練
+- Evolution専用2フレームアート / 捕食・魔術系の上位Node
 - Stable Content ID相互リンク / VitePress Data Loader一覧
 - EditMode / PlayModeテスト
 - VitePress Knowledge Base基盤
@@ -36,8 +40,8 @@
 1. NPC会話
 2. 敵AI
 3. クエスト・目的管理
-4. Art / Skillの取得・入力・UIと正式Runtimeコンテンツ
-5. Evolutionの本番用アートと上位Node
+4. 複数Art / Skillの選択UIと入力割当
+5. 追加の正式Runtimeコンテンツと取得経路
 6. 縦切りゲームループ完成
 
 ## P3候補

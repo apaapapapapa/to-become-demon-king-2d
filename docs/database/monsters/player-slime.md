@@ -8,6 +8,8 @@ relatedContentIds:
   - art.magic.fire
   - skill.combat.predatory_instinct
   - evolution.slime.lineage
+  - evolution.slime.apex_predator
+  - evolution.slime.archmage
 ---
 
 # プレイヤースライム
@@ -33,17 +35,17 @@ relatedContentIds:
 ## 進化
 
 - 進化元: なし
-- 進化先: `evolution.slime.predator`、`evolution.slime.arcane`（Node Definition、選択UI、Prototype外見を実装済み）
+- 進化先: 捕食・魔術のTier 1と、各系統の上位Node（Definition、選択UI、専用外見を実装済み）
 - 関連進化ページ: [スライム進化系列](../evolutions/slime-lineage.md)
 
 ## Skill
 
-- [捕食者の本能](../skills/predatory-instinct.md): Definition登録済み、具体的な習得経路は未接続
+- [捕食者の本能](../skills/predatory-instinct.md): 訓練用ダミーの初回撃破報酬から取得
 
 ## Art / Ability
 
 - 生得Ability: `ability.basic_melee`
-- 習得可能Art: [火炎魔法](../arts/fire-magic.md)（計画中）
+- 習得可能Art: [火炎魔法](../arts/fire-magic.md)（見習い魔術師の訓練から取得）
 
 ## 実装参照
 

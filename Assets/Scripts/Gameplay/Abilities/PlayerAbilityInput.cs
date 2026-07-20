@@ -12,8 +12,10 @@ namespace DemonKing.Gameplay.Abilities
     public sealed class PlayerAbilityInput : MonoBehaviour
     {
         private const string DefaultBasicAttackAbilityId = "ability.basic_melee";
+        private const string DefaultArtAbilityId = "ability.magic.fire_bolt";
 
         [SerializeField] private string basicAttackAbilityId = DefaultBasicAttackAbilityId;
+        [SerializeField] private string artAbilityId = DefaultArtAbilityId;
 
         private PlayerInputReader inputReader;
         private AbilityController abilityController;
@@ -33,6 +35,7 @@ namespace DemonKing.Gameplay.Abilities
             }
 
             inputReader.AttackPressed += HandleAttackPressed;
+            inputReader.ArtPressed += HandleArtPressed;
         }
 
         private void OnDisable()
@@ -40,6 +43,7 @@ namespace DemonKing.Gameplay.Abilities
             if (inputReader != null)
             {
                 inputReader.AttackPressed -= HandleAttackPressed;
+                inputReader.ArtPressed -= HandleArtPressed;
             }
         }
 
@@ -56,6 +60,14 @@ namespace DemonKing.Gameplay.Abilities
         {
             abilityController.TryUse(
                 basicAttackAbilityId,
+                gameObject,
+                new AbilityExecutionInput(facingDirection));
+        }
+
+        private void HandleArtPressed()
+        {
+            abilityController.TryUse(
+                artAbilityId,
                 gameObject,
                 new AbilityExecutionInput(facingDirection));
         }

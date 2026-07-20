@@ -67,8 +67,10 @@ Skill ID欄はSave Version 1から存在するため、今回の実装でSave Ve
 - Skill取得状態と既存Save DTOの往復
 - 与ダメージ、Abilityクールダウン、Art熟練ポイントへの補正接続
 - 正式Definition `skill.combat.predatory_instinct`
+- `ProgressionGrantDefinition` / `ProgressionAcquisitionService` による汎用取得境界
+- 訓練用ダミー初回撃破報酬による `skill.combat.predatory_instinct` の取得経路
 
-具体的な習得元、Skill選択UI、能力値・コスト・習得条件など追加対象への補正は未実装です。
+追加Skillの習得元、Skill選択UI、能力値・コスト・習得条件など追加対象への補正は未実装です。
 
 ## 関連仕様
 

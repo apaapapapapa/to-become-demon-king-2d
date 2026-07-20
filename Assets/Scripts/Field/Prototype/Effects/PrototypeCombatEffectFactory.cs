@@ -115,6 +115,48 @@ namespace DemonKing.Field.Prototype
             animator.Initialize(duration, 0.78f);
             return root;
         }
+
+        public static GameObject CreateFireProjectile(
+            GameObject projectile,
+            Vector2 direction)
+        {
+            if (projectile == null)
+            {
+                return null;
+            }
+
+            GameObject root = new("火炎弾エフェクト");
+            root.transform.SetParent(projectile.transform, false);
+            float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
+            root.transform.localRotation = Quaternion.Euler(0f, 0f, angle);
+
+            Shapes.CreateEllipse(
+                "炎の芯",
+                Vector2.zero,
+                new Vector2(0.38f, 0.28f),
+                new Color32(255, 244, 176, 255),
+                EffectSortingOrder + 30,
+                root.transform,
+                SortingLayerNames.Foreground);
+            Shapes.CreateEllipse(
+                "炎",
+                new Vector2(-0.10f, 0f),
+                new Vector2(0.52f, 0.34f),
+                new Color32(255, 108, 48, 235),
+                EffectSortingOrder + 29,
+                root.transform,
+                SortingLayerNames.Foreground);
+            Shapes.CreateDiamond(
+                "火の尾",
+                new Vector2(-0.36f, 0f),
+                new Vector2(0.34f, 0.22f),
+                new Color32(244, 46, 44, 210),
+                EffectSortingOrder + 28,
+                root.transform,
+                SortingLayerNames.Foreground);
+            root.AddComponent<PrototypeProjectilePulse>();
+            return root;
+        }
     }
 
     internal sealed class PrototypeSlashEffectAnimator : MonoBehaviour
@@ -223,6 +265,24 @@ namespace DemonKing.Field.Prototype
             {
                 Destroy(gameObject);
             }
+        }
+    }
+
+    internal sealed class PrototypeProjectilePulse : MonoBehaviour
+    {
+        private Vector3 baseScale;
+        private float elapsed;
+
+        private void Awake()
+        {
+            baseScale = transform.localScale;
+        }
+
+        private void Update()
+        {
+            elapsed += Time.deltaTime * 14f;
+            float pulse = 1f + Mathf.Sin(elapsed) * 0.10f;
+            transform.localScale = baseScale * pulse;
         }
     }
 }

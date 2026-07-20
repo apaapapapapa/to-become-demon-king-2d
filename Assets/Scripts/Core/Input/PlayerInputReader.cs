@@ -24,6 +24,7 @@ namespace DemonKing.Core.Input
 
         private InputAction moveAction;
         private InputAction attackAction;
+        private InputAction artAction;
         private InputAction interactAction;
         private InputAction dodgeAction;
         private InputAction evolutionAction;
@@ -37,6 +38,7 @@ namespace DemonKing.Core.Input
         private bool componentEnabled;
 
         public event Action AttackPressed;
+        public event Action ArtPressed;
         public event Action InteractPressed;
         public event Action DodgePressed;
         public event Action EvolutionPressed;
@@ -147,6 +149,7 @@ namespace DemonKing.Core.Input
 
             moveAction = FindAction(gameplayActionMap, "Move");
             attackAction = FindAction(gameplayActionMap, "Attack");
+            artAction = FindAction(gameplayActionMap, "Art");
             interactAction = FindAction(gameplayActionMap, "Interact");
             dodgeAction = FindAction(gameplayActionMap, "Dodge");
             evolutionAction = FindAction(gameplayActionMap, "Evolution");
@@ -210,6 +213,7 @@ namespace DemonKing.Core.Input
         private void SubscribeCallbacks()
         {
             if (attackAction != null) attackAction.performed += OnAttackPerformed;
+            if (artAction != null) artAction.performed += OnArtPerformed;
             if (interactAction != null) interactAction.performed += OnInteractPerformed;
             if (dodgeAction != null) dodgeAction.performed += OnDodgePerformed;
             if (evolutionAction != null) evolutionAction.performed += OnEvolutionPerformed;
@@ -222,6 +226,7 @@ namespace DemonKing.Core.Input
         private void UnsubscribeCallbacks()
         {
             if (attackAction != null) attackAction.performed -= OnAttackPerformed;
+            if (artAction != null) artAction.performed -= OnArtPerformed;
             if (interactAction != null) interactAction.performed -= OnInteractPerformed;
             if (dodgeAction != null) dodgeAction.performed -= OnDodgePerformed;
             if (evolutionAction != null) evolutionAction.performed -= OnEvolutionPerformed;
@@ -232,6 +237,7 @@ namespace DemonKing.Core.Input
         }
 
         private void OnAttackPerformed(InputAction.CallbackContext context) => AttackPressed?.Invoke();
+        private void OnArtPerformed(InputAction.CallbackContext context) => ArtPressed?.Invoke();
         private void OnInteractPerformed(InputAction.CallbackContext context) => InteractPressed?.Invoke();
         private void OnDodgePerformed(InputAction.CallbackContext context) => DodgePressed?.Invoke();
         private void OnEvolutionPerformed(InputAction.CallbackContext context) => EvolutionPressed?.Invoke();

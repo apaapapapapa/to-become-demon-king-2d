@@ -28,6 +28,7 @@ namespace DemonKing.Gameplay.Progression.Configuration
         [SerializeField] private Color effectColor = Color.white;
         [SerializeField] private Vector2 visualScale = Vector2.one;
         [SerializeField] private EvolutionVisualEffect visualEffect;
+        [SerializeField] private Texture2D spriteSheet;
 
         public Color OutlineColor => outlineColor;
         public Color BodyColor => bodyColor;
@@ -37,6 +38,7 @@ namespace DemonKing.Gameplay.Progression.Configuration
         public Color EffectColor => effectColor;
         public Vector2 VisualScale => visualScale;
         public EvolutionVisualEffect VisualEffect => visualEffect;
+        public Texture2D SpriteSheet => spriteSheet;
 
         internal bool IsConfigured =>
             outlineColor.a > 0f &&

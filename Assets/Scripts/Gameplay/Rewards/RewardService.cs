@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using DemonKing.Domain.Progression;
 using DemonKing.Gameplay.Characters;
 using DemonKing.Gameplay.Combat;
+using DemonKing.Gameplay.Progression;
 using DemonKing.Gameplay.Rewards.Configuration;
 
 namespace DemonKing.Gameplay.Rewards
@@ -26,18 +27,21 @@ namespace DemonKing.Gameplay.Rewards
             bool wasGranted,
             string rewardDefinitionId,
             RewardGrantFailureReason failureReason,
-            LevelUpResult levelUpResult)
+            LevelUpResult levelUpResult,
+            ProgressionGrantResult progressionGrantResult = default)
         {
             WasGranted = wasGranted;
             RewardDefinitionId = rewardDefinitionId ?? string.Empty;
             FailureReason = failureReason;
             LevelUpResult = levelUpResult;
+            ProgressionGrantResult = progressionGrantResult;
         }
 
         public bool WasGranted { get; }
         public string RewardDefinitionId { get; }
         public RewardGrantFailureReason FailureReason { get; }
         public LevelUpResult LevelUpResult { get; }
+        public ProgressionGrantResult ProgressionGrantResult { get; }
         public long GrantedExperience => LevelUpResult.AppliedExperience;
     }
 
@@ -49,9 +53,12 @@ namespace DemonKing.Gameplay.Rewards
     {
         private readonly CharacterRuntimeContext recipient;
         private readonly ExperienceTable experienceTable;
+        private readonly ProgressionAcquisitionService acquisitionService;
         private readonly HashSet<Guid> rewardedDefeatIds = new HashSet<Guid>();
 
-        public RewardService(CharacterRuntimeContext recipient)
+        public RewardService(
+            CharacterRuntimeContext recipient,
+            ProgressionAcquisitionService acquisitionService = null)
         {
             this.recipient = recipient ?? throw new ArgumentNullException(nameof(recipient));
 
@@ -64,6 +71,7 @@ namespace DemonKing.Gameplay.Rewards
             }
 
             experienceTable = recipient.Definition.ExperienceTableDefinition.CreateRuntimeTable();
+            this.acquisitionService = acquisitionService;
         }
 
         public event Action<RewardGrantResult> RewardGranted;
@@ -113,16 +121,31 @@ namespace DemonKing.Gameplay.Rewards
                     RewardGrantFailureReason.AlreadyGranted);
             }
 
+            if (rewardDefinition.ProgressionGrant != null && acquisitionService == null)
+            {
+                return Rejected(
+                    rewardDefinition.RewardId,
+                    RewardGrantFailureReason.InvalidRewardDefinition);
+            }
+
             LevelUpResult levelUpResult = recipient.ProgressionState.GainExperience(
                 rewardDefinition.Experience,
                 experienceTable);
+            ProgressionGrantResult progressionGrantResult = default;
+            if (rewardDefinition.ProgressionGrant != null)
+            {
+                progressionGrantResult = acquisitionService.Grant(
+                    rewardDefinition.ProgressionGrant);
+            }
+
             rewardedDefeatIds.Add(defeatContext.DefeatId);
 
             var result = new RewardGrantResult(
                 true,
                 rewardDefinition.RewardId,
                 RewardGrantFailureReason.None,
-                levelUpResult);
+                levelUpResult,
+                progressionGrantResult);
             RewardGranted?.Invoke(result);
             return result;
         }

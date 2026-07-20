@@ -25,9 +25,13 @@ namespace DemonKing.EditorTools
         private const string PlayerPrefabPath = "Assets/Resources/Prefabs/Characters/PrototypeSlime.prefab";
         private const string PlayerCharacterStatsPath = "Assets/Resources/Settings/Gameplay/PlayerCharacterStats.asset";
         private const string PlayerMeleeAttackPath = "Assets/Resources/Settings/Gameplay/PlayerMeleeAttack.asset";
+        private const string FireMagicArtPath = "Assets/Resources/Settings/Gameplay/FireMagicArt.asset";
+        private const string FireMagicTrainingGrantPath = "Assets/Resources/Settings/Gameplay/FireMagicTrainingGrant.asset";
         private const string PredatoryInstinctSkillPath = "Assets/Resources/Settings/Gameplay/PredatoryInstinctSkill.asset";
         private const string PredatorSlimeEvolutionPath = "Assets/Resources/Settings/Gameplay/PredatorSlimeEvolution.asset";
         private const string ArcaneSlimeEvolutionPath = "Assets/Resources/Settings/Gameplay/ArcaneSlimeEvolution.asset";
+        private const string ApexPredatorSlimeEvolutionPath = "Assets/Resources/Settings/Gameplay/ApexPredatorSlimeEvolution.asset";
+        private const string ArchmageSlimeEvolutionPath = "Assets/Resources/Settings/Gameplay/ArchmageSlimeEvolution.asset";
         private const string PlayerDodgePath = "Assets/Resources/Settings/Gameplay/PlayerDodge.asset";
         private const string PlayerExperienceTablePath = "Assets/Resources/Settings/Gameplay/PlayerExperienceTable.asset";
         private const string TrainingDummyRewardPath = "Assets/Resources/Settings/Gameplay/TrainingDummyReward.asset";
@@ -90,6 +94,7 @@ namespace DemonKing.EditorTools
             changed |= AssignIfDifferent(serializedObject, "applicationSettings", Load<PrototypeApplicationSettings>(ApplicationSettingsPath));
             changed |= AssignIfDifferent(serializedObject, "playerCharacter", playerCharacter);
             changed |= AssignIfDifferent(serializedObject, "trainingDummyReward", Load<RewardDefinition>(TrainingDummyRewardPath));
+            changed |= AssignIfDifferent(serializedObject, "fireMagicTrainingGrant", Load<ProgressionGrantDefinition>(FireMagicTrainingGrantPath));
             changed |= AssignIfDifferent(serializedObject, "uiFont", Load<Font>(JapaneseUiFontInstaller.FontAssetPath, logIfMissing: forceLog));
             changed |= AssignIfDifferent(serializedObject, "cottagePrefab", Load<GameObject>(CottagePrefabPath));
             changed |= AssignIfDifferent(serializedObject, "treePrefab", Load<GameObject>(TreePrefabPath));
@@ -134,13 +139,19 @@ namespace DemonKing.EditorTools
                 Load<MeleeAttackDefinition>(PlayerMeleeAttackPath));
             changed |= AssignArrayIfDifferent(
                 serializedObject,
+                "artDefinitions",
+                Load<ArtDefinition>(FireMagicArtPath));
+            changed |= AssignArrayIfDifferent(
+                serializedObject,
                 "skillDefinitions",
                 Load<SkillDefinition>(PredatoryInstinctSkillPath));
             changed |= AssignArrayIfDifferent(
                 serializedObject,
                 "evolutionDefinitions",
                 Load<EvolutionDefinition>(PredatorSlimeEvolutionPath),
-                Load<EvolutionDefinition>(ArcaneSlimeEvolutionPath));
+                Load<EvolutionDefinition>(ArcaneSlimeEvolutionPath),
+                Load<EvolutionDefinition>(ApexPredatorSlimeEvolutionPath),
+                Load<EvolutionDefinition>(ArchmageSlimeEvolutionPath));
             changed |= AssignIfDifferent(serializedObject, "dodgeDefinition", Load<DodgeDefinition>(PlayerDodgePath));
             changed |= AssignIfDifferent(serializedObject, "experienceTableDefinition", Load<ExperienceTableDefinition>(PlayerExperienceTablePath));
 

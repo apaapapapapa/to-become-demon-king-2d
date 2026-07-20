@@ -18,11 +18,13 @@ namespace DemonKing.Presentation.Characters
     {
         private const string SpriteRoot = "Art/Characters/PrototypeSlime/";
         private const float PixelsPerUnit = 16f;
+        private const float DedicatedSpritePixelsPerUnit = 384f;
 
         [SerializeField, Min(0.05f)] private float idleFrameDuration = 0.34f;
         [SerializeField, Min(0.05f)] private float moveFrameDuration = 0.14f;
 
         private readonly List<Sprite> generatedSprites = new();
+        private readonly List<Texture2D> generatedTextures = new();
         private MoveInputReader inputReader;
         private SpriteRenderer spriteRenderer;
         private Sprite[] idleFrames;
@@ -98,8 +100,16 @@ namespace DemonKing.Presentation.Characters
             }
 
             ReleaseGeneratedSprites();
-            idleFrames = LoadFrames("IdleA", "IdleB");
-            moveFrames = LoadFrames("MoveA", "MoveB");
+            if (profile.SpriteSheet != null)
+            {
+                idleFrames = LoadDedicatedFrames(profile.SpriteSheet);
+                moveFrames = idleFrames;
+            }
+            else
+            {
+                idleFrames = LoadFrames("IdleA", "IdleB");
+                moveFrames = LoadFrames("MoveA", "MoveB");
+            }
             spriteRenderer.transform.localScale = new Vector3(
                 profile.VisualScale.x,
                 profile.VisualScale.y,
@@ -116,15 +126,19 @@ namespace DemonKing.Presentation.Characters
                     continue;
                 }
 
-                Texture2D texture = sprite.texture;
                 Destroy(sprite);
+            }
+
+            generatedSprites.Clear();
+            foreach (Texture2D texture in generatedTextures)
+            {
                 if (texture != null)
                 {
                     Destroy(texture);
                 }
             }
 
-            generatedSprites.Clear();
+            generatedTextures.Clear();
         }
 
         private SpriteRenderer ResolveRenderer()
@@ -200,11 +214,36 @@ namespace DemonKing.Presentation.Characters
             }
 
             texture.Apply();
+            generatedTextures.Add(texture);
             return Sprite.Create(
                 texture,
                 new Rect(0f, 0f, width, height),
                 new Vector2(0.5f, 0.5f),
                 PixelsPerUnit);
+        }
+
+        private Sprite[] LoadDedicatedFrames(Texture2D spriteSheet)
+        {
+            int frameWidth = spriteSheet.width / 2;
+            if (frameWidth <= 0 || spriteSheet.height <= 0)
+            {
+                Debug.LogError("Evolution専用スプライトシートの寸法が不正です。", this);
+                return Array.Empty<Sprite>();
+            }
+
+            var frames = new Sprite[2];
+            for (int index = 0; index < frames.Length; index++)
+            {
+                frames[index] = Sprite.Create(
+                    spriteSheet,
+                    new Rect(frameWidth * index, 0f, frameWidth, spriteSheet.height),
+                    new Vector2(0.5f, 0.5f),
+                    DedicatedSpritePixelsPerUnit);
+                frames[index].name = $"{spriteSheet.name}_{index}";
+                generatedSprites.Add(frames[index]);
+            }
+
+            return frames;
         }
 
         private Color ResolveColor(char token)

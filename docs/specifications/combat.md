@@ -47,9 +47,11 @@ RewardService
 
 ## Definition
 
-`AbilityDefinition` がStable Ability ID、表示情報、実行方式、クールダウン、コストを持ちます。`MeleeAttackDefinition` はこれを継承し、Damage Type、ダメージ、攻撃半径、攻撃距離などの近接攻撃固有値を持ちます。
+`AbilityDefinition` がStable Ability ID、表示情報、実行方式、クールダウン、コストを持ちます。`MeleeAttackDefinition` は近接範囲固有値を、`ProjectileAttackDefinition` はダメージ、速度、到達距離、衝突半径など飛翔体固有値を持ちます。
 
 基本近接攻撃のStable Content IDは `ability.basic_melee` です。DamageRequestには実行したAbility IDを必ず渡します。
+
+火炎魔法Artの `ability.magic.fire_bolt` は `ProjectileAttackExecutor` が実行します。飛翔体は命中または最大距離到達までAbilityを実行中に保ち、終了時に同じExecution IDで効果成立結果と完了を通知します。
 
 Runtime数値はScriptableObjectを正とし、Markdownへ複製しません。
 
