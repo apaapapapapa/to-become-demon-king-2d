@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using DemonKing.Gameplay.Characters;
+using DemonKing.Gameplay.Content;
 using DemonKing.Gameplay.Events;
 using DemonKing.Gameplay.Progression;
 using DemonKing.Gameplay.Quests;
@@ -19,18 +20,21 @@ namespace DemonKing.Field.Prototype
             ProgressionAcquisitionService progressionAcquisitionService,
             RewardService rewardService,
             GameplayEventHub gameplayEventHub,
-            QuestProgressionService questProgressionService)
+            QuestProgressionService questProgressionService,
+            GameContentCatalog gameContentCatalog)
         {
             ProgressionAcquisitionService = progressionAcquisitionService;
             RewardService = rewardService;
             GameplayEventHub = gameplayEventHub;
             QuestProgressionService = questProgressionService;
+            GameContentCatalog = gameContentCatalog;
         }
 
         public ProgressionAcquisitionService ProgressionAcquisitionService { get; }
         public RewardService RewardService { get; }
         public GameplayEventHub GameplayEventHub { get; }
         public QuestProgressionService QuestProgressionService { get; }
+        public GameContentCatalog GameContentCatalog { get; }
     }
 
     internal static class PrototypeGameplayServicesFactory
@@ -38,12 +42,19 @@ namespace DemonKing.Field.Prototype
         public static bool TryCreate(
             GameObject player,
             IEnumerable<QuestDefinition> questDefinitions,
+            GameContentCatalog gameContentCatalog,
             out PrototypeGameplayServices services)
         {
             services = null;
             if (player == null)
             {
                 Debug.LogError("Gameplay Serviceを初期化できません。プレイヤーが生成されていません。");
+                return false;
+            }
+
+            if (gameContentCatalog == null)
+            {
+                Debug.LogError("Gameplay Serviceを初期化できません。GameContentCatalogが生成されていません。");
                 return false;
             }
 
@@ -71,7 +82,8 @@ namespace DemonKing.Field.Prototype
                 acquisitionService,
                 rewardService,
                 gameplayEventHub,
-                questProgressionService);
+                questProgressionService,
+                gameContentCatalog);
             return true;
         }
     }
