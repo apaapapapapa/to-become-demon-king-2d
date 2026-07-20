@@ -9,8 +9,17 @@
 | Art | K | Button North |
 | Interact | E | Button South |
 | Dodge | Left Shift | Button East |
+| Jump / Ascend | Space | Left Shoulder |
+| Flight Toggle | F | Left Stick Press |
+| Descend | Left Ctrl | Left Trigger |
 | Evolution | V | Right Shoulder |
 | Pause | Escape | Start |
+
+Jump入力は地上ではJump開始に使用します。飛行中は同じ入力を保持して上昇します。Descend入力は飛行中の下降に使用します。
+
+Flight Toggleで飛行状態を切り替えます。飛行解除時に地面より上にいる場合は落下状態へ移行します。
+
+移動状態と高さ方向の具体的な振る舞いは [移動仕様](./movement.md) を参照してください。
 
 ## UI Action Map
 
