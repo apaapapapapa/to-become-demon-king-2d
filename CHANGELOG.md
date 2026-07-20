@@ -1,3 +1,23 @@
+## [1.6.0](https://github.com/apaapapapapa/to-become-demon-king-2d/compare/v1.5.0...v1.6.0) (2026-07-20)
+
+### Features
+
+* add game content definition contract ([0e10e80](https://github.com/apaapapapapa/to-become-demon-king-2d/commit/0e10e80e7f061e6be2d8e19069679942a930e77d))
+* add runtime game content catalog ([0278229](https://github.com/apaapapapapa/to-become-demon-king-2d/commit/0278229e21e211d962a2d64f68ea9c7a2280b9d2))
+* compose game content catalog in world builder ([fa79f7f](https://github.com/apaapapapapa/to-become-demon-king-2d/commit/fa79f7f780c488202b8a404bb04b900adec9adc2))
+* compose runtime game content catalog ([93a4d72](https://github.com/apaapapapapa/to-become-demon-king-2d/commit/93a4d72d84c1d1e2ef12d32d4ebbfe5bef9215a9))
+* expose ability encyclopedia metadata ([a5f963d](https://github.com/apaapapapapa/to-become-demon-king-2d/commit/a5f963d25c8e1ff652aeb859380dc180c7be7620))
+* expose art encyclopedia metadata ([8efcb68](https://github.com/apaapapapapa/to-become-demon-king-2d/commit/8efcb68b0c93fb5e2b51d77f5dd7154820b02eac))
+* expose character encyclopedia metadata ([0714564](https://github.com/apaapapapapa/to-become-demon-king-2d/commit/0714564fa344800920348ab4c08ce3bad40d6f03))
+* expose evolution encyclopedia metadata ([7b06652](https://github.com/apaapapapapa/to-become-demon-king-2d/commit/7b06652568308712f20ec62b9aa26bff8ef761f6))
+* expose game content catalog as runtime service ([de1e5e0](https://github.com/apaapapapapa/to-become-demon-king-2d/commit/de1e5e0c8780fdf145a7ae630dd9be705bc70e15))
+* expose game content catalog from world build ([f9d1672](https://github.com/apaapapapapa/to-become-demon-king-2d/commit/f9d1672e88cad08d7536a76e10fa3ff1d7691954))
+* expose skill encyclopedia metadata ([4b9f82d](https://github.com/apaapapapapa/to-become-demon-king-2d/commit/4b9f82d4a1da0630ef083cda12adbb1d975c60ce))
+* generate encyclopedia catalog from runtime definitions ([d289689](https://github.com/apaapapapapa/to-become-demon-king-2d/commit/d289689ca445351a1d9c053a42a2cd325d3b67bd))
+* render runtime encyclopedia descriptions ([89a8d4e](https://github.com/apaapapapapa/to-become-demon-king-2d/commit/89a8d4e739ec6bc3bd882004b9811e9fc366b95a))
+* render runtime encyclopedia entries in catalog ([787fa72](https://github.com/apaapapapapa/to-become-demon-king-2d/commit/787fa72a8a80505793ca52f2b356866d8977b5ee))
+* support encyclopedia relations without detail pages ([01e4e00](https://github.com/apaapapapapa/to-become-demon-king-2d/commit/01e4e00d63315f3dcb8cd37e2bf5a35fc112c2e7))
+
 ## [1.5.0](https://github.com/apaapapapapa/to-become-demon-king-2d/compare/v1.4.0...v1.5.0) (2026-07-20)
 
 ### Features
