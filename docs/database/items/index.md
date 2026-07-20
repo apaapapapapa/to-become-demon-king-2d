@@ -4,4 +4,6 @@
 
 コンテンツページの共通メタデータ規則とRuntime値のSource of Truthは [ドキュメント規約](../../development/documentation-rules.md) を参照してください。
 
-現在の正式コンテンツ登録状況は [ロードマップ](../../development/roadmap.md) を参照してください。
+## 登録ページ
+
+<ContentCatalog content-type="item" />
