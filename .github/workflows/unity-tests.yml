@@ -1,0 +1,84 @@
+name: Unity Tests
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "Assets/**"
+      - "Packages/**"
+      - "ProjectSettings/**"
+      - ".github/workflows/unity-tests.yml"
+  pull_request:
+    paths:
+      - "Assets/**"
+      - "Packages/**"
+      - "ProjectSettings/**"
+      - ".github/workflows/unity-tests.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  checks: write
+
+concurrency:
+  group: unity-tests-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Unity Test Runner
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+      UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+      UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+      UNITY_SERIAL: ${{ secrets.UNITY_SERIAL }}
+
+    steps:
+      - name: リポジトリを取得
+        uses: actions/checkout@v6
+        with:
+          lfs: true
+
+      - name: Unityライセンス設定を確認
+        id: unity-license
+        shell: bash
+        run: |
+          if [[ -n "$UNITY_EMAIL" && -n "$UNITY_PASSWORD" && ( -n "$UNITY_LICENSE" || -n "$UNITY_SERIAL" ) ]]; then
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+            echo "Unityライセンス用Secretsが設定されています。"
+          else
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::Unityライセンス用Secretsが未設定のため、Unity Test Runnerをスキップします。UNITY_EMAIL、UNITY_PASSWORD、およびUNITY_LICENSEまたはUNITY_SERIALを登録してください。"
+          fi
+
+      - name: Unity Libraryをキャッシュ
+        if: steps.unity-license.outputs.configured == 'true'
+        uses: actions/cache@v4
+        with:
+          path: Library
+          key: unity-library-${{ runner.os }}-${{ hashFiles('Assets/**', 'Packages/**', 'ProjectSettings/**') }}
+          restore-keys: |
+            unity-library-${{ runner.os }}-
+
+      - name: EditMode / PlayModeテストを実行
+        if: steps.unity-license.outputs.configured == 'true'
+        id: unity-tests
+        uses: game-ci/unity-test-runner@v4
+        with:
+          projectPath: .
+          unityVersion: auto
+          testMode: All
+          artifactsPath: artifacts
+          githubToken: ${{ secrets.GITHUB_TOKEN }}
+          checkName: Unity Test Results
+
+      - name: テスト結果をアップロード
+        if: always() && steps.unity-license.outputs.configured == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: unity-test-results
+          path: ${{ steps.unity-tests.outputs.artifactsPath }}
+          if-no-files-found: warn
