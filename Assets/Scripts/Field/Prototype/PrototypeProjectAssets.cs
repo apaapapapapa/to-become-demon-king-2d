@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using DemonKing.Field.Prototype.Configuration;
+using DemonKing.Gameplay.AI.Configuration;
 using DemonKing.Gameplay.Characters.Configuration;
 using DemonKing.Gameplay.Content;
 using DemonKing.Gameplay.Dialogue.Configuration;
@@ -24,6 +25,7 @@ namespace DemonKing.Field.Prototype
 
         [Header("Characters")]
         [SerializeField] private CharacterDefinition playerCharacter;
+        [SerializeField] private EnemyAiDefinition trainingSlimeAi;
 
         [Header("Content")]
         [SerializeField] private DialogueDefinition apprenticeMageDialogue;
@@ -52,6 +54,7 @@ namespace DemonKing.Field.Prototype
 
         public PrototypeApplicationSettings ApplicationSettings => applicationSettings;
         public CharacterDefinition PlayerCharacter => playerCharacter;
+        public EnemyAiDefinition TrainingSlimeAi => trainingSlimeAi;
         public DialogueDefinition ApprenticeMageDialogue => apprenticeMageDialogue;
         public QuestDefinition[] QuestDefinitions => questDefinitions ?? Array.Empty<QuestDefinition>();
         public RewardDefinition TrainingDummyReward => trainingDummyReward;
@@ -112,6 +115,8 @@ namespace DemonKing.Field.Prototype
             applicationSettings != null &&
             playerCharacter != null &&
             playerCharacter.IsConfigured &&
+            trainingSlimeAi != null &&
+            trainingSlimeAi.IsConfigured &&
             apprenticeMageDialogue != null &&
             apprenticeMageDialogue.IsConfigured &&
             questDefinitions != null &&
