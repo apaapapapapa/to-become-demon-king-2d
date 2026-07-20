@@ -1,3 +1,9 @@
+## [1.2.1](https://github.com/apaapapapapa/to-become-demon-king-2d/compare/v1.2.0...v1.2.1) (2026-07-20)
+
+### Bug Fixes
+
+* refine NPC dialogue progression ([176ad50](https://github.com/apaapapapapa/to-become-demon-king-2d/commit/176ad505e44f5266d3b11330371d9f4d8c940718))
+
 ## [1.2.0](https://github.com/apaapapapapa/to-become-demon-king-2d/compare/v1.1.0...v1.2.0) (2026-07-20)
 
 ### Features
