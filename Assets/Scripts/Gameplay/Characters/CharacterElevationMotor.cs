@@ -11,7 +11,8 @@ namespace DemonKing.Gameplay.Characters
 
     /// <summary>
     /// フィールドのElevation軸（Z）だけを制御し、Jump / Fall / Flightを管理します。
-    /// X/Y平面移動はCharacterPlanarMotorへ委譲し、Unity標準重力は使用しません。
+    /// X/Y平面移動はCharacterPlanarMotorへ委譲し、最終的な3軸移動の合成はCharacterPhysicsBody3Dへ委譲します。
+    /// Unity標準重力は使用しません。
     /// </summary>
     [DisallowMultipleComponent]
     [RequireComponent(typeof(CharacterPhysicsBody3D))]
@@ -27,13 +28,12 @@ namespace DemonKing.Gameplay.Characters
         [SerializeField, Min(0.001f)] private float groundTolerance = 0.02f;
 
         private CharacterPhysicsBody3D physicsBody;
-        private Rigidbody body;
         private float verticalVelocity;
         private float flightVerticalInput;
         private float lastSupportContactFixedTime = float.NegativeInfinity;
 
         public CharacterElevationMode Mode { get; private set; }
-        public float Elevation => body == null ? transform.position.z : body.position.z;
+        public float Elevation => physicsBody == null ? transform.position.z : physicsBody.Elevation;
         public float VerticalVelocity => verticalVelocity;
         public bool IsGrounded => Mode == CharacterElevationMode.Grounded;
         public bool IsFlying => Mode == CharacterElevationMode.Flying;
@@ -42,9 +42,8 @@ namespace DemonKing.Gameplay.Characters
         {
             physicsBody = GetComponent<CharacterPhysicsBody3D>();
             physicsBody.EnsureConfigured();
-            body = physicsBody.Body;
 
-            if (body.position.z <= groundElevation + groundTolerance)
+            if (Elevation <= groundElevation + groundTolerance)
             {
                 SnapToGround();
             }
@@ -57,7 +56,7 @@ namespace DemonKing.Gameplay.Characters
 
         private void FixedUpdate()
         {
-            if (body == null)
+            if (physicsBody == null)
             {
                 return;
             }
@@ -151,15 +150,14 @@ namespace DemonKing.Gameplay.Characters
             physicsBody.SetElevationLocked(false);
             verticalVelocity -= fallAcceleration * Time.fixedDeltaTime;
 
-            Vector3 next = body.position;
-            next.z += verticalVelocity * Time.fixedDeltaTime;
-            if (next.z <= groundElevation)
+            float delta = verticalVelocity * Time.fixedDeltaTime;
+            if (Elevation + delta <= groundElevation)
             {
                 SnapToGround();
                 return;
             }
 
-            body.MovePosition(next);
+            physicsBody.QueueElevationDelta(delta);
         }
 
         private void UpdateFlying()
@@ -167,12 +165,11 @@ namespace DemonKing.Gameplay.Characters
             physicsBody.SetElevationLocked(false);
             verticalVelocity = 0f;
 
-            Vector3 next = body.position;
-            next.z = Mathf.Clamp(
-                next.z + flightVerticalInput * flightSpeed * Time.fixedDeltaTime,
+            float targetElevation = Mathf.Clamp(
+                Elevation + flightVerticalInput * flightSpeed * Time.fixedDeltaTime,
                 groundElevation,
                 maxFlightElevation);
-            body.MovePosition(next);
+            physicsBody.QueueElevationDelta(targetElevation - Elevation);
         }
 
         private void OnCollisionStay(Collision collision)
@@ -208,13 +205,8 @@ namespace DemonKing.Gameplay.Characters
             verticalVelocity = 0f;
             flightVerticalInput = 0f;
             Mode = CharacterElevationMode.Grounded;
-
-            // Rigidbody interpolation中の直前位置をFreezePositionZが保持しないよう、
-            // 先にElevationを固定してからGround Elevationへ明示的にテレポートします。
             physicsBody.SetElevationLocked(true);
-            Vector3 position = body.position;
-            position.z = groundElevation;
-            body.position = position;
+            physicsBody.SetElevationImmediate(groundElevation);
         }
     }
 }
