@@ -1,6 +1,7 @@
 import { defineConfig } from 'vitepress'
 
 export default defineConfig({
+  base: '/to-become-demon-king-2d/',
   lang: 'ja-JP',
   title: 'To Become Demon King Knowledge Base',
   description: 'ゲーム設計・仕様・ストーリー・世界設定・データベース・開発判断を一元管理するKnowledge Base',
