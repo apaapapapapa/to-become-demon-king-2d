@@ -12,13 +12,7 @@ runtimeSource: Assets/Resources/Settings/Gameplay/FireMagicArt.asset
 
 見習い魔術師との訓練を通じ、魔力を外部へ放出する制御を身につけるArtとして位置づけます。
 
-## Ability
-
-| Ability ID | 役割 |
-| --- | --- |
-| `ability.magic.fire_bolt` | 単体への遠距離攻撃 |
-
-Artの習得、熟練、Ability解放のRuntimeルールは [Art仕様](../../specifications/art.md)、具体的なInput Bindingは [入力仕様](../../specifications/input.md) を参照してください。
+解放Ability、熟練ランク、Mastery Point等のRuntimeデータは上記Runtime Sourceを正とし、このページへ複製しません。Artの習得・熟練・Ability解放ルールは [Art仕様](../../specifications/art.md)、具体的なInput Bindingは [入力仕様](../../specifications/input.md) を参照してください。
 
 ## 世界観
 
