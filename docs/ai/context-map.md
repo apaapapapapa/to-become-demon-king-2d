@@ -44,6 +44,14 @@ AIエージェントが変更対象に必要な仕様・コード・テストへ
 - **Tests:** `Assets/Tests/EditMode/`, `Assets/Tests/PlayMode/`
 - **Related:** Ability, Reward, Modifiers, Quest
 
+## Content / Encyclopedia
+
+- **Rule:** `docs/development/documentation-rules.md`
+- **Code:** `Assets/Scripts/Gameplay/Content/`, `Assets/Scripts/Gameplay/Characters/Configuration/`, `Assets/Scripts/Gameplay/Abilities/Configuration/`, `Assets/Scripts/Gameplay/Progression/Configuration/`
+- **Web:** `docs/.vitepress/theme/content-catalog.data.ts`, `docs/.vitepress/theme/ContentCatalog.vue`, `docs/.vitepress/theme/RuntimeContentHeader.vue`, `docs/database/`
+- **Tests:** `Assets/Tests/EditMode/GameContentCatalogTests.cs`
+- **Related:** Ability, Art, Skill, Evolution, Save
+
 ## Ability
 
 - **Spec:** `docs/specifications/ability.md`
@@ -100,7 +108,7 @@ AIエージェントが変更対象に必要な仕様・コード・テストへ
 - **Spec:** `docs/specifications/save.md`
 - **Code:** `Assets/Scripts/Domain/Save/`, `Assets/Scripts/Core/Application/`
 - **Tests:** `Assets/Tests/EditMode/`
-- **Related:** Progression, Art, Skill, Evolution
+- **Related:** Progression, Art, Skill, Evolution, Content / Encyclopedia
 
 ## Pause
 
