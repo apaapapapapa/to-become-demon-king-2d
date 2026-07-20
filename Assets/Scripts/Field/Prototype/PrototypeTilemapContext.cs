@@ -28,7 +28,6 @@ namespace DemonKing.Field.Prototype
 
         public static PrototypeTilemapContext Resolve()
         {
-            // シーン内にGridは1つだけ存在する前提のため、順序保証が不要なFindAnyObjectByTypeを使用します。
             Grid grid = Object.FindAnyObjectByType<Grid>();
             if (grid == null)
             {
@@ -43,17 +42,25 @@ namespace DemonKing.Field.Prototype
                 "Ground",
                 SortingLayerNames.Ground,
                 PrototypeWorldMath.GroundOrder,
-                true,
-                false);
+                true);
             Tilemap collision = ResolveTilemap(
                 grid.transform,
                 "Collision",
                 SortingLayerNames.Ground,
                 PrototypeWorldMath.GroundOrder,
-                false,
+                false);
+            Tilemap props = ResolveTilemap(
+                grid.transform,
+                "Props",
+                SortingLayerNames.World,
+                0,
                 true);
-            Tilemap props = ResolveTilemap(grid.transform, "Props", SortingLayerNames.World, 0, true, false);
-            Tilemap foreground = ResolveTilemap(grid.transform, "Foreground", SortingLayerNames.Foreground, 0, true, false);
+            Tilemap foreground = ResolveTilemap(
+                grid.transform,
+                "Foreground",
+                SortingLayerNames.Foreground,
+                0,
+                true);
 
             TilemapRenderer propsRenderer = props.GetComponent<TilemapRenderer>();
             if (propsRenderer != null)
@@ -69,8 +76,7 @@ namespace DemonKing.Field.Prototype
             string name,
             string sortingLayer,
             int sortingOrder,
-            bool rendererEnabled,
-            bool collisionMarker)
+            bool rendererEnabled)
         {
             Transform child = grid.Find(name);
             GameObject tilemapObject;
@@ -100,16 +106,6 @@ namespace DemonKing.Field.Prototype
             renderer.sortingLayerName = sortingLayer;
             renderer.sortingOrder = sortingOrder;
             renderer.enabled = rendererEnabled;
-
-            if (collisionMarker)
-            {
-                TilemapCollider2D legacyCollider = tilemapObject.GetComponent<TilemapCollider2D>();
-                if (legacyCollider != null)
-                {
-                    legacyCollider.enabled = false;
-                }
-            }
-
             return tilemap;
         }
     }
