@@ -32,6 +32,7 @@ export default defineConfig({
         { text: '仕様書一覧', link: '/specifications/' },
         { text: '入力', link: '/specifications/input' },
         { text: 'Ability', link: '/specifications/ability' },
+        { text: 'Art', link: '/specifications/art' },
         { text: '戦闘', link: '/specifications/combat' },
         { text: 'インタラクション', link: '/specifications/interaction' },
         { text: '成長', link: '/specifications/progression' },
@@ -49,6 +50,7 @@ export default defineConfig({
         { text: 'モンスター', link: '/database/monsters/' },
         { text: '進化テーブル', link: '/database/evolutions/' },
         { text: 'アイテム', link: '/database/items/' },
+        { text: 'アーツ', link: '/database/arts/' },
         { text: 'スキル', link: '/database/skills/' }
       ] }],
       '/development/': [{ text: '開発', items: [
@@ -60,7 +62,8 @@ export default defineConfig({
       ] }],
       '/decisions/': [{ text: 'Architecture Decision Records', items: [
         { text: 'ADR一覧', link: '/decisions/' },
-        { text: 'ADR-0001 Knowledge Baseを同一リポジトリで管理', link: '/decisions/ADR-0001-monorepo-knowledge-base' }
+        { text: 'ADR-0001 Knowledge Baseを同一リポジトリで管理', link: '/decisions/ADR-0001-monorepo-knowledge-base' },
+        { text: 'ADR-0002 Ability・Art・Skillの責務分離', link: '/decisions/ADR-0002-ability-art-skill-boundaries' }
       ] }]
     },
     socialLinks: [

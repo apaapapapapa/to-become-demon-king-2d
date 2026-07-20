@@ -22,6 +22,7 @@
 
 ```text
 Progression/
+  ArtProgressState（将来）
   CharacterProgressionState
   ExperienceTable
   LevelUpResult
@@ -64,6 +65,7 @@ Gameplay/
     DefeatContext
   Interaction/
   Progression/
+    ArtProgressionService（将来）
   Rewards/
 ```
 
@@ -88,6 +90,7 @@ Prototypeシーンを組み立てるComposition層です。恒久的なDomain/Ga
 ```text
 Definition
   AbilityDefinition
+  ArtDefinition（将来）
   CharacterDefinition
   CharacterStatsDefinition
   MeleeAttackDefinition
@@ -97,6 +100,7 @@ Definition
        ↓
 Runtime State
   AbilityRuntimeState
+  ArtProgressState（将来）
   CharacterProgressionState
        ↓ Mapper
 Save DTO
@@ -112,6 +116,7 @@ Definitionは静的定義、Runtime Stateはプレイ中に変化する状態、
 ```text
 character.player.slime
 ability.basic_melee
+art.magic.example
 reward.training_dummy
 ```
 
@@ -145,7 +150,7 @@ CharacterDefinition
   └ experienceTableDefinition
 ```
 
-## Ability / Combat / Reward境界
+## Ability / Art / Combat / Reward境界
 
 ```text
 Player Input / AI
@@ -169,7 +174,23 @@ CharacterProgressionState.GainExperience
 
 経験値・ドロップ・進化処理をHealthや攻撃コンポーネントへ直接埋め込みません。RewardServiceは同一Defeatに対する重複付与を防ぐ境界を持ちます。
 
-Abilityは実行可能な行動、SkillはAbility等を獲得・強化する成長要素、Evolutionは形態・成長経路を変える不可逆または排他的な選択として分離します。AbilityControllerとExecutorはSkill取得状態やEvolution条件を知りません。
+Abilityは実行可能な行動、Artは1つ以上のAbilityを習得・熟練する能動技能、Skillは受動的な成長要素、Evolutionは形態・成長経路を変える不可逆または排他的な選択として分離します。AbilityControllerとExecutorはArt進捗、Skill取得状態、Evolution条件を知りません。
+
+Artは次の境界で既存Ability基盤へ接続します。
+
+```text
+ArtProgressState + ArtDefinition
+  ↓ ランクで解放済みのAbility
+AbilityController
+  ↓ 実行
+IAbilityExecutor
+  ↓ 効果成立通知
+ArtProgressionService
+  ↓ Execution単位で重複排除
+ArtProgressState.AddMastery
+```
+
+Art進捗はDomain、静的なランク閾値とAbility対応はDefinition、習得・熟練度加算・Ability付与の調停はGameplayの責務です。効果処理から成長状態を直接変更しません。
 
 ## Save境界
 
@@ -215,12 +236,14 @@ ISaveService
 
 ## 直近の拡張方針
 
-1. Skill
-2. Evolution
-3. NPC会話
-4. 敵AI
-5. クエスト・目的管理
-6. 実際のセーブ保存実装
+1. Art Definition、進捗、Save Migration
+2. Art習得、Ability付与、熟練度加算
+3. 受動Skill
+4. Evolution
+5. NPC会話
+6. 敵AI
+7. クエスト・目的管理
+8. 実際のセーブ保存実装
 
 ## リアーキテクチャ判断基準
 

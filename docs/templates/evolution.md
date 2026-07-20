@@ -44,4 +44,5 @@ Base Monster
 - Monsters:
 - Items:
 - Skills:
+- Arts:
 - Story:

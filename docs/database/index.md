@@ -5,6 +5,7 @@
 - [モンスター](./monsters/)
 - [進化テーブル](./evolutions/)
 - [アイテム](./items/)
+- [アーツ](./arts/)
 - [スキル](./skills/)
 
 ## Source of Truth

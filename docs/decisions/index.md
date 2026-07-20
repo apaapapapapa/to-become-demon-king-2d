@@ -12,3 +12,4 @@
 | ADR | Status | 内容 |
 | --- | --- | --- |
 | [ADR-0001](./ADR-0001-monorepo-knowledge-base.md) | Accepted | Unity実装とKnowledge Baseを同一リポジトリで管理する |
+| [ADR-0002](./ADR-0002-ability-art-skill-boundaries.md) | Accepted | Ability・Art・Skillの責務を分離する |

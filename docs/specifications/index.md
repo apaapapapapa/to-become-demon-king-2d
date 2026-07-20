@@ -4,11 +4,12 @@
 
 - [入力](./input.md)
 - [Ability](./ability.md)
+- [Art](./art.md)
 - [戦闘](./combat.md)
 - [インタラクション](./interaction.md)
 - [成長](./progression.md)
 - [セーブ](./save.md)
 
-今後、会話、クエスト、Skill、Evolution、Scene遷移などを機能単位で追加します。
+今後、会話、クエスト、Skill、Evolution、Scene遷移などを機能単位で追加します。Artは設計済み・未実装です。
 
 仕様書には振る舞い、状態遷移、境界、Source of Truth、Stable ID、未実装事項を記載します。

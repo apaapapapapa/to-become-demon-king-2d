@@ -26,6 +26,19 @@ Tests
 
 Runtime数値をMarkdownへコピーしません。
 
+### Art追加
+
+```text
+docs/database/arts/
+docs/specifications/art.md
+ArtDefinition / AbilityDefinition
+Art進捗 / Save DTO / Migration
+Ability Executor
+Domain / EditMode / PlayMode Tests
+```
+
+能動行動はArtから解放されるAbilityとして実装し、Artの習得・熟練度をAbilityやExecutorへ直接埋め込みません。
+
 ### Combat変更
 
 ```text
@@ -61,6 +74,6 @@ docs/decisions/ADR-xxxx-*.md
 
 ## 将来の構造化データ
 
-モンスター、アイテム、Skill、Evolutionが大量になった場合は、YAML / JSON等からUnityとVitePress双方へ情報を供給する構成を検討できます。
+モンスター、アイテム、Art、Skill、Evolutionが大量になった場合は、YAML / JSON等からUnityとVitePress双方へ情報を供給する構成を検討できます。
 
 必要性が確認される前に独自データ生成基盤を導入せず、導入時はADRを追加します。

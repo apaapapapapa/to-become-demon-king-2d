@@ -9,7 +9,7 @@ docs/
   specifications/   実装と同期する仕様
   story/            ストーリー・キャラクター・クエスト
   world/            世界設定
-  database/         モンスター・進化・アイテム・スキル
+  database/         モンスター・進化・アイテム・アーツ・スキル
   development/      開発運用
   decisions/        ADR
   templates/        テンプレート
@@ -51,7 +51,7 @@ Knowledge Baseを正にする情報:
 
 ## リンク
 
-関連情報は相互リンクします。Monster、Evolution、Skill、Story、Unity Definitionを孤立させません。
+関連情報は相互リンクします。Monster、Evolution、Art、Skill、Story、Unity Definitionを孤立させません。
 
 ## 変更同期
 
