@@ -1,20 +1,9 @@
 ---
 title: プレイヤースライム
-contentId: character.player.slime
-contentType: monster
-status: Prototype Implemented
-relatedContentIds:
-  - character.training_dummy
-  - art.magic.fire
-  - skill.combat.predatory_instinct
-  - evolution.slime.lineage
-  - evolution.slime.apex_predator
-  - evolution.slime.archmage
+runtimeSource: Assets/Resources/Settings/Gameplay/PlayerCharacter.asset
 ---
 
-# プレイヤースライム
-
-Unity Definition: `Assets/Resources/Settings/Gameplay/PlayerCharacter.asset`
+<RuntimeContentHeader />
 
 ## 概要
 
@@ -32,10 +21,4 @@ Unity Definition: `Assets/Resources/Settings/Gameplay/PlayerCharacter.asset`
 
 ## 関連コンテンツ
 
-- [スライム進化系列](../evolutions/slime-lineage.md)
-- [捕食者の本能](../skills/predatory-instinct.md)
-- [火炎魔法](../arts/fire-magic.md)
-
-## Stable Content IDでの関連
-
-<ContentRelations content-id="character.player.slime" />
+<ContentRelations />
