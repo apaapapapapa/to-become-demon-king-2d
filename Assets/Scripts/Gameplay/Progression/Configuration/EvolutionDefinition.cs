@@ -6,6 +6,57 @@ using UnityEngine;
 
 namespace DemonKing.Gameplay.Progression.Configuration
 {
+    public enum EvolutionVisualEffect
+    {
+        None = 0,
+        PredatorSpikes = 1,
+        ArcaneWisps = 2
+    }
+
+    /// <summary>
+    /// Evolution後の外見をPresentationへ渡す静的な表示プロファイルです。
+    /// 実際のSprite生成や演出再生はPresentation側が担当します。
+    /// </summary>
+    [Serializable]
+    public sealed class EvolutionAppearanceProfile
+    {
+        [SerializeField] private Color outlineColor = new(0.08f, 0.31f, 0.25f, 1f);
+        [SerializeField] private Color bodyColor = new(0.30f, 0.86f, 0.53f, 1f);
+        [SerializeField] private Color shadowColor = new(0.18f, 0.65f, 0.44f, 1f);
+        [SerializeField] private Color highlightColor = new(0.76f, 1f, 0.80f, 1f);
+        [SerializeField] private Color eyeColor = new(0.04f, 0.11f, 0.10f, 1f);
+        [SerializeField] private Color effectColor = Color.white;
+        [SerializeField] private Vector2 visualScale = Vector2.one;
+        [SerializeField] private EvolutionVisualEffect visualEffect;
+
+        public Color OutlineColor => outlineColor;
+        public Color BodyColor => bodyColor;
+        public Color ShadowColor => shadowColor;
+        public Color HighlightColor => highlightColor;
+        public Color EyeColor => eyeColor;
+        public Color EffectColor => effectColor;
+        public Vector2 VisualScale => visualScale;
+        public EvolutionVisualEffect VisualEffect => visualEffect;
+
+        internal bool IsConfigured =>
+            outlineColor.a > 0f &&
+            bodyColor.a > 0f &&
+            shadowColor.a > 0f &&
+            highlightColor.a > 0f &&
+            eyeColor.a > 0f &&
+            effectColor.a > 0f &&
+            visualScale.x > 0f &&
+            visualScale.y > 0f &&
+            Enum.IsDefined(typeof(EvolutionVisualEffect), visualEffect);
+
+        internal void Normalize()
+        {
+            visualScale = new Vector2(
+                Mathf.Max(0.1f, visualScale.x),
+                Mathf.Max(0.1f, visualScale.y));
+        }
+    }
+
     /// <summary>
     /// ArtランクをEvolution条件として参照する静的要件です。
     /// </summary>
@@ -59,6 +110,9 @@ namespace DemonKing.Gameplay.Progression.Configuration
         [SerializeField] private GameplayModifierEntry[] modifiers =
             Array.Empty<GameplayModifierEntry>();
 
+        [Header("Appearance")]
+        [SerializeField] private EvolutionAppearanceProfile appearance = new();
+
         public string EvolutionNodeId => evolutionNodeId;
         public string DisplayName => displayName;
         public string Description => description;
@@ -74,6 +128,7 @@ namespace DemonKing.Gameplay.Progression.Configuration
             requiredEvolutionNodeIds ?? Array.Empty<string>();
         public IReadOnlyList<GameplayModifierEntry> Modifiers =>
             modifiers ?? Array.Empty<GameplayModifierEntry>();
+        public EvolutionAppearanceProfile Appearance => appearance;
 
         public bool IsConfigured =>
             StableContentId.IsValid(evolutionNodeId) &&
@@ -90,7 +145,9 @@ namespace DemonKing.Gameplay.Progression.Configuration
                 requiredEvolutionNodeIds,
                 EvolutionIdPrefix,
                 allowSelf: false) &&
-            HasValidModifiers();
+            HasValidModifiers() &&
+            appearance != null &&
+            appearance.IsConfigured;
 
         private bool HasValidArtRequirements()
         {
@@ -177,6 +234,9 @@ namespace DemonKing.Gameplay.Progression.Configuration
             {
                 modifier?.Normalize();
             }
+
+            appearance ??= new EvolutionAppearanceProfile();
+            appearance.Normalize();
         }
 
         private static string[] NormalizeIds(string[] ids)

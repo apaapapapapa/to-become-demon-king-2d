@@ -44,6 +44,23 @@ namespace DemonKing.Gameplay.Progression
             return Service.Evolve(evolutionNodeId);
         }
 
+        public IReadOnlyList<EvolutionDefinition> Definitions
+        {
+            get
+            {
+                EnsureInitialized();
+                return Service.Definitions;
+            }
+        }
+
+        public bool TryGetDefinition(
+            string evolutionNodeId,
+            out EvolutionDefinition definition)
+        {
+            EnsureInitialized();
+            return Service.TryGetDefinition(evolutionNodeId, out definition);
+        }
+
         public NumericModifier GetAbilityCooldownModifier(AbilityDefinition definition)
         {
             return definition == null || Service == null

@@ -28,3 +28,12 @@ MonoBehaviour:
     operation: 0
     value: 1
     targetContentId:
+  appearance:
+    outlineColor: {r: 0.29, g: 0.075, b: 0.06, a: 1}
+    bodyColor: {r: 0.88, g: 0.27, b: 0.16, a: 1}
+    shadowColor: {r: 0.63, g: 0.14, b: 0.11, a: 1}
+    highlightColor: {r: 1, g: 0.72, b: 0.36, a: 1}
+    eyeColor: {r: 0.12, g: 0.025, b: 0.02, a: 1}
+    effectColor: {r: 1, g: 0.52, b: 0.18, a: 1}
+    visualScale: {x: 1.14, y: 1.08}
+    visualEffect: 1

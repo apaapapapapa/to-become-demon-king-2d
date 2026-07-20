@@ -26,6 +26,7 @@
 - 受動Skill Definition / 取得 / Save接続
 - 与ダメージ / Abilityクールダウン / Art熟練ポイント補正
 - Evolution Node Definition / 条件評価 / 排他選択 / Save / 永続補正
+- Evolution選択UI / Input Context / Prototype形態表示・演出
 - Stable Content ID相互リンク / VitePress Data Loader一覧
 - EditMode / PlayModeテスト
 - VitePress Knowledge Base基盤
@@ -35,8 +36,8 @@
 1. NPC会話
 2. 敵AI
 3. クエスト・目的管理
-4. Art / Skill / Evolutionの取得・入力・UIと正式Runtimeコンテンツ
-5. Evolutionの見た目・演出と上位Node
+4. Art / Skillの取得・入力・UIと正式Runtimeコンテンツ
+5. Evolutionの本番用アートと上位Node
 6. 縦切りゲームループ完成
 
 ## P3候補

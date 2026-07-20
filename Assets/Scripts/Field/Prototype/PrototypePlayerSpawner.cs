@@ -58,10 +58,12 @@ namespace DemonKing.Field.Prototype
                 root.AddComponent<SlimeController>();
             }
 
-            if (root.GetComponent<PrototypeSlimeSpriteAnimator>() == null)
+            PrototypeSlimeSpriteAnimator spriteAnimator =
+                root.GetComponent<PrototypeSlimeSpriteAnimator>();
+            if (spriteAnimator == null)
             {
                 Debug.LogWarning("PrototypeSlime Prefabにスプライトアニメーションがないため、実行時に補完します。", root);
-                root.AddComponent<PrototypeSlimeSpriteAnimator>();
+                spriteAnimator = root.AddComponent<PrototypeSlimeSpriteAnimator>();
             }
 
             CharacterMotor2D motor = root.GetComponent<CharacterMotor2D>();
@@ -119,6 +121,15 @@ namespace DemonKing.Field.Prototype
             evolutionProgressionController.Initialize(
                 state,
                 characterDefinition.EvolutionDefinitions);
+
+            PrototypeSlimeEvolutionPresenter evolutionPresenter =
+                root.GetComponent<PrototypeSlimeEvolutionPresenter>();
+            if (evolutionPresenter == null)
+            {
+                evolutionPresenter = root.AddComponent<PrototypeSlimeEvolutionPresenter>();
+            }
+
+            evolutionPresenter.Initialize(evolutionProgressionController);
 
             ArtProgressionController artProgressionController =
                 root.GetComponent<ArtProgressionController>();

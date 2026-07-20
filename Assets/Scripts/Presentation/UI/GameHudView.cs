@@ -120,7 +120,7 @@ namespace DemonKing.Presentation.UI
             CreateText(
                 "Controls Text",
                 panel,
-                "移動  WASD／矢印／左スティック    攻撃  J    話す・調べる  E    回避  Shift    ポーズ  Esc",
+                "移動 WASD／矢印    攻撃 J    話す E    回避 Shift    進化 V／RB    ポーズ Esc",
                 fontSize: 16,
                 color: HintColor,
                 fontStyle: FontStyle.Normal,

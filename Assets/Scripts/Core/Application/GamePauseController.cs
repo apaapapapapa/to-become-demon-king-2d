@@ -109,6 +109,14 @@ namespace DemonKing.Core.Application
 
         private void HandlePausePressed()
         {
+            // 別のモーダルUIがUI Contextを所有している間は、Pause画面を重ねません。
+            if (!IsPaused &&
+                inputReader != null &&
+                inputReader.CurrentContext != PlayerInputContext.Gameplay)
+            {
+                return;
+            }
+
             TogglePause();
         }
 

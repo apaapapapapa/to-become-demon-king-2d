@@ -8,6 +8,7 @@
 | Attack | J | Button West |
 | Interact | E | Button South |
 | Dodge | Left Shift | Button East |
+| Evolution | V | Right Shoulder |
 | Pause | Escape | Start |
 
 ## UI Action Map
@@ -26,6 +27,8 @@
 - `Disabled`: すべて無効
 
 GameplayとUIを同時に有効化しません。Pause開始時はUI、Resume時はGameplayへ戻します。
+
+Evolutionメニューを開くとUI Contextへ切り替えて時間を停止し、確定またはキャンセルで直前のGameplay ContextとTime Scaleへ戻します。別のモーダルUIがUI Contextを所有している間はPause画面を重ねません。
 
 将来の会話・メニュー・カットシーンでも、個別コンポーネントの場当たり的なEnable/DisableではなくInput Contextで制御します。
 

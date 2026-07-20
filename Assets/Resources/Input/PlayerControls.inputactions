@@ -9,6 +9,7 @@
                 {"name":"Attack","type":"Button","id":"55d8d1a8-7c4f-4ef0-9f2e-2d7dbf0a8c11","expectedControlType":"Button","processors":"","interactions":"","initialStateCheck":false},
                 {"name":"Interact","type":"Button","id":"1d86a1c4-f7bb-4d53-80d8-3cf27e1dfb12","expectedControlType":"Button","processors":"","interactions":"","initialStateCheck":false},
                 {"name":"Dodge","type":"Button","id":"8f184546-9c3e-44eb-b6d4-72ca3c2b1987","expectedControlType":"Button","processors":"","interactions":"","initialStateCheck":false},
+                {"name":"Evolution","type":"Button","id":"c4799f65-3f8d-4c7b-a5b2-8e9c12fdc421","expectedControlType":"Button","processors":"","interactions":"","initialStateCheck":false},
                 {"name":"Pause","type":"Button","id":"55b2f786-0be4-4da0-9261-1dca75a77fa3","expectedControlType":"Button","processors":"","interactions":"","initialStateCheck":false}
             ],
             "bindings": [
@@ -29,6 +30,8 @@
                 {"name":"","id":"e715e948-f0b6-4679-9c51-f6b3332a2cb4","path":"<Gamepad>/buttonSouth","interactions":"","processors":"","groups":"Gamepad","action":"Interact","isComposite":false,"isPartOfComposite":false},
                 {"name":"","id":"9bb1a289-bf84-44cb-8cfa-6d18a4f731c5","path":"<Keyboard>/leftShift","interactions":"","processors":"","groups":"Keyboard","action":"Dodge","isComposite":false,"isPartOfComposite":false},
                 {"name":"","id":"28024ccf-9abe-4901-8f99-c542b3e1f1d6","path":"<Gamepad>/buttonEast","interactions":"","processors":"","groups":"Gamepad","action":"Dodge","isComposite":false,"isPartOfComposite":false},
+                {"name":"","id":"0b928eed-777f-41bf-b6a8-6ec9b7b4f101","path":"<Keyboard>/v","interactions":"","processors":"","groups":"Keyboard","action":"Evolution","isComposite":false,"isPartOfComposite":false},
+                {"name":"","id":"0b928eed-777f-41bf-b6a8-6ec9b7b4f102","path":"<Gamepad>/rightShoulder","interactions":"","processors":"","groups":"Gamepad","action":"Evolution","isComposite":false,"isPartOfComposite":false},
                 {"name":"","id":"98564de0-cd22-46d0-9cdf-ad91ad3604e7","path":"<Keyboard>/escape","interactions":"","processors":"","groups":"Keyboard","action":"Pause","isComposite":false,"isPartOfComposite":false},
                 {"name":"","id":"90273840-f7ce-4d5e-88bd-167cb3282fb8","path":"<Gamepad>/start","interactions":"","processors":"","groups":"Gamepad","action":"Pause","isComposite":false,"isPartOfComposite":false}
             ]

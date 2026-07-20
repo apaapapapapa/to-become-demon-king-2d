@@ -380,6 +380,12 @@ namespace DemonKing.Tests.EditMode
             Assert.That(
                 projectAssets.PlayerCharacter.EvolutionDefinitions[1].IsConfigured,
                 Is.True);
+            Assert.That(
+                projectAssets.PlayerCharacter.EvolutionDefinitions[0].Appearance.VisualEffect,
+                Is.EqualTo(EvolutionVisualEffect.PredatorSpikes));
+            Assert.That(
+                projectAssets.PlayerCharacter.EvolutionDefinitions[1].Appearance.VisualEffect,
+                Is.EqualTo(EvolutionVisualEffect.ArcaneWisps));
             Assert.That(projectAssets.PlayerCharacter.ExperienceTableDefinition, Is.Not.Null);
             Assert.That(projectAssets.PlayerCharacter.ExperienceTableDefinition.IsConfigured, Is.True);
             Assert.That(projectAssets.TrainingDummyReward, Is.Not.Null);

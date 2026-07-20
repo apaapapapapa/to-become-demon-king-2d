@@ -45,7 +45,7 @@ Skillをきっかけに能動行動を利用可能にする場合も、その行
 
 Evolutionは `evolution.*` Nodeとして定義し、レベル、Skill、Artランク、前提Node、排他グループを共通サービスで評価します。適用済みNode IDだけをRuntime Stateへ不可逆に追加し、同じ排他グループの別Nodeを拒否します。
 
-選択済みNodeのGameplay補正はSkillと同じ汎用Modifier Sourceへ公開します。専用の見た目と進化選択UIは未実装です。詳細は [Evolution仕様](./evolution.md) を参照してください。
+選択済みNodeのGameplay補正はSkillと同じ汎用Modifier Sourceへ公開します。進化選択UIとPrototype形態表示は実装済みで、本番用の専用アートはPresentation内の後続タスクです。詳細は [Evolution仕様](./evolution.md) を参照してください。
 
 ## Experience
 
