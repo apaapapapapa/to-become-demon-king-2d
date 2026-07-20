@@ -133,12 +133,7 @@ namespace DemonKing.Gameplay.Characters
 
             if (groundedOnBasePlane)
             {
-                physicsBody.SetElevationLocked(true);
-                if (Mathf.Abs(Elevation - groundElevation) > groundTolerance)
-                {
-                    physicsBody.SetElevationImmediate(groundElevation);
-                }
-
+                LockToBaseGround();
                 return;
             }
 
@@ -223,8 +218,15 @@ namespace DemonKing.Gameplay.Characters
             verticalVelocity = 0f;
             flightVerticalInput = 0f;
             Mode = CharacterElevationMode.Grounded;
-            physicsBody.SetElevationLocked(true);
+            LockToBaseGround();
+        }
+
+        private void LockToBaseGround()
+        {
+            // 直前フレームのMovePosition予約をGround Elevationへ上書きしてからZを固定します。
+            physicsBody.SetElevationLocked(false);
             physicsBody.SetElevationImmediate(groundElevation);
+            physicsBody.SetElevationLocked(true);
         }
     }
 }
