@@ -1,3 +1,12 @@
+## [1.7.0](https://github.com/apaapapapapa/to-become-demon-king-2d/compare/v1.6.0...v1.7.0) (2026-07-20)
+
+### Features
+
+* add 3D planar character motor ([e4ce256](https://github.com/apaapapapapa/to-become-demon-king-2d/commit/e4ce25696e2da9fb9fbe303095252d2f7198815d))
+* add 3D planar dodge movement ([66b05f1](https://github.com/apaapapapapa/to-become-demon-king-2d/commit/66b05f1c1fbf902a7fc34cd4b0229a31a511e1b6))
+* add character 3D physics body ([9ba43ff](https://github.com/apaapapapapa/to-become-demon-king-2d/commit/9ba43ff2297870e2236d5f3fe263245d5c1d8a5c))
+* define 3D field axis convention ([4747434](https://github.com/apaapapapapa/to-become-demon-king-2d/commit/47474345449ac9ae9504485f3c77aec441440fb8))
+
 ## [1.6.0](https://github.com/apaapapapapa/to-become-demon-king-2d/compare/v1.5.0...v1.6.0) (2026-07-20)
 
 ### Features
