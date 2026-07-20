@@ -56,8 +56,15 @@ namespace DemonKing.Domain.Quests
         }
     }
 
+    public enum QuestProgressStatus
+    {
+        Available = 0,
+        Active = 1,
+        Completed = 2,
+    }
+
     /// <summary>
-    /// Quest単位のRuntime Stateです。Objective群の完了状態からQuest完了を導出します。
+    /// Quest単位のRuntime Stateです。受注状態とObjective進捗を保持し、完了状態を明示的に遷移させます。
     /// </summary>
     public sealed class QuestProgressState
     {
@@ -80,7 +87,33 @@ namespace DemonKing.Domain.Quests
 
         public string QuestId { get; }
         public IReadOnlyCollection<ObjectiveProgressState> Objectives => objectives.Values;
-        public bool IsCompleted => objectives.Values.All(objective => objective.IsCompleted);
+        public QuestProgressStatus Status { get; private set; } = QuestProgressStatus.Available;
+        public bool IsAccepted => Status != QuestProgressStatus.Available;
+        public bool IsActive => Status == QuestProgressStatus.Active;
+        public bool IsCompleted => Status == QuestProgressStatus.Completed;
+
+        public bool Accept()
+        {
+            if (Status != QuestProgressStatus.Available)
+            {
+                return false;
+            }
+
+            Status = QuestProgressStatus.Active;
+            return true;
+        }
+
+        public bool TryComplete()
+        {
+            if (Status != QuestProgressStatus.Active ||
+                !objectives.Values.All(objective => objective.IsCompleted))
+            {
+                return false;
+            }
+
+            Status = QuestProgressStatus.Completed;
+            return true;
+        }
 
         public bool TryGetObjective(string objectiveId, out ObjectiveProgressState state)
         {
