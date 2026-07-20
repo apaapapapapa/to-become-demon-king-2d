@@ -2,6 +2,8 @@ using System.Collections;
 using DemonKing.Field.Prototype;
 using DemonKing.Gameplay.Combat;
 using DemonKing.Gameplay.Dialogue;
+using DemonKing.Gameplay.Dialogue.Configuration;
+using DemonKing.Gameplay.Spawning;
 using DemonKing.Presentation.UI;
 using NUnit.Framework;
 using UnityEngine;
@@ -30,12 +32,19 @@ namespace DemonKing.Tests.PlayMode
         }
 
         [UnityTest]
-        public IEnumerator PrototypeNpcInteractable_話しかけるたび会話を進め終了後に閉じる()
+        public IEnumerator PrototypeNpcInteractable_DialogueDefinitionの内容で会話を進め終了後に閉じる()
         {
+            DialogueDefinition definition = DialogueDefinition.CreateRuntime(
+                "dialogue.test.apprentice",
+                "見習い魔術師",
+                "魔王を目指しているの？",
+                "まずは訓練用スライムで腕試ししてみて。",
+                "攻撃は何度でも試せるよ。");
             var dialogueLog = new DialogueLog();
             GameObject npcObject = new("Dialogue Test NPC");
             PrototypeNpcInteractable npc = npcObject.AddComponent<PrototypeNpcInteractable>();
             npc.ConfigureDialogueLog(dialogueLog);
+            npc.ConfigureDialogue(definition);
             GameObject interactor = new("Dialogue Test Interactor");
 
             yield return null;
@@ -59,23 +68,36 @@ namespace DemonKing.Tests.PlayMode
 
             Object.Destroy(npcObject);
             Object.Destroy(interactor);
+            Object.Destroy(definition);
         }
 
         [UnityTest]
-        public IEnumerator PrototypeNpcInteractable_話しかけると撃破済みスライムを復活させる()
+        public IEnumerator PrototypeNpcInteractable_汎用SpawnLifecycle経由で撃破済みスライムを復活させる()
         {
             GameObject world = new("Respawn Test World");
-            var respawner = new PrototypeCombatDummyRespawner(
-                world.transform,
-                new Vector3(1.45f, -0.45f, 0f),
-                configureSpawnedDummy: null);
-            PrototypeCombatDummy defeatedDummy = respawner.SpawnOrRestore();
+            Vector3 spawnPosition = new(1.45f, -0.45f, 0f);
+            var lifecycle = new SpawnLifecycle<PrototypeCombatDummy>(
+                () =>
+                {
+                    GameObject dummyObject = new("訓練用スライム");
+                    dummyObject.transform.SetParent(world.transform, false);
+                    dummyObject.transform.localPosition = spawnPosition;
+                    return dummyObject.AddComponent<PrototypeCombatDummy>();
+                },
+                dummy => dummy != null && dummy.IsAlive,
+                dummy => dummy.RestoreToFull());
+            PrototypeCombatDummy defeatedDummy = lifecycle.SpawnOrRestore();
 
+            DialogueDefinition definition = DialogueDefinition.CreateRuntime(
+                "dialogue.test.respawn",
+                "見習い魔術師",
+                "訓練しよう。");
             var dialogueLog = new DialogueLog();
             GameObject npcObject = new("Respawn Test NPC");
             PrototypeNpcInteractable npc = npcObject.AddComponent<PrototypeNpcInteractable>();
             npc.ConfigureDialogueLog(dialogueLog);
-            npc.Interacted += () => respawner.SpawnOrRestore();
+            npc.ConfigureDialogue(definition);
+            npc.Interacted += () => lifecycle.SpawnOrRestore();
             GameObject interactor = new("Respawn Test Interactor");
 
             yield return null;
@@ -88,22 +110,23 @@ namespace DemonKing.Tests.PlayMode
 
             npc.Interact(interactor);
 
-            PrototypeCombatDummy respawnedDummy = respawner.CurrentDummy;
+            PrototypeCombatDummy respawnedDummy = lifecycle.Current;
             Assert.That(respawnedDummy, Is.Not.Null);
             Assert.That(respawnedDummy, Is.Not.SameAs(defeatedDummy));
             Assert.That(respawnedDummy.IsAlive, Is.True);
-            Assert.That(respawnedDummy.transform.localPosition, Is.EqualTo(new Vector3(1.45f, -0.45f, 0f)));
+            Assert.That(respawnedDummy.transform.localPosition, Is.EqualTo(spawnPosition));
 
             Health respawnedHealth = respawnedDummy.GetComponent<Health>();
             respawnedHealth.ApplyDamage(new DamageRequest(1));
             npc.Interact(interactor);
 
-            Assert.That(respawner.CurrentDummy, Is.SameAs(respawnedDummy));
+            Assert.That(lifecycle.Current, Is.SameAs(respawnedDummy));
             Assert.That(respawnedHealth.CurrentHealth, Is.EqualTo(respawnedHealth.MaxHealth));
 
             Object.Destroy(world);
             Object.Destroy(npcObject);
             Object.Destroy(interactor);
+            Object.Destroy(definition);
             yield return null;
         }
 
