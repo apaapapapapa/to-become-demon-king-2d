@@ -31,6 +31,7 @@ namespace DemonKing.Gameplay.Characters
         private float verticalVelocity;
         private float flightVerticalInput;
         private float lastSupportContactFixedTime = float.NegativeInfinity;
+        private bool groundedOnBasePlane;
 
         public CharacterElevationMode Mode { get; private set; }
         public float Elevation => physicsBody == null ? transform.position.z : physicsBody.Elevation;
@@ -49,6 +50,7 @@ namespace DemonKing.Gameplay.Characters
             }
             else
             {
+                groundedOnBasePlane = false;
                 Mode = CharacterElevationMode.Airborne;
                 physicsBody.SetElevationLocked(false);
             }
@@ -82,6 +84,7 @@ namespace DemonKing.Gameplay.Characters
                 return false;
             }
 
+            groundedOnBasePlane = false;
             Mode = CharacterElevationMode.Airborne;
             verticalVelocity = jumpSpeed;
             lastSupportContactFixedTime = float.NegativeInfinity;
@@ -98,6 +101,7 @@ namespace DemonKing.Gameplay.Characters
         {
             if (enabled)
             {
+                groundedOnBasePlane = false;
                 Mode = CharacterElevationMode.Flying;
                 verticalVelocity = 0f;
                 physicsBody.SetElevationLocked(false);
@@ -112,6 +116,7 @@ namespace DemonKing.Gameplay.Characters
             }
             else
             {
+                groundedOnBasePlane = false;
                 Mode = CharacterElevationMode.Airborne;
                 physicsBody.SetElevationLocked(false);
             }
@@ -126,11 +131,12 @@ namespace DemonKing.Gameplay.Characters
         {
             verticalVelocity = 0f;
 
-            if (Elevation <= groundElevation + groundTolerance)
+            if (groundedOnBasePlane)
             {
-                if (!physicsBody.IsElevationLocked)
+                physicsBody.SetElevationLocked(true);
+                if (Mathf.Abs(Elevation - groundElevation) > groundTolerance)
                 {
-                    SnapToGround();
+                    physicsBody.SetElevationImmediate(groundElevation);
                 }
 
                 return;
@@ -172,7 +178,17 @@ namespace DemonKing.Gameplay.Characters
             physicsBody.QueueElevationDelta(targetElevation - Elevation);
         }
 
+        private void OnCollisionEnter(Collision collision)
+        {
+            ResolveSupportContact(collision);
+        }
+
         private void OnCollisionStay(Collision collision)
+        {
+            ResolveSupportContact(collision);
+        }
+
+        private void ResolveSupportContact(Collision collision)
         {
             if (Mode == CharacterElevationMode.Flying || verticalVelocity > 0f)
             {
@@ -187,6 +203,7 @@ namespace DemonKing.Gameplay.Characters
                     continue;
                 }
 
+                groundedOnBasePlane = false;
                 lastSupportContactFixedTime = Time.fixedTime;
                 verticalVelocity = 0f;
                 Mode = CharacterElevationMode.Grounded;
@@ -202,6 +219,7 @@ namespace DemonKing.Gameplay.Characters
 
         private void SnapToGround()
         {
+            groundedOnBasePlane = true;
             verticalVelocity = 0f;
             flightVerticalInput = 0f;
             Mode = CharacterElevationMode.Grounded;
