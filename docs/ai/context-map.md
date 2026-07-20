@@ -139,9 +139,10 @@ AIエージェントが変更対象に必要な仕様・コード・テストへ
 - **Spec:** `docs/specifications/quest.md`
 - **Boundary:** `docs/design/feature-boundaries.md`
 - **Code:** `Assets/Scripts/Domain/Quests/`, `Assets/Scripts/Gameplay/Quests/`
-- **Integration:** `Assets/Scripts/Gameplay/Events/GameplayEventHub.cs`, `Assets/Scripts/Field/Prototype/PrototypeTrainingAreaCoordinator.cs`
-- **Tests:** `Assets/Tests/PlayMode/QuestProgressionServiceTests.cs`
-- **Related:** Gameplay Events, Combat, Dialogue
+- **Presentation:** `Assets/Scripts/Presentation/UI/QuestTrackerView.cs`
+- **Integration:** `Assets/Scripts/Gameplay/Events/GameplayEventHub.cs`, `Assets/Scripts/Field/Prototype/PrototypeTrainingAreaCoordinator.cs`, `Assets/Scripts/Field/Prototype/PrototypeUiInstaller.cs`
+- **Tests:** `Assets/Tests/PlayMode/QuestProgressionServiceTests.cs`, `Assets/Tests/PlayMode/QuestTrackerViewPlayModeTests.cs`
+- **Related:** Gameplay Events, Combat, Dialogue, Interaction
 
 ## Spawning
 
