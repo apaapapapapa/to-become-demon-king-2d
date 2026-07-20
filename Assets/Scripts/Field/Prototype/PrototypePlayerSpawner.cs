@@ -74,6 +74,21 @@ namespace DemonKing.Field.Prototype
                 spriteAnimator = root.AddComponent<PrototypeSlimeSpriteAnimator>();
             }
 
+            if (root.GetComponent<CharacterElevationMotor>() == null)
+            {
+                root.AddComponent<CharacterElevationMotor>();
+            }
+
+            if (root.GetComponent<PlayerElevationInput>() == null)
+            {
+                root.AddComponent<PlayerElevationInput>();
+            }
+
+            if (root.GetComponent<CharacterElevationPresenter>() == null)
+            {
+                root.AddComponent<CharacterElevationPresenter>();
+            }
+
             CharacterPlanarMotor motor = root.GetComponent<CharacterPlanarMotor>();
             if (motor == null)
             {
