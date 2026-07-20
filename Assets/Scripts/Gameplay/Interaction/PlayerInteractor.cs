@@ -13,8 +13,6 @@ namespace DemonKing.Gameplay.Interaction
     [RequireComponent(typeof(PlayerInputReader))]
     public sealed class PlayerInteractor : MonoBehaviour
     {
-        private const float GroundElevationTolerance = 0.001f;
-
         [SerializeField, Min(0.1f)] private float interactionRadius = 1.1f;
         [SerializeField] private Vector2 interactionOffset = new(0f, 0.15f);
         [SerializeField] private LayerMask interactionLayers = ~0;
@@ -78,29 +76,6 @@ namespace DemonKing.Gameplay.Interaction
                     center,
                     ref nearest,
                     ref nearestDistance);
-            }
-
-            // 既存の地上PlayModeテストfixtureを段階移行するための互換Queryです。
-            // Runtime Actorは3D Colliderへ移行済みのため正式な探索は上の3D Queryです。
-            if (nearest == null && Mathf.Abs(center.z) <= GroundElevationTolerance)
-            {
-                Collider2D[] legacyColliders = Physics2D.OverlapCircleAll(
-                    FieldSpace3D.ToPlanar(center),
-                    interactionRadius,
-                    interactionLayers);
-                foreach (Collider2D collider in legacyColliders)
-                {
-                    if (collider == null || collider.transform.IsChildOf(transform))
-                    {
-                        continue;
-                    }
-
-                    ConsiderBehaviours(
-                        collider.GetComponentsInParent<MonoBehaviour>(false),
-                        center,
-                        ref nearest,
-                        ref nearestDistance);
-                }
             }
 
             return nearest;
