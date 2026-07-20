@@ -1,18 +1,8 @@
 ---
-title: 火炎魔法
-contentId: art.magic.fire
-contentType: art
-status: Runtime Implemented
-relatedContentIds:
-  - character.player.slime
-  - skill.combat.predatory_instinct
-  - evolution.slime.lineage
-  - evolution.slime.archmage
+runtimeSource: Assets/Resources/Settings/Gameplay/FireMagicArt.asset
 ---
 
-# 火炎魔法
-
-Unity Definition: `Assets/Resources/Settings/Gameplay/FireMagicArt.asset`
+<RuntimeContentHeader />
 
 ## 概要
 
@@ -34,12 +24,6 @@ Artの習得、熟練、Ability解放のRuntimeルールは [Art仕様](../../sp
 
 生来の器官ではなく、魔力操作を反復して身につける技法です。術式の流派と教習者はストーリー実装時に確定します。
 
-## 関連リンク
+## 関連コンテンツ
 
-- [プレイヤースライム](../monsters/player-slime.md)
-- [スライム進化系列](../evolutions/slime-lineage.md)
-- [大魔導スライム](../evolutions/archmage-slime.md)
-
-## Stable Content IDでの関連
-
-<ContentRelations content-id="art.magic.fire" />
+<ContentRelations />
