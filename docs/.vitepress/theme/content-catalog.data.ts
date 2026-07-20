@@ -3,26 +3,32 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { createContentLoader } from 'vitepress'
 
-export type ContentType = 'monster' | 'art' | 'skill' | 'evolution'
+export type ContentType = 'monster' | 'ability' | 'art' | 'skill' | 'evolution'
 export type ContentSourceKind = 'Unity Definition' | 'Runtime Code' | 'Knowledge Base'
 
 export interface ContentCatalogEntry {
   contentId: string
   title: string
+  description: string
+  encyclopediaDescription: string
   contentType: ContentType
-  url: string
+  url?: string
   relatedContentIds: string[]
   sourceKind: ContentSourceKind
   runtimeSource?: string
+  visibleInEncyclopedia: boolean
 }
 
 interface RuntimeContentRecord {
   contentId: string
   displayName?: string
+  description: string
+  encyclopediaDescription: string
   contentType: ContentType
   runtimeSource: string
   sourceKind: Exclude<ContentSourceKind, 'Knowledge Base'>
   relatedContentIds: string[]
+  visibleInEncyclopedia: boolean
   guid?: string
 }
 
@@ -98,6 +104,27 @@ function extractYamlScalar(content: string, fieldName: string): string | undefin
   return value.length > 0 ? value : undefined
 }
 
+function extractYamlBoolean(
+  content: string,
+  fieldName: string,
+  defaultValue: boolean
+): boolean {
+  const value = extractYamlScalar(content, fieldName)?.toLowerCase()
+  if (value === undefined) {
+    return defaultValue
+  }
+
+  if (value === '1' || value === 'true') {
+    return true
+  }
+
+  if (value === '0' || value === 'false') {
+    return false
+  }
+
+  throw new Error(`Invalid boolean value for ${fieldName}: ${value}`)
+}
+
 function extractCSharpString(content: string, fieldName: string): string | undefined {
   const match = content.match(
     new RegExp(`\\b${escapeRegExp(fieldName)}\\s*=\\s*"([^"]+)"`)
@@ -107,7 +134,9 @@ function extractCSharpString(content: string, fieldName: string): string | undef
 
 function extractStableContentIds(content: string): string[] {
   return Array.from(
-    new Set(content.match(/\b(?:character|art|skill|evolution)\.[A-Za-z0-9_.-]+/g) ?? [])
+    new Set(
+      content.match(/\b(?:character|ability|art|skill|evolution)\.[A-Za-z0-9_.-]+/g) ?? []
+    )
   )
 }
 
@@ -140,6 +169,7 @@ function identifyUnityContent(
     type: ContentType
   }> = [
     { idField: 'characterId', type: 'monster' },
+    { idField: 'abilityId', type: 'ability' },
     { idField: 'artId', type: 'art' },
     { idField: 'skillId', type: 'skill' },
     { idField: 'evolutionNodeId', type: 'evolution' }
@@ -154,10 +184,13 @@ function identifyUnityContent(
     return {
       contentId,
       displayName: extractYamlScalar(content, 'displayName'),
+      description: extractYamlScalar(content, 'description') ?? '',
+      encyclopediaDescription: extractYamlScalar(content, 'encyclopediaDescription') ?? '',
       contentType: definition.type,
       runtimeSource,
       sourceKind: 'Unity Definition',
       relatedContentIds: extractStableContentIds(content).filter(id => id !== contentId),
+      visibleInEncyclopedia: extractYamlBoolean(content, 'visibleInEncyclopedia', true),
       guid
     }
   }
@@ -234,10 +267,13 @@ function resolveRuntimeContent(runtimeSource: string): RuntimeContentRecord {
     if (actorId) {
       return {
         contentId: actorId,
+        description: '',
+        encyclopediaDescription: '',
         contentType: 'monster',
         runtimeSource: normalizedSource,
         sourceKind: 'Runtime Code',
-        relatedContentIds: []
+        relatedContentIds: [],
+        visibleInEncyclopedia: false
       }
     }
   }
@@ -247,6 +283,7 @@ function resolveRuntimeContent(runtimeSource: string): RuntimeContentRecord {
 
 function inferContentType(url: string): ContentType {
   if (url.includes('/database/monsters/')) return 'monster'
+  if (url.includes('/database/abilities/')) return 'ability'
   if (url.includes('/database/arts/')) return 'art'
   if (url.includes('/database/skills/')) return 'skill'
   if (url.includes('/database/evolutions/')) return 'evolution'
@@ -257,6 +294,7 @@ function inferContentType(url: string): ContentType {
 function hasExpectedPrefix(contentId: string, contentType: ContentType): boolean {
   const prefixes: Record<ContentType, string> = {
     monster: 'character.',
+    ability: 'ability.',
     art: 'art.',
     skill: 'skill.',
     evolution: 'evolution.'
@@ -320,17 +358,57 @@ export default createContentLoader<ContentCatalogEntry[]>('database/**/*.md', {
         return {
           contentId,
           title,
+          description: runtimeContent?.description ?? String(frontmatter.description ?? ''),
+          encyclopediaDescription:
+            runtimeContent?.encyclopediaDescription ??
+            String(frontmatter.encyclopediaDescription ?? ''),
           contentType,
           url,
           relatedContentIds: [],
           sourceKind: runtimeContent?.sourceKind ?? 'Knowledge Base',
           runtimeSource,
+          visibleInEncyclopedia:
+            runtimeContent?.visibleInEncyclopedia ??
+            Boolean(frontmatter.visibleInEncyclopedia ?? true),
           manualRelatedContentIds: Array.isArray(frontmatter.relatedContentIds)
             ? frontmatter.relatedContentIds.map(String)
             : [],
           runtimeRelatedContentIds: runtimeContent?.relatedContentIds ?? []
         }
       })
+
+    const representedRuntimeSources = new Set(
+      pendingEntries
+        .map(entry => entry.runtimeSource)
+        .filter((runtimeSource): runtimeSource is string => Boolean(runtimeSource))
+    )
+
+    for (const runtimeContent of unityContentByPath.values()) {
+      if (representedRuntimeSources.has(runtimeContent.runtimeSource)) {
+        continue
+      }
+
+      const title = runtimeContent.displayName ?? runtimeContent.contentId
+      if (runtimeContent.visibleInEncyclopedia && !runtimeContent.displayName) {
+        throw new Error(
+          `Visible encyclopedia content requires displayName: ${runtimeContent.runtimeSource}`
+        )
+      }
+
+      pendingEntries.push({
+        contentId: runtimeContent.contentId,
+        title,
+        description: runtimeContent.description,
+        encyclopediaDescription: runtimeContent.encyclopediaDescription,
+        contentType: runtimeContent.contentType,
+        relatedContentIds: [],
+        sourceKind: runtimeContent.sourceKind,
+        runtimeSource: runtimeContent.runtimeSource,
+        visibleInEncyclopedia: runtimeContent.visibleInEncyclopedia,
+        manualRelatedContentIds: [],
+        runtimeRelatedContentIds: runtimeContent.relatedContentIds
+      })
+    }
 
     const entriesById = new Map<string, PendingCatalogEntry>()
     for (const entry of pendingEntries) {
