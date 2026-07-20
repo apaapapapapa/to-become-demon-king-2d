@@ -16,6 +16,7 @@ MonoBehaviour:
   displayName: はじめての討伐
   objectives:
   - objectiveId: objective.training.defeat_slime
+    displayName: 訓練用スライムを倒す
     eventId: gameplay.enemy_defeated
     subjectId: character.training_dummy
     requiredCount: 1
