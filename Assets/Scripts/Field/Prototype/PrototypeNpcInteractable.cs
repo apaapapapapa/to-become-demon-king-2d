@@ -23,6 +23,7 @@ namespace DemonKing.Field.Prototype
         private LinearDialogueSequence dialogueSequence;
 
         public event Action Interacted;
+        public event Action ConversationStarted;
         public event Action<GameObject> DialogueCompleted;
 
         public string DialogueId => dialogueDefinition == null ? string.Empty : dialogueDefinition.DialogueId;
@@ -71,6 +72,12 @@ namespace DemonKing.Field.Prototype
         public void Interact(GameObject interactor)
         {
             Interacted?.Invoke();
+
+            bool isConversationStart = dialogueSequence == null || dialogueSequence.NextDialogueIndex == 0;
+            if (isConversationStart)
+            {
+                ConversationStarted?.Invoke();
+            }
 
             if (dialogueLog == null)
             {
