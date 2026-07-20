@@ -15,7 +15,9 @@ MonoBehaviour:
   abilityId: ability.magic.fire_bolt
   displayName: 火炎弾
   description: 前方へ火炎の弾を放ち、最初に命中した対象へ魔法ダメージを与える。
+  encyclopediaDescription: 火の魔力を弾として前方へ射出する遠距離Ability。最初に命中した対象へ魔法ダメージを与え、火炎魔法Artの基本的な攻撃手段となる。
   icon: {fileID: 0}
+  visibleInEncyclopedia: 1
   executionMode: 1
   cooldownSeconds: 0.8
   cost:
