@@ -1,3 +1,21 @@
+## [1.9.0](https://github.com/apaapapapapa/to-become-demon-king-2d/compare/v1.8.0...v1.9.0) (2026-07-20)
+
+### Features
+
+* add data-driven enemy AI definition ([1a37b50](https://github.com/apaapapapapa/to-become-demon-king-2d/commit/1a37b50c9f1d9a48ab1da2bd9163440bb8fadcd3))
+* add enemy AI configuration folder ([4ab5d29](https://github.com/apaapapapapa/to-become-demon-king-2d/commit/4ab5d292898828ec190c0048de7ac4743b086a8a))
+* add enemy AI controller meta ([f992a84](https://github.com/apaapapapapa/to-become-demon-king-2d/commit/f992a846eeff4ca3ff9033678a2c1dbd12157ce7))
+* add enemy AI definition meta ([791867c](https://github.com/apaapapapapa/to-become-demon-king-2d/commit/791867cdb065b85c46896c2312e3b3a89b55f2f0))
+* add enemy AI gameplay folder ([5f0fcdb](https://github.com/apaapapapapa/to-become-demon-king-2d/commit/5f0fcdb216122e7240808ca9d814ad2b1ac544cc))
+* add training slime AI asset meta ([3f21660](https://github.com/apaapapapapa/to-become-demon-king-2d/commit/3f21660e69ded843f26362f76824ac4971286881))
+* add training slime behavior settings ([fa11cd6](https://github.com/apaapapapapa/to-become-demon-king-2d/commit/fa11cd6451813df239d7c352b62853d932b522fd))
+* auto repair enemy AI project asset reference ([eed075a](https://github.com/apaapapapapa/to-become-demon-king-2d/commit/eed075abb6bec6a66d61ff3ad19a7abdce423a42))
+* connect enemy AI to training slime lifecycle ([24833a2](https://github.com/apaapapapapa/to-become-demon-king-2d/commit/24833a2a72a9bf41e590b7bb5a541815a492422c))
+* implement enemy idle chase attack AI ([9929e12](https://github.com/apaapapapapa/to-become-demon-king-2d/commit/9929e12c4ba89bc96661d665c3e6123edd53ade3))
+* pass player and enemy AI definition into gameplay composition ([f0f2dc6](https://github.com/apaapapapapa/to-become-demon-king-2d/commit/f0f2dc65612e7480b44a5a66cb58cf3e35007a48))
+* register training slime AI settings ([b91302f](https://github.com/apaapapapapa/to-become-demon-king-2d/commit/b91302febbb26273599231762431c0ae65ab8dc8))
+* wire training slime AI project asset ([adf7bfa](https://github.com/apaapapapapa/to-become-demon-king-2d/commit/adf7bfa8ecb1bdfc41a6142f4183d176f7d91ae3))
+
 ## [1.8.0](https://github.com/apaapapapapa/to-become-demon-king-2d/compare/v1.7.0...v1.8.0) (2026-07-20)
 
 ### Features
