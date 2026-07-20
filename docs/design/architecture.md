@@ -2,7 +2,9 @@
 
 ## 目的
 
-この文書は、責務境界、依存方向、Composition Root、意図的に残す移行境界、将来のリアーキテクチャ判断基準を定義します。
+この文書は、レイヤー責務、依存方向、Composition、状態モデル、Platform境界、意図的な移行境界を定義します。
+
+個別Feature間の接続規則は [Feature間の責務境界](./feature-boundaries.md)、Unity固有の実装方式は [技術設計](./technical-design.md) を参照してください。
 
 ## 基本原則
 
@@ -18,220 +20,71 @@
 
 ### Domain
 
-`DemonKing.Domain` はUnity非依存の純C#領域です。
+`DemonKing.Domain` はUnity非依存の純C#領域です。状態、値、保存DTOなど、Unity Objectを必要としないルールを置きます。
 
-```text
-  Progression/
-    ArtMasteryTable
-    ArtProgressState
-    CharacterProgressionState
-  ExperienceTable
-  LevelUpResult
-Save/
-  GameSaveData
-  PlayerSaveData
-StableContentId
-```
-
-`UnityEngine`、Scene、GameObject、MonoBehaviour、ScriptableObjectなどのUnity依存型をDomainへ持ち込みません。
+`UnityEngine`、Scene、`GameObject`、`MonoBehaviour`、`ScriptableObject`をDomainへ持ち込みません。
 
 ### Core
 
-アプリケーション基盤と共通処理を置きます。
-
-```text
-Core/
-  Application/
-    GamePauseController
-    ISaveService
-    CharacterProgressionSaveMapper
-  Input/
-  Math/
-```
+アプリケーション基盤とFeature横断の共通処理を置きます。保存抽象、入力抽象、共通Math等を含みます。
 
 ### Gameplay
 
 Unity上で動くゲームルールとキャラクター挙動を置きます。
 
-```text
-Gameplay/
-  Abilities/
-    AbilityController
-    AbilityRuntimeState
-    IAbilityExecutor
-  Characters/
-  Combat/
-    DamageRequest
-    DamageResult
-    DefeatContext
-  Interaction/
-  Progression/
-    ArtProgressionController
-    ArtProgressionService
-    ProgressionAcquisitionService
-    EvolutionProgressionController
-    EvolutionProgressionService
-    EvolutionSelectionController
-    SkillProgressionController
-    SkillProgressionService
-  Modifiers/
-    NumericModifier
-    Modifier Source contracts
-  Rewards/
-```
+GameplayはDomain / Coreを利用できますが、Prototype固有クラスや具体的なuGUI Viewへ依存しません。
 
-`DamageRequest`、`DamageResult`、`DefeatContext` は `UnityEngine.GameObject` を参照するため、Unity非依存のDomainではなくGameplay/Combatの責務です。
-
-GameplayはDomain/Coreを利用できますが、Prototype固有クラスやuGUI Viewへ依存しません。
+Unity Objectを参照する `DamageRequest` / `DamageResult` / `DefeatContext` のような型はDomainへ移さず、Gameplay側のUnity依存境界として扱います。
 
 ### Presentation
 
-カメラ、描画順、アニメーション、uGUI Viewを置きます。ゲームルールの決定主体にはしません。
+カメラ、描画順、アニメーション、uGUI Viewを置きます。Presentationはゲームルールの決定主体になりません。
 
 ### Field / Prototype
 
-Prototypeシーンを組み立てるComposition層です。恒久的なDomain/Gameplayルールをここへ蓄積しません。
+Prototypeシーンを組み立てるComposition層です。具体クラスとUnityアセットを接続しますが、恒久的なDomain / Gameplayルールを蓄積しません。
 
 ## 依存方向
 
-上位のComposition層が具体クラスとUnityアセットを組み合わせ、DomainがUnityやPrototypeを知らないことを重視します。
+Compositionが具体実装を組み合わせ、内側のレイヤーが外側の具体実装を知らない方向を維持します。
+
+```text
+Field / Prototype (Composition)
+  ↓
+Presentation / Gameplay
+  ↓
+Core / Domain
+```
+
+Gameplay Feature同士の接続が必要な場合は、共通契約、イベント境界、またはCompositionを使用します。具体的な接続方向は [Feature間の責務境界](./feature-boundaries.md) を参照してください。
 
 ## Definition / Runtime State / Save DTO
 
 ```text
 Definition
-  AbilityDefinition
-  ArtDefinition
-  EvolutionDefinition
-  ProgressionGrantDefinition
-  SkillDefinition
-  CharacterDefinition
-  CharacterStatsDefinition
-  MeleeAttackDefinition
-  DodgeDefinition
-  ExperienceTableDefinition
-  RewardDefinition
-       ↓
+  ↓ 構築・参照
 Runtime State
-  AbilityRuntimeState
-  ArtProgressState
-  CharacterProgressionState
-       ↓ Mapper
+  ↓ Mapper
 Save DTO
-  PlayerSaveData / GameSaveData
 ```
 
-Definitionは静的定義、Runtime Stateはプレイ中に変化する状態、Save DTOは保存形式です。
+- Definition: ScriptableObjectによる静的コンテンツ定義、バランス値、Asset参照。
+- Runtime State: プレイ中に変化する状態。
+- Save DTO: Runtime Stateと分離した保存形式。
 
-## Stable Content ID
+DefinitionをRuntime Stateや保存状態として書き換えません。Save形式の詳細は [セーブ仕様](../specifications/save.md) を参照してください。
 
-保存データやコンテンツ間参照には、表示名やAsset名とは独立した安定IDを使用します。
+## Composition Root
 
-```text
-character.player.slime
-ability.basic_melee
-art.magic.example
-skill.combat.example
-evolution.slime.example
-reward.training_dummy
-```
+起動入口は薄く保ち、具体的な構築順序とFeature間配線をInstaller / Builder / Coordinatorへ委譲します。
 
-## 起動構造
+現在のUnity起動フローは [技術設計](./technical-design.md) を参照してください。
 
-```text
-Prototype.unity
-  ↓
-FieldBootstrap
-  ↓
-PrototypeProjectAssets
-  ↓
-PrototypeApplicationInstaller
-  ├ PrototypeApplicationSettings
-  ├ PrototypeWorldBuilder
-  ├ GamePauseController
-  └ PrototypeUiInstaller
-```
+## Platform境界
 
-`FieldBootstrap` は最小のエントリーポイントに保ちます。
+Steamや将来のコンソールSDKをGameplayから直接呼び出しません。
 
-## CharacterDefinition
-
-```text
-CharacterDefinition
-  ├ characterId
-  ├ prefab
-  ├ statsDefinition
-  ├ abilityDefinitions[]
-  ├ artDefinitions[]
-  ├ skillDefinitions[]
-  ├ evolutionDefinitions[]
-  ├ dodgeDefinition
-  └ experienceTableDefinition
-```
-
-## Ability / Art / Combat / Reward境界
-
-```text
-Player Input / AI
-  ↓
-AbilityController
-  ↓
-IAbilityExecutor
-  ↓
-DamageRequest
-  ↓
-IDamageable / Health
-  ↓
-DamageResult
-  ↓
-DefeatContext
-  ↓
-RewardService
-  ↓
-CharacterProgressionState.GainExperience
-```
-
-経験値・ドロップ・進化処理をHealthや攻撃コンポーネントへ直接埋め込みません。RewardServiceは同一Defeatに対する重複付与を防ぐ境界を持ちます。
-
-Abilityは実行可能な行動、Artは1つ以上のAbilityを習得・熟練する能動技能、Skillは受動的な成長要素、Evolutionは形態・成長経路を変える不可逆または排他的な選択として分離します。AbilityControllerとExecutorはArt進捗、Skill取得状態、Evolution条件を知りません。
-
-Artは次の境界で既存Ability基盤へ接続します。
-
-```text
-ArtProgressState + ArtDefinition
-  ↓ ランクで解放済みのAbility
-AbilityController
-  ↓ 実行
-IAbilityExecutor
-  ↓ 効果成立通知
-ArtProgressionService
-  ↓ Execution単位で重複排除
-ArtProgressState.AddMastery
-```
-
-Art進捗はDomain、静的なランク閾値とAbility対応はDefinition、習得・熟練度加算・Ability付与の調停はGameplayの責務です。効果処理から成長状態を直接変更しません。
-
-訓練、報酬など複数の取得元は `ProgressionGrantDefinition` を `ProgressionAcquisitionService` へ渡します。この境界はArtとSkillの既存Controllerを調停するだけで、取得元固有条件を保持しません。
-
-Skillは `CharacterProgressionState.UnlockedSkillIds` と `SkillDefinition` から受動補正を導出します。`SkillProgressionController` が補正を汎用Modifier Source契約として公開し、Ability、Combat、Artは補正取得元がSkill、装備、バフのどれであるかを知りません。
-
-EvolutionはNode Definitionと `UnlockedEvolutionNodeIds` を組み合わせ、レベル、Skill、Artランク、前提Node、排他グループを `EvolutionProgressionService` で評価します。選択済みNodeの永続補正はSkillと同じModifier Source境界へ公開します。
-
-`EvolutionSelectionController` はInput Context、選択位置、確定要求を管理します。uGUIの `EvolutionMenuView` は評価結果を表示するだけで、進捗状態を直接変更しません。形態変更は `EvolutionApplied` 通知の外側にある `PrototypeSlimeEvolutionPresenter` が担当し、Save復元時も選択済みNodeから専用Sprite Sheetを導出します。
-
-## Save境界
-
-```text
-CharacterProgressionState
-  ↕ CharacterProgressionSaveMapper
-PlayerSaveData
-  ↓
-GameSaveData
-  ↓
-ISaveService
-```
-
-ローカル保存、クラウド、Platform保存は `ISaveService` の外側で実装します。
+保存先、実績、クラウド、ユーザー識別等は抽象境界の外側へ置きます。保存処理の境界は `ISaveService` を使用します。
 
 ## 意図的に残している移行境界
 
@@ -241,43 +94,6 @@ ISaveService
 - `Resources`: 少数の起動入口・互換用途
 - `PrototypeProjectAssetsAutoRepair`: Editor上の参照修復ツール
 
-## 完了済みの基盤
-
-- Rigidbody2D / Collision Tilemap
-- Isometric描画順
-- Input Action / Input Context
-- Interaction / Combat
-- uGUI / Camera / Pause / Dodge
-- ScriptableObject Definition
-- ApplicationInstaller
-- Domain assembly
-- CharacterDefinition
-- CharacterProgressionState
-- ExperienceTable / LevelUpResult
-- Save DTO / ISaveService境界
-- DamageResult / DefeatContext
-- RewardServiceから経験値加算への接続
-- Ability Definition / Runtime State / Controller / Executor
-- プレイヤー入力とAIで共有できる基本近接攻撃
-- Art Definition / Runtime State / 習得 / 熟練度 / Ability付与
-- Ability Execution ID / 効果成立通知
-- Save DTO Version 2 / Version 1 Migration
-- 受動Skill Definition / 取得 / 汎用補正接続
-- Evolution Node Definition / 条件評価 / 排他選択 / 永続補正
-- Evolution選択UI / Prototype形態表示・演出
-- 火炎魔法Art / Projectile Ability / 汎用Progression Grant
-- Evolution専用アート / 捕食・魔術系上位Node
-- EditMode / PlayModeテスト
-
-## 直近の拡張方針
-
-1. NPC会話
-2. 敵AI
-3. クエスト・目的管理
-4. 複数Art / Skillの選択UIと入力割当
-5. 追加の正式Runtimeコンテンツと取得経路
-6. 実際のセーブ保存実装
-
 ## リアーキテクチャ判断基準
 
 - 同じ変更理由で複数箇所を毎回修正している。
@@ -285,4 +101,6 @@ ISaveService
 - Resourcesや単一Sceneがコンテンツ量に耐えられない。
 - テスト困難性が責務分離不足を示している。
 - ScriptableObjectだけでは大量データの整合性管理が難しい。
-- 複数機能が同じRuntime Stateを別々に管理し始めた。
+- 複数Featureが同じRuntime Stateを別々に管理し始めた。
+
+現在の実装状況と開発優先度は [ロードマップ](../development/roadmap.md) を参照してください。
