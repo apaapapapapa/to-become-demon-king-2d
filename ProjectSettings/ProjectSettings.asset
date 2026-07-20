@@ -146,9 +146,9 @@ PlayerSettings:
   vulkanEnableLateAcquireNextImage: 0
   vulkanEnableCommandBufferRecycling: 1
   loadStoreDebugModeEnabled: 0
-  visionOSBundleVersion: 1.4.0
-  tvOSBundleVersion: 1.4.0
-  bundleVersion: 1.4.0
+  visionOSBundleVersion: 1.5.0
+  tvOSBundleVersion: 1.5.0
+  bundleVersion: 1.5.0
   preloadedAssets: []
   metroInputSource: 0
   wsaTransparentSwapchain: 0
@@ -171,12 +171,12 @@ PlayerSettings:
   applicationIdentifier:
     Standalone: com.DefaultCompany.2D-URP
   buildNumber:
-    Standalone: 1004000
-    VisionOS: 1004000
-    iPhone: 1004000
-    tvOS: 1004000
+    Standalone: 1005000
+    VisionOS: 1005000
+    iPhone: 1005000
+    tvOS: 1005000
   overrideDefaultApplicationIdentifier: 1
-  AndroidBundleVersionCode: 1004000
+  AndroidBundleVersionCode: 1005000
   AndroidMinSdkVersion: 26
   AndroidTargetSdkVersion: 0
   AndroidPreferredInstallLocation: 1
@@ -415,7 +415,7 @@ PlayerSettings:
   switchPresenceGroupId: 
   switchLogoHandling: 0
   switchReleaseVersion: 0
-  switchDisplayVersion: 1.4.0
+  switchDisplayVersion: 1.5.0
   switchStartupUserAccount: 0
   switchSupportedLanguagesMask: 0
   switchLogoType: 0
@@ -646,7 +646,7 @@ PlayerSettings:
   XboxOneGameOsOverridePath: 
   XboxOnePackagingOverridePath: 
   XboxOneAppManifestOverridePath: 
-  XboxOneVersion: 1.4.0.0
+  XboxOneVersion: 1.5.0.0
   XboxOnePackageEncryption: 0
   XboxOnePackageUpdateGranularity: 2
   XboxOneDescription: 
