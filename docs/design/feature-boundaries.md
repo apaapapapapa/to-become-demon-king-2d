@@ -122,6 +122,12 @@ SpawnLifecycle<T>
   └ restore
 ```
 
-Prototypeでは `PrototypeTrainingAreaCoordinator` がNPC Interaction、訓練対象のSpawn / Restore、Dialogue完了、Reward、Gameplay Event、QuestをComposition層で接続します。各Gameplay Featureは互いの具体実装へ依存しません。
+Prototypeの訓練エリアは `PrototypeGameplayFeatureInstaller` が具体オブジェクトとサービスを組み合わせ、複数Featureにまたがる流れを次のComposition境界へ分割します。
+
+- `TrainingQuestFlowController`: NPC Interactから訓練対象のSpawn / Restoreを要求し、Quest状態に応じたDialogue選択、Quest受注・報告完了、Completion Grantを調停する。
+- `TrainingDummyEventBridge`: 現在の訓練対象のDefeatをGameplay Eventへ変換し、撃破個体を `SpawnLifecycle<T>` のCurrentから外す。Quest状態やDialogueは参照しない。
+- 撃破Reward: Combat構成側で `PrototypeGameplayFeatureInstaller` が訓練対象と `RewardService` を接続し、Quest Flowへ持ち込まない。
+
+各Gameplay Featureは互いの具体実装へ依存せず、Feature横断の接続はGameplay EventまたはPrototype Compositionへ閉じ込めます。
 
 詳細は [Spawning仕様](../specifications/spawning.md) を参照してください。
