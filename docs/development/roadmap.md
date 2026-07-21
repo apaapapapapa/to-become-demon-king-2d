@@ -27,6 +27,7 @@
 - 受動Skill取得と汎用Modifier
 - Evolution Node条件評価、排他選択、永続補正、選択UI、形態表示
 - 火炎魔法Art、Projectile Ability、Progression Grant
+- 魔弾術Art / 魔力弾Ability、魔力循環Skill
 
 ### Interaction / Dialogue / Quest / Spawning
 
@@ -40,6 +41,8 @@
 - `TrainingScenarioDefinition` による訓練シナリオ参照の集約
 - `TrainingQuestFlowController` と `TrainingDummyEventBridge` によるComposition責務分離
 - Gameplay Event HubからQuest Progressionへの共通Application配線
+- `ProgressionGrantInteractable` による一度きりのフィールド取得経路
+- 古びた魔導書から魔弾術、魔力結晶から魔力循環を取得するPrototype導線
 
 ### Content / Composition / Delivery
 
@@ -91,8 +94,7 @@
 
 ## 次の開発フェーズ
 
-1. 追加の正式Runtimeコンテンツと取得経路
-2. 実際のローカルSave実装
+1. 実際のローカルSave実装
 
 ## 将来候補
 
