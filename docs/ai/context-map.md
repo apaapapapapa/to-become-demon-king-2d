@@ -114,9 +114,11 @@ AIエージェントが変更対象に必要な仕様・コード・テストへ
 ## Save
 
 - **Spec:** `docs/specifications/save.md`
-- **Code:** `Assets/Scripts/Domain/Save/`, `Assets/Scripts/Core/Application/`
-- **Tests:** `Assets/Tests/EditMode/`
-- **Related:** Progression, Art, Skill, Evolution, Content / Encyclopedia
+- **Design:** `docs/design/technical-design.md#local-save`
+- **Code:** `Assets/Scripts/Domain/Save/`, `Assets/Scripts/Core/Application/`, `Assets/Scripts/Gameplay/Abilities/AbilityLoadoutSaveMapper.cs`, `Assets/Scripts/Gameplay/Quests/QuestProgressSaveMapper.cs`
+- **Integration:** `Assets/Scripts/Field/Prototype/PrototypeSaveSession.cs`, `Assets/Scripts/Field/Prototype/PrototypeLocalSaveCoordinator.cs`, `Assets/Scripts/Field/Prototype/PrototypeApplicationInstaller.cs`, `Assets/Scripts/Field/Prototype/PrototypeWorldBuilder.cs`
+- **Tests:** `Assets/Tests/EditMode/LocalSaveTests.cs`
+- **Related:** Progression, Art, Skill, Evolution, Quest, Ability, Content / Encyclopedia
 
 ## Pause
 
