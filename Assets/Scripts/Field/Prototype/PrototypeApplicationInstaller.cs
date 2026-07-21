@@ -1,6 +1,5 @@
 using DemonKing.Core.Application;
 using DemonKing.Core.Input;
-using DemonKing.Domain.Save;
 using DemonKing.Field.Prototype.Configuration;
 using DemonKing.Gameplay.Abilities;
 using DemonKing.Gameplay.Dialogue;
@@ -11,7 +10,7 @@ namespace DemonKing.Field.Prototype
 {
     /// <summary>
     /// プロトタイプ起動時のアプリケーション構成を組み立てます。
-    /// FieldBootstrapを薄いエントリーポイントに保ち、Scene / World / Pause / UI / Saveの初期化順序をここへ集約します。
+    /// Application全体の構築順序を調停し、Feature固有のSave復元処理はGame Sessionへ委譲します。
     /// </summary>
     internal sealed class PrototypeApplicationInstaller
     {
@@ -34,35 +33,38 @@ namespace DemonKing.Field.Prototype
             PrototypeSceneConfigurator.Configure(Camera.main);
             PrototypeSortingConfigurator.Configure();
 
-            JsonFileSaveService saveService = JsonFileSaveService.CreateDefault();
-            PrototypeSaveSession saveSession = PrototypeSaveSession.Load(
-                saveService,
-                projectAssets.PlayerCharacter.CharacterId);
-
-            var dialogueLog = new DialogueLog();
-            PrototypeWorldBuildResult worldResult = new PrototypeWorldBuilder(
-                    settings.PlayerSpawnPosition,
-                    settings.PlayableTileRadius,
-                    projectAssets,
-                    dialogueLog,
-                    saveSession.ProgressionState,
-                    saveSession.GrantConsumptionState,
-                    saveSession.SaveData?.quests)
-                .Build();
-
             GameObject applicationRoot = new("Application Runtime");
-            GamePauseController pauseController = applicationRoot.AddComponent<GamePauseController>();
+            var dialogueLog = new DialogueLog();
+            JsonFileSaveService saveService = JsonFileSaveService.CreateDefault();
+            PrototypeGameSessionResult sessionResult = new PrototypeGameSession(
+                    projectAssets,
+                    settings,
+                    dialogueLog,
+                    saveService)
+                .Start(applicationRoot);
+            PrototypeWorldBuildResult worldResult = sessionResult.WorldResult;
 
             PlayerInputReader inputReader = worldResult.Player == null
                 ? null
                 : worldResult.Player.GetComponent<PlayerInputReader>();
 
+            ModalUiCoordinator modalUiCoordinator =
+                applicationRoot.AddComponent<ModalUiCoordinator>();
+            GamePauseController pauseController =
+                applicationRoot.AddComponent<GamePauseController>();
+
             if (inputReader == null)
             {
-                Debug.LogError("PlayerInputReaderが見つからないため、Pause入力を初期化できません。");
+                Debug.LogError("PlayerInputReaderが見つからないため、Modal UI入力を初期化できません。");
             }
-
-            pauseController.Initialize(inputReader, settings.PausedTimeScale);
+            else
+            {
+                modalUiCoordinator.Initialize(inputReader);
+                pauseController.Initialize(
+                    inputReader,
+                    modalUiCoordinator,
+                    settings.PausedTimeScale);
+            }
 
             EvolutionSelectionController evolutionSelectionController = null;
             EvolutionProgressionController evolutionProgressionController =
@@ -75,6 +77,7 @@ namespace DemonKing.Field.Prototype
                     applicationRoot.AddComponent<EvolutionSelectionController>();
                 evolutionSelectionController.Initialize(
                     inputReader,
+                    modalUiCoordinator,
                     evolutionProgressionController);
             }
             else
@@ -85,28 +88,24 @@ namespace DemonKing.Field.Prototype
             AbilityLoadoutController loadoutController = worldResult.Player == null
                 ? null
                 : worldResult.Player.GetComponent<AbilityLoadoutController>();
-            if (loadoutController == null)
-            {
-                Debug.LogError("Ability Loadoutを初期化するためのPlayerコンポーネントが見つかりません。");
-            }
-            else if (saveSession.HasSavedLoadout)
-            {
-                AbilityLoadoutSaveData loadoutSaveData =
-                    saveSession.SaveData?.player?.abilityLoadout;
-                AbilityLoadoutSaveMapper.ApplySavedAssignments(
-                    loadoutController,
-                    loadoutSaveData,
-                    projectAssets.PlayerCharacter,
-                    saveSession.ProgressionState);
-            }
-
             AbilityLoadoutSelectionController abilityLoadoutSelectionController =
                 worldResult.Player == null
                     ? null
                     : worldResult.Player.GetComponent<AbilityLoadoutSelectionController>();
-            if (abilityLoadoutSelectionController == null)
+            if (inputReader == null ||
+                loadoutController == null ||
+                abilityLoadoutSelectionController == null)
             {
                 Debug.LogError("Ability Loadout選択を初期化するためのPlayerコンポーネントが見つかりません。");
+            }
+            else
+            {
+                abilityLoadoutSelectionController.Initialize(
+                    inputReader,
+                    modalUiCoordinator,
+                    loadoutController,
+                    projectAssets.PlayerCharacter,
+                    sessionResult.ProgressionState);
             }
 
             PrototypeUiInstaller.Create(
@@ -116,20 +115,6 @@ namespace DemonKing.Field.Prototype
                 evolutionSelectionController,
                 abilityLoadoutSelectionController,
                 worldResult.QuestProgressionService);
-
-            if (loadoutController != null && worldResult.QuestProgressionService != null)
-            {
-                PrototypeLocalSaveCoordinator saveCoordinator =
-                    applicationRoot.AddComponent<PrototypeLocalSaveCoordinator>();
-                saveCoordinator.Initialize(
-                    saveService,
-                    saveSession.ProgressionState,
-                    loadoutController,
-                    worldResult.QuestProgressionService,
-                    saveSession.GrantConsumptionState,
-                    saveSession.SavingEnabled);
-                saveCoordinator.SaveNow();
-            }
 
             return applicationRoot;
         }

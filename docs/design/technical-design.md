@@ -27,14 +27,20 @@ Prototype.unity
      |- Progression Pickup definitions
      `- World / UI Asset references
   -> PrototypeApplicationInstaller
-     |- PrototypeSaveSession
-     |- PrototypeWorldBuilder
+     |- PrototypeGameSession
+     |  |- PrototypeSaveSession
+     |  |- PrototypeWorldBuilder
+     |  |- PrototypeGameSaveRestorer
+     |  |- PrototypeGameSaveSnapshotProvider
+     |  `- PrototypeLocalSaveCoordinator
+     |- ModalUiCoordinator
      |- GamePauseController
-     |- PrototypeUiInstaller
-     `- PrototypeLocalSaveCoordinator
+     `- PrototypeUiInstaller
 ```
 
 `FieldBootstrap` は最小のエントリーポイントとします。`PrototypeProjectAssets` はPrototype全体のComposition Manifestです。Quest、状態別Dialogue、Enemy AI、Reward、Progression Grantのように同じ縦切りループで変更される参照は `TrainingScenarioDefinition` へ集約します。訓練シナリオ外のフィールド取得物は `PrototypeProgressionPickupDefinition` としてProjectAssetsへ保持します。
+
+`PrototypeApplicationInstaller` はApplication全体の構築順序だけを調停します。Save読込からRuntime構築・復元・保存開始までの順序は `PrototypeGameSession` に委譲し、Feature固有のSave復元ロジックをInstallerへ追加しません。
 
 訓練エリアでは `PrototypeGameplayFeatureInstaller` がScenario Definitionを受け取り、次の責務へ接続します。
 
@@ -122,9 +128,21 @@ PrototypeProjectAssets
 
 ## Local Save
 
-PrototypeのローカルSaveは `JsonFileSaveService`、`PrototypeSaveSession`、各Save Mapper、`PrototypeLocalSaveCoordinator` をComposition Rootで接続します。`PrototypeSaveSession` が起動時にSave Version MigrationとRuntime State復元を行い、`PrototypeLocalSaveCoordinator` がProgression、Ability Loadout、Quest、World消費状態を `GameSaveData` へ集約して、Runtime構築完了直後・15秒ごと・Pause・Quit時に保存します。
+PrototypeのローカルSaveは次の順序で構成します。
 
-Gameplay Featureは具体的な保存先を参照しません。具体的な永続化対象と復元時の扱いは [セーブ仕様](../specifications/save.md) を参照してください。
+```text
+ISaveService
+  -> PrototypeSaveSession: Load / Migration / Player・World基礎Runtime State復元
+  -> PrototypeWorldBuilder: World / Player Runtime構築
+  -> PrototypeGameSaveRestorer: Ability Loadout / Questを構築済みRuntimeへ適用
+  -> PrototypeGameSaveSnapshotProvider: Runtime State一式 -> GameSaveData
+  -> PrototypeLocalSaveCoordinator: 保存タイミング
+  -> ISaveService
+```
+
+`PrototypeWorldBuilder` はSave DTOを参照せず、Quest復元も行いません。`CharacterProgressionSaveMapper` は `CharacterProgressionState` と `PlayerSaveData` の変換だけを担当します。`PrototypeGameSaveSnapshotProvider` がProgression、Ability Loadout、Quest、World消費状態を現在Versionの `GameSaveData` へ集約します。`PrototypeLocalSaveCoordinator` はRuntime構築完了直後・15秒ごと・Application Pause・Quit時の保存だけを管理します。
+
+Save Slot / New Game / Continueを追加する場合は、Slotや開始方法に応じた `ISaveService` の解決をApplication / Platform側へ追加します。Runtime State、Save Mapper、`GameSaveData` はSlot数に依存させません。Gameplay Featureは具体的な保存先を参照しません。具体的な永続化対象と復元時の扱いは [セーブ仕様](../specifications/save.md) を参照してください。
 
 ## Combat / Interaction / AI
 
@@ -144,7 +162,7 @@ Quest Trackerは次の境界で構成します。
 
 常設Trackerの表示ポリシーと一時通知の寿命を分離し、通知Coroutineの変更が常設Trackerへ波及しない構造とします。プレイヤーが追跡Questを手動選択する仕様が追加されるまでは、状態保持型 `QuestTrackingService` を導入しません。具体的な表示ルールは [Quest仕様](../specifications/quest.md) を参照してください。
 
-EvolutionメニューとAbility Loadoutメニューは同じInput Context原則に従うモーダルUIです。開いている間はUI Contextと停止Time Scaleを所有し、確定またはキャンセルで直前状態へ戻します。別モーダルがUI Contextを所有している場合は重ねて開きません。
+Pause、Evolution、Ability Loadoutは同じ `ModalUiCoordinator` を利用します。Coordinatorだけが現在のModal所有者、Open前のInput Context / Time Scale、UI Contextへの切替、Close時の復元を管理し、Modalの同時Openを拒否します。各Feature ControllerはPause状態、Evolution選択、Loadout選択・割当といったFeature固有状態だけを保持します。Component Disable / Destroy時はCoordinatorまたはOwner側からModal所有権を解放し、停止Time ScaleやUI Contextを残留させません。
 
 ## ScriptableObject / Resources
 
@@ -167,6 +185,7 @@ EditModeで検証する対象:
 - Ability LoadoutのRuntime進捗初期化、取得済みArt / Skillの表示Projection
 - 追加Runtime ContentとProgression Pickup Definition / Grantの設定整合性
 - Save Migration、JSON File round trip、Ability Loadout / Quest / World Save Mapper
+- Game SessionのLoad → Migration → Runtime復元 → Snapshot → Save境界
 - Quest TrackerのProjection / Selector / Notification Formatter
 - `LinearDialogueSequence`、`SpawnLifecycle<T>` の純粋ロジック
 - フレーム進行を必要としないScriptableObject Definition検証
@@ -176,6 +195,7 @@ PlayModeで検証する対象:
 - `MonoBehaviour` LifecycleとEvent購読・解除
 - Coroutine / Realtime時間経過
 - Scene、Input Context、3D Physics、移動
+- `ModalUiCoordinator` の排他Open、Input Context / Time Scale復元、Disable / Destroy時復元
 - Runtime生成したuGUI
 - Jump / Fall / Flight、Combat / Interaction、Enemy AI
 - Progression Grant InteractionからArt / Skill Runtime Stateまでの取得統合

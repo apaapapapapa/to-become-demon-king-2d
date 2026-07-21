@@ -1,11 +1,6 @@
-using System;
-using System.Collections.Generic;
 using DemonKing.Domain.Progression;
-using DemonKing.Domain.Quests;
-using DemonKing.Domain.Save;
 using DemonKing.Gameplay.Content;
 using DemonKing.Gameplay.Dialogue;
-using DemonKing.Gameplay.Quests;
 using UnityEngine;
 
 namespace DemonKing.Field.Prototype
@@ -13,6 +8,7 @@ namespace DemonKing.Field.Prototype
     /// <summary>
     /// 試作フィールド全体の構築順序を管理する構成ルートです。
     /// Tilemap、衝突、Prefab、演出、試作Gameplay Feature、プレイヤー、カメラを組み合わせます。
+    /// Save DTOからの復元適用はGame Session側のRestorerが担当します。
     /// </summary>
     internal sealed class PrototypeWorldBuilder
     {
@@ -22,7 +18,6 @@ namespace DemonKing.Field.Prototype
         private readonly DialogueLog dialogueLog;
         private readonly CharacterProgressionState progressionState;
         private readonly ProgressionGrantConsumptionState grantConsumptionState;
-        private readonly IReadOnlyList<QuestProgressSaveData> questSaveData;
 
         public PrototypeWorldBuilder(
             Vector3 playerSpawnPosition,
@@ -30,8 +25,7 @@ namespace DemonKing.Field.Prototype
             PrototypeProjectAssets projectAssets,
             DialogueLog dialogueLog,
             CharacterProgressionState progressionState = null,
-            ProgressionGrantConsumptionState grantConsumptionState = null,
-            IReadOnlyList<QuestProgressSaveData> questSaveData = null)
+            ProgressionGrantConsumptionState grantConsumptionState = null)
         {
             this.playerSpawnPosition = playerSpawnPosition;
             this.playableTileRadius = Mathf.Max(4, playableTileRadius);
@@ -40,7 +34,6 @@ namespace DemonKing.Field.Prototype
             this.progressionState = progressionState;
             this.grantConsumptionState = grantConsumptionState ??
                 ProgressionGrantConsumptionState.CreateInitial();
-            this.questSaveData = questSaveData ?? Array.Empty<QuestProgressSaveData>();
         }
 
         public PrototypeWorldBuildResult Build()
@@ -75,12 +68,6 @@ namespace DemonKing.Field.Prototype
                     gameContentCatalog,
                     out gameplayServices))
             {
-                IReadOnlyList<QuestProgressState> restoredQuestStates =
-                    QuestProgressSaveMapper.FromSaveData(
-                        projectAssets.QuestDefinitions,
-                        questSaveData);
-                gameplayServices.QuestProgressionService.Restore(restoredQuestStates);
-
                 new PrototypeGameplayFeatureInstaller().Install(
                     world,
                     player,

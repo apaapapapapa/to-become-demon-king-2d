@@ -54,6 +54,9 @@
 - Quest Status / Objective進捗の保存・復元
 - フィールド上の一度きりProgression Grant消費状態の保存・復元
 - 破損・未対応Saveを復元できない場合の既存ファイル保護
+- `PrototypeGameSession` によるLoad → Migration → World構築 → Restore → 保存開始の明示化
+- `PrototypeGameSaveSnapshotProvider` によるRuntime State一式からのSave Snapshot生成
+- `PrototypeLocalSaveCoordinator` の保存タイミング責務への限定
 
 ### Content / Composition / Delivery
 
@@ -62,6 +65,7 @@
 - 同一Definition共有参照の重複排除とStable Content ID衝突検出
 - `PrototypeProjectAssets` をComposition Manifestとして維持
 - `PrototypeProjectAssetsAutoRepair` のEditor起動時自動書き換え廃止、検証と明示的手動Repairへの分離
+- `ModalUiCoordinator` によるPause / Evolution / Ability LoadoutのModal所有権、Input Context、Time Scaleの共通管理
 - VitePress Knowledge Base
 - 実行要件に基づくEditMode / PlayModeテスト境界
 - semantic-releaseによるリリース自動化
@@ -93,119 +97,32 @@
    - Quest UIのPlayModeテストはuGUI生成、Questイベント購読、通知寿命のRuntime統合を検証
    - CIではEditMode / PlayModeの両方を継続実行
 
+## 第2次優先リファクタリング
+
+### P0: 完了
+
+第2次リファクタリングのP0は完了しました。確定した実装境界は [技術設計](../design/technical-design.md) と [AI Context Map](../ai/context-map.md) を参照してください。
+
+1. Save / Game Session起動フローの再編
+   - `PrototypeGameSession` がSave読込、Migration、World / Player構築、Runtime復元、保存開始の順序を管理
+   - `PrototypeGameSaveRestorer` が構築済みRuntimeへのFeature復元を担当
+   - `PrototypeGameSaveSnapshotProvider` がProgression / Ability Loadout / Quest / World状態を `GameSaveData` へ集約
+   - `CharacterProgressionSaveMapper` はPlayer状態変換だけを担当
+   - `PrototypeWorldBuilder` からQuest Save復元を除去
+   - `PrototypeLocalSaveCoordinator` は保存タイミングだけを管理
+   - Save Slot / New Game / Continueの保存先解決はApplication / Platform境界へ追加可能
+2. Modal UI制御の共通化
+   - `ModalUiCoordinator` がModal所有権、排他Open、Input Context、Time Scaleの退避・復元を一元管理
+   - Pause / Evolution / Ability Loadoutは同一Coordinatorを利用
+   - 各Feature ControllerからTime Scale / Input Contextの独自保存・復元を除去
+   - Disable / Destroy時の復元をPlayModeテストで検証
+3. Architecture / AI Context Mapの陳腐化修正
+   - 現行のGameplay Composition、Save、Modal、EditMode / PlayModeテスト参照へ更新
+   - ロードマップは実装状況・優先度、Technical Designは実装済み正式アーキテクチャという役割を維持
+
 ## 第2次優先リファクタリング: 実施予定
 
-Local Save、Runtime Loadout、追加Progressionコンテンツの実装後に再評価した結果、次のP0〜P2をすべて実施対象とします。
-
-実装では現在のプレイ可能なゲームループを維持し、リファクタリングだけを目的とした新規Frameworkや過剰な抽象化は導入しません。各項目の実装完了後に、確定した実装境界だけを [技術設計](../design/technical-design.md) と [AI Context Map](../ai/context-map.md) へ反映します。
-
-### P0-1: Save / Game Session起動フローの再編
-
-#### 目的
-
-Save対象の増加とSave Slot / New Game / Continue追加に備え、Saveの読込・Migration・Runtime復元・Snapshot生成・保存タイミングを明確に分離します。
-
-現在は `PrototypeSaveSession`、`PrototypeApplicationInstaller`、`PrototypeWorldBuilder`、`PrototypeLocalSaveCoordinator` に復元・保存責務が分散しているため、新しい永続化対象を追加するたびに複数のCompositionクラスを変更する構造を解消します。
-
-#### 要件
-
-1. 起動時のSave処理をGame Session単位の明示的なフローへ整理する
-   - Save読込
-   - Save Version Migration
-   - Runtime復元用データの生成
-   - World / Player Runtime構築
-   - Runtime Stateへの復元適用
-   - 保存開始
-2. `PrototypeApplicationInstaller` はApplication全体の構築順序を調停する責務に限定し、個別FeatureのSave復元ロジックを直接持たない
-3. Quest復元を `PrototypeWorldBuilder` のWorld構築責務から分離する
-4. Runtime Stateから `GameSaveData` を構築する専用Snapshot境界を設ける
-   - Character Progression
-   - Ability Loadout
-   - Quest Progress
-   - World State
-   - 将来のInventory / Equipment / Player Position等を同じ方向で追加可能にする
-5. `CharacterProgressionSaveMapper` はCharacter / Player状態の変換に限定し、Game全体のSave生成責務を持たない
-6. `PrototypeLocalSaveCoordinator` は保存タイミングの管理を中心とし、FeatureごとのSave DTO組立ロジックを直接列挙しない
-7. `ISaveService` は保存先抽象として維持する
-8. Save Slotを導入する場合、Gameplay側へSlot概念を漏らさない
-   - Slotごとの保存先解決はApplication / Platform境界で行う
-   - `GameSaveData` とRuntime StateのMapper境界はSlot数に依存させない
-9. 破損Save・未対応Version・Character不一致時に既存Saveを上書きしない現在の保護動作を維持する
-10. Save Version Migrationは従来どおりSave DTO境界で行い、Runtime StateへMigration条件を持ち込まない
-
-#### 受入条件
-
-- 新しいSave対象を1つ追加する際、Application Installer / World Builderへ個別復元処理を追加しなくてよい構造になっている
-- Load → Migration → Restore → Saveの往復をEditModeテストで検証できる
-- 既存Version 1〜3のMigrationテストが継続して成功する
-- 破損・未対応Saveで保存無効化される既存動作を維持する
-- Save Slot / New Game / Continueを追加できる境界が明示されている
-- Unity TestsのEditMode / PlayModeが成功する
-
-### P0-2: Modal UI制御の共通化
-
-#### 目的
-
-Pause、Evolution、Ability Loadoutで重複しているInput Context、`Time.timeScale`、Submit / Cancel、モーダル排他制御を共通化し、Inventory / Equipment / Map / Save等の新しい画面を安全に追加できるようにします。
-
-#### 要件
-
-1. Modal UIの所有権を一元管理する共通Coordinatorを導入する
-2. Coordinatorは少なくとも次を管理する
-   - 現在開いているModal
-   - ModalのOpen / Close要求
-   - Modal同士の排他制御
-   - Open前のInput Context
-   - Open前のTime Scale
-   - UI Contextへの切替
-   - Close時のInput Context / Time Scale復元
-3. `GamePauseController`、`EvolutionSelectionController`、`AbilityLoadoutSelectionController` がそれぞれ独自に `Time.timeScale` とInput Contextを所有しない構造へ変更する
-4. 各Feature Controllerは自身のFeature固有状態だけを管理する
-   - Pause: Pause状態
-   - Evolution: 選択・条件評価・確定
-   - Loadout: 候補・Slot選択・割当
-5. 別Modalが開いている間は新しいModalを重ねて開かない
-6. Component Disable / Scene破棄時にも `Time.timeScale = 0` やUI Contextが残留しない
-7. Pause / Evolution / Loadoutの既存操作感を維持する
-8. Realtime基準で動作すべき通知等はModalのTime Scale停止に影響されない
-
-#### 受入条件
-
-- Pause / Evolution / Loadoutが同じModal所有権管理を利用している
-- 各Controllerから重複したTime Scale / Input Context保存・復元コードが除去されている
-- 同時Openが防止されることをテストできる
-- Close後に元のInput ContextとTime Scaleへ復元されることをテストできる
-- Disable / Destroy時の復元をPlayModeテストで確認できる
-- Unity TestsのEditMode / PlayModeが成功する
-
-### P0-3: Architecture / AI Context Mapの陳腐化修正
-
-#### 目的
-
-第1次リファクタリング後に残っている旧Composition名・旧テスト配置・旧責務記述を除去し、人間とAIエージェントが現在存在する実装境界だけを参照する状態へ戻します。
-
-#### 要件
-
-1. 削除済み `PrototypeTrainingAreaCoordinator` への参照を設計・Context Mapから除去する
-2. 現在のComposition境界へ更新する
-   - `PrototypeGameplayFeatureInstaller`
-   - `TrainingQuestFlowController`
-   - `TrainingDummyEventBridge`
-   - `SpawnLifecycle<T>`
-   - `PrototypeGameplayServicesFactory`
-3. EditModeへ移動済みの純粋ロジックテストについて、AI Context Mapのテスト参照を現在の配置へ更新する
-4. Dialogue / Combat / Reward / Quest / SpawningのIntegration参照を現行ファイルへ更新する
-5. ロードマップとTechnical Designの役割を維持する
-   - ロードマップ: 実装状況・優先度・未実装要件
-   - Technical Design: 実装済みの正式アーキテクチャ
-6. 同じ将来タスク一覧を複数文書へ重複させない
-
-#### 受入条件
-
-- Repository内の設計文書・AI Context Mapに `PrototypeTrainingAreaCoordinator` の現役参照が残っていない
-- 各FeatureのIntegration参照先が実在する
-- EditMode / PlayModeの記載が現在のテスト配置と一致する
-- VitePress buildが成功する
+P0完了後の残作業はP1〜P2です。現在のプレイ可能なゲームループを維持し、リファクタリングだけを目的とした新規Frameworkや過剰な抽象化は導入しません。
 
 ### P1-1: Player Runtime Compositionの分割
 
@@ -358,22 +275,19 @@ Ability Loadout導入前の `Attack` / `Art` 命名とObsoleteイベントを整
 
 ## 第2次リファクタリングの実施順序
 
-原則として次の順序で実施します。
+P0完了後は次の順序で実施します。
 
-1. P0-3: Architecture / AI Context Mapの陳腐化修正
-2. P0-1: Save / Game Session起動フローの再編
-3. P0-2: Modal UI制御の共通化
-4. P1-2: Ability LoadoutルールのSource of Truth集約
-5. P1-4: PlayerInputReaderの論理入力整理
-6. P1-1: Player Runtime Compositionの分割
-7. P1-3: uGUI Runtime生成コードの整理
-8. P2: Field / World CompositionのScene単位アーキテクチャ化
+1. P1-2: Ability LoadoutルールのSource of Truth集約
+2. P1-4: PlayerInputReaderの論理入力整理
+3. P1-1: Player Runtime Compositionの分割
+4. P1-3: uGUI Runtime生成コードの整理
+5. P2: Field / World CompositionのScene単位アーキテクチャ化
 
-P0完了後はSave Slot / New Game / Continueを実装可能な状態とし、P1・P2も継続して完了させます。各項目は可能な限り独立PRとし、機能変更と大規模構造変更を同一PRへ混在させません。
+各項目は可能な限り独立PRとし、機能変更と大規模構造変更を同一PRへ混在させません。
 
 ## 次の開発フェーズ
 
-1. 第2次優先リファクタリング P0〜P2
+1. 第2次優先リファクタリング P1〜P2
    - 上記実施順序で全項目を対応する
    - 各項目の受入条件を満たしてから次へ進む
 2. Save SlotとNew Game / Continue導線
@@ -390,7 +304,7 @@ P0完了後はSave Slot / New Game / Continueを実装可能な状態とし、P1
 - Addressables / 非同期ロード
 - Scene Streaming
 
-上記はP0〜P2完了後も、具体的な機能要件または性能問題が発生した時点で再評価します。
+上記はP1〜P2完了後も、具体的な機能要件または性能問題が発生した時点で再評価します。
 
 ## 将来候補
 

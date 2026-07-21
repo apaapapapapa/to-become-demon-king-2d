@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using DemonKing.Core.Application;
 using DemonKing.Core.Input;
 using DemonKing.Domain.Progression;
 using DemonKing.Gameplay.Characters.Configuration;
@@ -9,7 +10,7 @@ namespace DemonKing.Gameplay.Abilities
 {
     /// <summary>
     /// Ability Loadout画面の開閉、候補選択、Action Slot選択とRuntime割当を管理します。
-    /// 表示はPresentation層へ委譲し、受動SkillをAbility Slotへ割り当てません。
+    /// Modal所有権とInput Context / Time Scale切替はModalUiCoordinatorへ委譲します。
     /// </summary>
     [DisallowMultipleComponent]
     public sealed class AbilityLoadoutSelectionController : MonoBehaviour
@@ -27,11 +28,10 @@ namespace DemonKing.Gameplay.Abilities
 
         private readonly List<AbilityLoadoutMenuEntry> entries = new();
         private PlayerInputReader inputReader;
+        private ModalUiCoordinator modalUiCoordinator;
         private AbilityLoadoutController loadoutController;
         private CharacterDefinition characterDefinition;
         private CharacterProgressionState progressionState;
-        private PlayerInputContext previousInputContext;
-        private float resumeTimeScale = 1f;
         private float nextNavigationTime;
         private int navigationCommand;
         private bool subscribed;
@@ -40,6 +40,7 @@ namespace DemonKing.Gameplay.Abilities
 
         public bool IsInitialized =>
             inputReader != null &&
+            modalUiCoordinator != null &&
             loadoutController != null &&
             characterDefinition != null &&
             progressionState != null;
@@ -64,10 +65,30 @@ namespace DemonKing.Gameplay.Abilities
             CharacterDefinition definition,
             CharacterProgressionState state)
         {
+            Initialize(
+                reader,
+                ModalUiCoordinator.GetOrCreate(reader),
+                controller,
+                definition,
+                state);
+        }
+
+        public void Initialize(
+            PlayerInputReader reader,
+            ModalUiCoordinator coordinator,
+            AbilityLoadoutController controller,
+            CharacterDefinition definition,
+            CharacterProgressionState state)
+        {
+            RestoreGameplayState();
             UnsubscribeInput();
             inputReader = reader != null
                 ? reader
                 : throw new ArgumentNullException(nameof(reader));
+            modalUiCoordinator = coordinator != null
+                ? coordinator
+                : throw new ArgumentNullException(nameof(coordinator));
+            modalUiCoordinator.Initialize(inputReader);
             loadoutController = controller != null && controller.IsInitialized
                 ? controller
                 : throw new ArgumentException(
@@ -127,19 +148,20 @@ namespace DemonKing.Gameplay.Abilities
         public bool OpenMenu()
         {
             EnsureInitialized();
-            if (IsOpen || inputReader.CurrentContext != PlayerInputContext.Gameplay)
+            if (IsOpen)
             {
                 return false;
             }
 
             RefreshEntries();
-            previousInputContext = inputReader.CurrentContext;
-            resumeTimeScale = Time.timeScale > 0f ? Time.timeScale : 1f;
+            if (!modalUiCoordinator.TryOpen(this, 0f))
+            {
+                return false;
+            }
+
             IsOpen = true;
             navigationCommand = 0;
             LastActionMessage = string.Empty;
-            Time.timeScale = 0f;
-            inputReader.EnableUiInput();
             StateChanged?.Invoke();
             return true;
         }
@@ -385,8 +407,7 @@ namespace DemonKing.Gameplay.Abilities
 
             IsOpen = false;
             navigationCommand = 0;
-            Time.timeScale = resumeTimeScale;
-            inputReader?.SetContext(previousInputContext);
+            modalUiCoordinator?.TryClose(this);
         }
 
         private static string FormatSlot(AbilitySlot slot)

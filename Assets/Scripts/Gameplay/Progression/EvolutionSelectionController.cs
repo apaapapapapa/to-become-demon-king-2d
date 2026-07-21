@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using DemonKing.Core.Application;
 using DemonKing.Core.Input;
 using DemonKing.Gameplay.Progression.Configuration;
 using UnityEngine;
@@ -22,7 +23,7 @@ namespace DemonKing.Gameplay.Progression
 
     /// <summary>
     /// Evolution選択画面の開閉、選択位置、確定要求を管理します。
-    /// 条件判定はEvolutionProgressionControllerへ委譲し、具体的なuGUI表示を知りません。
+    /// Modal所有権とInput Context / Time Scale切替はModalUiCoordinatorへ委譲します。
     /// </summary>
     [DisallowMultipleComponent]
     public sealed class EvolutionSelectionController : MonoBehaviour
@@ -32,16 +33,18 @@ namespace DemonKing.Gameplay.Progression
 
         private readonly List<EvolutionSelectionEntry> entries = new();
         private PlayerInputReader inputReader;
+        private ModalUiCoordinator modalUiCoordinator;
         private EvolutionProgressionController progressionController;
-        private PlayerInputContext previousInputContext;
-        private float resumeTimeScale = 1f;
         private float nextNavigationTime;
         private int navigationDirection;
         private bool subscribed;
 
         public event Action StateChanged;
 
-        public bool IsInitialized => inputReader != null && progressionController != null;
+        public bool IsInitialized =>
+            inputReader != null &&
+            modalUiCoordinator != null &&
+            progressionController != null;
         public bool IsOpen { get; private set; }
         public int SelectedIndex { get; private set; }
         public IReadOnlyList<EvolutionSelectionEntry> Entries => entries;
@@ -56,10 +59,26 @@ namespace DemonKing.Gameplay.Progression
             PlayerInputReader reader,
             EvolutionProgressionController controller)
         {
+            Initialize(
+                reader,
+                ModalUiCoordinator.GetOrCreate(reader),
+                controller);
+        }
+
+        public void Initialize(
+            PlayerInputReader reader,
+            ModalUiCoordinator coordinator,
+            EvolutionProgressionController controller)
+        {
+            RestoreGameplayState();
             UnsubscribeInput();
             inputReader = reader != null
                 ? reader
                 : throw new ArgumentNullException(nameof(reader));
+            modalUiCoordinator = coordinator != null
+                ? coordinator
+                : throw new ArgumentNullException(nameof(coordinator));
+            modalUiCoordinator.Initialize(inputReader);
             progressionController = controller != null && controller.IsInitialized
                 ? controller
                 : throw new ArgumentException(
@@ -114,20 +133,20 @@ namespace DemonKing.Gameplay.Progression
         public bool OpenMenu()
         {
             EnsureInitialized();
-            if (IsOpen || entries.Count == 0 ||
-                inputReader.CurrentContext != PlayerInputContext.Gameplay)
+            if (IsOpen || entries.Count == 0)
             {
                 return false;
             }
 
             RefreshEntries();
-            previousInputContext = inputReader.CurrentContext;
-            resumeTimeScale = Time.timeScale > 0f ? Time.timeScale : 1f;
+            if (!modalUiCoordinator.TryOpen(this, 0f))
+            {
+                return false;
+            }
+
             IsOpen = true;
             LastApplyResult = null;
             navigationDirection = 0;
-            Time.timeScale = 0f;
-            inputReader.EnableUiInput();
             StateChanged?.Invoke();
             return true;
         }
@@ -273,11 +292,7 @@ namespace DemonKing.Gameplay.Progression
 
             IsOpen = false;
             navigationDirection = 0;
-            Time.timeScale = resumeTimeScale;
-            if (inputReader != null)
-            {
-                inputReader.SetContext(previousInputContext);
-            }
+            modalUiCoordinator?.TryClose(this);
         }
 
         private void EnsureInitialized()
