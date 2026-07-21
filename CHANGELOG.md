@@ -1,3 +1,12 @@
+## [1.11.1](https://github.com/apaapapapapa/to-become-demon-king-2d/compare/v1.11.0...v1.11.1) (2026-07-21)
+
+### Bug Fixes
+
+* disambiguate Unity object in composition tests ([f825b48](https://github.com/apaapapapapa/to-become-demon-king-2d/commit/f825b4851eed584220cbbb193835569ab53c9674))
+* import gameplay event domain type ([bb1affb](https://github.com/apaapapapapa/to-become-demon-king-2d/commit/bb1affb2dc194058df05006b2093545775705656))
+* import melee attack definition ([09e13db](https://github.com/apaapapapapa/to-become-demon-king-2d/commit/09e13db0265da669cc8d4fb61b084290a980f50d))
+* reference dialogue definition namespace ([ed7288c](https://github.com/apaapapapapa/to-become-demon-king-2d/commit/ed7288ca6f4d14adbc88fdb41083571670904a5d))
+
 ## [1.11.0](https://github.com/apaapapapapa/to-become-demon-king-2d/compare/v1.10.0...v1.11.0) (2026-07-20)
 
 ### Features
