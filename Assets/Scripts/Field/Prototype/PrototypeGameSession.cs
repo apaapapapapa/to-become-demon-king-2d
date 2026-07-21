@@ -137,11 +137,6 @@ namespace DemonKing.Field.Prototype
                 throw new ArgumentNullException(nameof(saveSession));
             }
 
-            if (worldResult == null)
-            {
-                throw new ArgumentNullException(nameof(worldResult));
-            }
-
             if (!saveSession.WasLoaded)
             {
                 return;
