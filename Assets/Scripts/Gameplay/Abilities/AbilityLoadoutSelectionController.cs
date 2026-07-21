@@ -15,14 +15,6 @@ namespace DemonKing.Gameplay.Abilities
     [DisallowMultipleComponent]
     public sealed class AbilityLoadoutSelectionController : MonoBehaviour
     {
-        private static readonly AbilitySlot[] EditableActionSlots =
-        {
-            AbilitySlot.Action1,
-            AbilitySlot.Action2,
-            AbilitySlot.Action3,
-            AbilitySlot.Action4
-        };
-
         [SerializeField, Min(0.05f)] private float initialNavigationDelay = 0.32f;
         [SerializeField, Min(0.05f)] private float navigationRepeatInterval = 0.12f;
 
@@ -49,7 +41,7 @@ namespace DemonKing.Gameplay.Abilities
         public int SelectedEntryIndex { get; private set; } = -1;
         public int SelectedSlotIndex { get; private set; }
         public IReadOnlyList<AbilityLoadoutMenuEntry> Entries => entries;
-        public IReadOnlyList<AbilitySlot> Slots => EditableActionSlots;
+        public IReadOnlyList<AbilitySlot> Slots => AbilityLoadoutPolicy.EditableSlots;
         public string LastActionMessage { get; private set; } = string.Empty;
 
         public AbilityLoadoutMenuEntry? SelectedEntry =>
@@ -57,7 +49,7 @@ namespace DemonKing.Gameplay.Abilities
                 ? entries[SelectedEntryIndex]
                 : null;
 
-        public AbilitySlot SelectedSlot => EditableActionSlots[SelectedSlotIndex];
+        public AbilitySlot SelectedSlot => AbilityLoadoutPolicy.GetEditableSlot(SelectedSlotIndex);
 
         public void Initialize(
             PlayerInputReader reader,
@@ -200,14 +192,14 @@ namespace DemonKing.Gameplay.Abilities
 
         public bool MoveSlotSelection(int direction)
         {
-            if (!IsOpen || direction == 0)
+            int slotCount = AbilityLoadoutPolicy.EditableSlots.Count;
+            if (!IsOpen || slotCount == 0 || direction == 0)
             {
                 return false;
             }
 
             int nextIndex =
-                (SelectedSlotIndex + Math.Sign(direction) + EditableActionSlots.Length) %
-                EditableActionSlots.Length;
+                (SelectedSlotIndex + Math.Sign(direction) + slotCount) % slotCount;
             if (nextIndex == SelectedSlotIndex)
             {
                 return false;
@@ -242,7 +234,17 @@ namespace DemonKing.Gameplay.Abilities
                 return false;
             }
 
-            bool changed = MoveAbilityToSlot(SelectedSlot, entry.AbilityId);
+            if (!AbilityLoadoutEligibility.CanAssign(
+                    characterDefinition,
+                    progressionState,
+                    entry.AbilityId))
+            {
+                LastActionMessage = "現在の進行状態では、このAbilityを割り当てられません。";
+                StateChanged?.Invoke();
+                return false;
+            }
+
+            bool changed = loadoutController.Assign(SelectedSlot, entry.AbilityId);
             LastActionMessage = changed
                 ? $"{entry.DisplayName} を {FormatSlot(SelectedSlot)} に割り当てました。"
                 : $"{entry.DisplayName} はすでに {FormatSlot(SelectedSlot)} に割り当て済みです。";
@@ -301,25 +303,6 @@ namespace DemonKing.Gameplay.Abilities
                     break;
                 }
             }
-        }
-
-        private bool MoveAbilityToSlot(AbilitySlot targetSlot, string abilityId)
-        {
-            bool changed = false;
-            foreach (AbilitySlot slot in EditableActionSlots)
-            {
-                if (slot == targetSlot ||
-                    !loadoutController.TryResolve(slot, out string existingAbilityId) ||
-                    !string.Equals(existingAbilityId, abilityId, StringComparison.Ordinal))
-                {
-                    continue;
-                }
-
-                changed |= loadoutController.Clear(slot);
-            }
-
-            changed |= loadoutController.Assign(targetSlot, abilityId);
-            return changed;
         }
 
         private void SubscribeInput()
