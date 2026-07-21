@@ -75,7 +75,8 @@ namespace DemonKing.EditorTools
 
         private static void ValidateProjectAssets(bool forceLog)
         {
-            PrototypeProjectAssets projectAssets = AssetDatabase.LoadAssetAtPath<PrototypeProjectAssets>(ProjectAssetsPath);
+            PrototypeProjectAssets projectAssets =
+                AssetDatabase.LoadAssetAtPath<PrototypeProjectAssets>(ProjectAssetsPath);
             if (projectAssets == null)
             {
                 Debug.LogError($"PrototypeProjectAssetsが見つかりません: {ProjectAssetsPath}");
@@ -101,7 +102,8 @@ namespace DemonKing.EditorTools
         {
             JapaneseUiFontInstaller.EnsureInstalled(forceLog: forceLog);
 
-            PrototypeProjectAssets projectAssets = AssetDatabase.LoadAssetAtPath<PrototypeProjectAssets>(ProjectAssetsPath);
+            PrototypeProjectAssets projectAssets =
+                AssetDatabase.LoadAssetAtPath<PrototypeProjectAssets>(ProjectAssetsPath);
             if (projectAssets == null)
             {
                 Debug.LogError($"PrototypeProjectAssetsが見つかりません: {ProjectAssetsPath}");
@@ -113,10 +115,19 @@ namespace DemonKing.EditorTools
             CharacterDefinition playerCharacter = Load<CharacterDefinition>(PlayerCharacterPath);
             bool characterDefinitionChanged = RepairPlayerCharacterDefinition(playerCharacter);
 
-            changed |= AssignIfDifferent(serializedObject, "applicationSettings", Load<PrototypeApplicationSettings>(ApplicationSettingsPath));
+            changed |= AssignIfDifferent(
+                serializedObject,
+                "applicationSettings",
+                Load<PrototypeApplicationSettings>(ApplicationSettingsPath));
             changed |= AssignIfDifferent(serializedObject, "playerCharacter", playerCharacter);
-            changed |= AssignIfDifferent(serializedObject, "trainingScenario", Load<TrainingScenarioDefinition>(TrainingScenarioPath));
-            changed |= AssignIfDifferent(serializedObject, "uiFont", Load<Font>(JapaneseUiFontInstaller.FontAssetPath, logIfMissing: forceLog));
+            changed |= AssignIfDifferent(
+                serializedObject,
+                "trainingScenario",
+                Load<TrainingScenarioDefinition>(TrainingScenarioPath));
+            changed |= AssignIfDifferent(
+                serializedObject,
+                "uiFont",
+                Load<Font>(JapaneseUiFontInstaller.FontAssetPath, logIfMissing: forceLog));
             changed |= AssignIfDifferent(serializedObject, "cottagePrefab", Load<GameObject>(CottagePrefabPath));
             changed |= AssignIfDifferent(serializedObject, "treePrefab", Load<GameObject>(TreePrefabPath));
             changed |= AssignIfDifferent(serializedObject, "lamppostPrefab", Load<GameObject>(LamppostPrefabPath));
@@ -155,8 +166,14 @@ namespace DemonKing.EditorTools
             SerializedObject serializedObject = new(definition);
             bool changed = false;
             changed |= AssignIfDifferent(serializedObject, "prefab", Load<GameObject>(PlayerPrefabPath));
-            changed |= AssignIfDifferent(serializedObject, "statsDefinition", Load<CharacterStatsDefinition>(PlayerCharacterStatsPath));
-            changed |= AssignArrayIfDifferent(serializedObject, "abilityDefinitions", Load<MeleeAttackDefinition>(PlayerMeleeAttackPath));
+            changed |= AssignIfDifferent(
+                serializedObject,
+                "statsDefinition",
+                Load<CharacterStatsDefinition>(PlayerCharacterStatsPath));
+            changed |= AssignArrayIfDifferent(
+                serializedObject,
+                "abilityDefinitions",
+                Load<MeleeAttackDefinition>(PlayerMeleeAttackPath));
             changed |= AssignArrayIfDifferent(
                 serializedObject,
                 "artDefinitions",
@@ -174,8 +191,14 @@ namespace DemonKing.EditorTools
                 Load<EvolutionDefinition>(ArcaneSlimeEvolutionPath),
                 Load<EvolutionDefinition>(ApexPredatorSlimeEvolutionPath),
                 Load<EvolutionDefinition>(ArchmageSlimeEvolutionPath));
-            changed |= AssignIfDifferent(serializedObject, "dodgeDefinition", Load<DodgeDefinition>(PlayerDodgePath));
-            changed |= AssignIfDifferent(serializedObject, "experienceTableDefinition", Load<ExperienceTableDefinition>(PlayerExperienceTablePath));
+            changed |= AssignIfDifferent(
+                serializedObject,
+                "dodgeDefinition",
+                Load<DodgeDefinition>(PlayerDodgePath));
+            changed |= AssignIfDifferent(
+                serializedObject,
+                "experienceTableDefinition",
+                Load<ExperienceTableDefinition>(PlayerExperienceTablePath));
 
             if (changed)
             {
@@ -212,7 +235,9 @@ namespace DemonKing.EditorTools
                 return null;
             }
 
-            bool needsReimport = importer.textureType != TextureImporterType.Sprite || importer.spriteImportMode != SpriteImportMode.Single;
+            bool needsReimport =
+                importer.textureType != TextureImporterType.Sprite ||
+                importer.spriteImportMode != SpriteImportMode.Single;
             if (needsReimport)
             {
                 importer.textureType = TextureImporterType.Sprite;
@@ -243,10 +268,15 @@ namespace DemonKing.EditorTools
                 return direct;
             }
 
-            return AssetDatabase.LoadAllAssetsAtPath(path).OfType<Sprite>().FirstOrDefault();
+            return AssetDatabase.LoadAllAssetsAtPath(path)
+                .OfType<Sprite>()
+                .FirstOrDefault();
         }
 
-        private static bool AssignIfDifferent(SerializedObject serializedObject, string propertyName, Object value)
+        private static bool AssignIfDifferent(
+            SerializedObject serializedObject,
+            string propertyName,
+            Object value)
         {
             SerializedProperty property = serializedObject.FindProperty(propertyName);
             if (property == null)
@@ -264,7 +294,10 @@ namespace DemonKing.EditorTools
             return true;
         }
 
-        private static bool AssignArrayIfDifferent(SerializedObject serializedObject, string propertyName, params Object[] values)
+        private static bool AssignArrayIfDifferent(
+            SerializedObject serializedObject,
+            string propertyName,
+            params Object[] values)
         {
             SerializedProperty property = serializedObject.FindProperty(propertyName);
             if (property == null || !property.isArray)
