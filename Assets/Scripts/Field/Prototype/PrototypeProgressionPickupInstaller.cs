@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using DemonKing.Domain.Progression;
 using DemonKing.Field.Prototype.Configuration;
 using DemonKing.Gameplay.Progression;
 using DemonKing.Presentation.Rendering;
@@ -15,9 +16,13 @@ namespace DemonKing.Field.Prototype
         public void Install(
             Transform world,
             ProgressionAcquisitionService acquisitionService,
+            ProgressionGrantConsumptionState consumptionState,
             IReadOnlyList<PrototypeProgressionPickupDefinition> definitions)
         {
-            if (world == null || acquisitionService == null || definitions == null)
+            if (world == null ||
+                acquisitionService == null ||
+                consumptionState == null ||
+                definitions == null)
             {
                 return;
             }
@@ -30,13 +35,14 @@ namespace DemonKing.Field.Prototype
                     continue;
                 }
 
-                CreatePickup(world, acquisitionService, definition);
+                CreatePickup(world, acquisitionService, consumptionState, definition);
             }
         }
 
         private static void CreatePickup(
             Transform world,
             ProgressionAcquisitionService acquisitionService,
+            ProgressionGrantConsumptionState consumptionState,
             PrototypeProgressionPickupDefinition definition)
         {
             GameObject root = new(definition.DisplayName);
@@ -72,7 +78,10 @@ namespace DemonKing.Field.Prototype
 
             ProgressionGrantInteractable interactable =
                 root.AddComponent<ProgressionGrantInteractable>();
-            interactable.Initialize(definition.GrantDefinition, acquisitionService);
+            interactable.Initialize(
+                definition.GrantDefinition,
+                acquisitionService,
+                consumptionState);
             sorter.RefreshRenderers();
         }
     }
