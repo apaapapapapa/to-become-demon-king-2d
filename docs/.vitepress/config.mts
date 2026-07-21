@@ -51,7 +51,8 @@ export default defineConfig({
         { text: 'ストーリー骨格', link: '/story/overview' }
       ] }],
       '/world/': [{ text: '世界設定', items: [
-        { text: '概要', link: '/world/' }
+        { text: '概要', link: '/world/' },
+        { text: 'アウレリオン', link: '/world/aurelion' }
       ] }],
       '/database/': [{ text: '図鑑', items: [
         { text: '図鑑一覧', link: '/database/' },

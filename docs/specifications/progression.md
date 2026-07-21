@@ -46,12 +46,11 @@ PlayerInteractor
 
 `ProgressionGrantInteractable` は正常なInteractionを一度処理すると消費済みとなり、同じRuntime中は再取得できません。すでに同じArt / Skillを取得済みの場合も一度きり取得物として消費します。
 
-Prototypeでは `PrototypeProjectAssets` のProgression Pickup設定をCompositionのSource of Truthとし、現在は次を配置します。
+Prototypeでは `PrototypeProjectAssets` のProgression Pickup設定をCompositionのSource of Truthとします。個別の取得物、付与対象、表示情報、Stable Content IDはRuntime Definitionを正とし、この仕様書へ複製しません。
 
-- 古びた魔導書: `grant.field.arcane_grimoire` から `art.magic.arcane_bolt` を習得
-- 魔力結晶: `grant.field.mana_crystal` から `skill.magic.mana_flow` を取得
+フィールド取得物の消費状態は `ProgressionGrantConsumptionState` が保持します。Save Version 3では消費済みGrantのStable IDを `WorldSaveData.consumedProgressionGrantIds` へ保存し、ロード後は取得済みGrantを再配置しません。Art / Skillそのものの取得状態は `CharacterProgressionState` と対応するSave DTOで別途保存・復元します。
 
-Art / Skillの成長状態は既存Save DTO境界の対象です。一方、フィールド取得物そのものの消費状態はまだ永続化しません。実際のローカルSave実装時に、再ロード後の配置状態と接続します。
+具体的な保存形式とMigrationは [セーブ仕様](./save.md) を参照してください。個別Art / Skillのプレイヤー向け情報は [Art一覧](../database/arts/) / [Skill一覧](../database/skills/) を参照してください。
 
 Combat / Rewardから成長状態へ接続する方向は [Feature間の責務境界](../design/feature-boundaries.md#ability--combat--reward--progression) を参照してください。
 
