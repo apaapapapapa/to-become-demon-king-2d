@@ -1,3 +1,27 @@
+## [1.14.0](https://github.com/apaapapapapa/to-become-demon-king-2d/compare/v1.13.0...v1.14.0) (2026-07-21)
+
+### Features
+
+* add json file save service ([4af2701](https://github.com/apaapapapapa/to-become-demon-king-2d/commit/4af270191793b44e1c3339e9a6533e950db5e9e0))
+* add local autosave coordinator ([5d523a0](https://github.com/apaapapapapa/to-become-demon-king-2d/commit/5d523a0304cf1adf57246785c2e956df92e04d07))
+* add progression grant consumption state ([b988faf](https://github.com/apaapapapapa/to-become-demon-king-2d/commit/b988faf1c7a34befc8b7d8be772b2068c5861cd5))
+* add prototype save load session ([8757b99](https://github.com/apaapapapapa/to-become-demon-king-2d/commit/8757b998fa4dd69472e46368061e7e8cb589f394))
+* add quest runtime restore boundary ([9f9f2c0](https://github.com/apaapapapapa/to-become-demon-king-2d/commit/9f9f2c00f6c5b3111afcd2bc1da4afd0306147dd))
+* extend save data to version 3 ([5ea245b](https://github.com/apaapapapapa/to-become-demon-king-2d/commit/5ea245b8ebad364a29cb399ca3cf4a5a32a9d612))
+* inject restored pickup consumption state ([f9ac91a](https://github.com/apaapapapapa/to-become-demon-king-2d/commit/f9ac91a14795b45a03771eaa354dd90c273fa4cd))
+* load and autosave prototype state ([eb34b5f](https://github.com/apaapapapapa/to-become-demon-king-2d/commit/eb34b5f71adae0b74191e9982294ecabac34baa8))
+* map quest runtime state to save data ([1d4e967](https://github.com/apaapapapapa/to-become-demon-king-2d/commit/1d4e967dbe46e8b1184429214bfd3b124b0dad94))
+* migrate save data to version 3 ([80f4321](https://github.com/apaapapapapa/to-become-demon-king-2d/commit/80f432125f815e559145846d3fb2f2af95adefc3))
+* persist ability loadout assignments ([f983d87](https://github.com/apaapapapapa/to-become-demon-king-2d/commit/f983d87299211ac615394ba45680064bd307ecbb))
+* restore progression pickup consumption ([e3110c1](https://github.com/apaapapapapa/to-become-demon-king-2d/commit/e3110c1c9247e9d6bc3cb3335b58083d70d3e332))
+* restore quest progression state ([922a400](https://github.com/apaapapapapa/to-become-demon-king-2d/commit/922a4009908938c228eed4560204197b840c9a0c))
+* restore saved world and quest state ([35993cf](https://github.com/apaapapapapa/to-become-demon-king-2d/commit/35993cf227a7469e52192f7eded8616a70a9a9f3))
+
+### Bug Fixes
+
+* qualify Unity application save path ([666b578](https://github.com/apaapapapapa/to-become-demon-king-2d/commit/666b578e6780563417351a2bd6f470d9259dbfc9))
+* use quest runtime namespace in world restore ([c1e4347](https://github.com/apaapapapapa/to-become-demon-king-2d/commit/c1e43471a448ae781ea1ba9785b821bafe198471))
+
 ## [1.13.0](https://github.com/apaapapapapa/to-become-demon-king-2d/compare/v1.12.0...v1.13.0) (2026-07-21)
 
 ### Features
