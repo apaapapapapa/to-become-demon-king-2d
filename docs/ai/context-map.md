@@ -19,7 +19,8 @@ AIエージェントが変更対象に必要な仕様・コード・テストへ
 
 ## Field Physics / Movement
 
-- **Design:** `docs/design/technical-design.md#3dフィールド座標`, `docs/design/technical-design.md#移動と物理`
+- **Spec:** `docs/specifications/movement.md`
+- **Design:** `docs/design/technical-design.md`
 - **Code:** `Assets/Scripts/Gameplay/Characters/CharacterPhysicsBody3D.cs`, `Assets/Scripts/Gameplay/Characters/CharacterPlanarMotor.cs`, `Assets/Scripts/Gameplay/Characters/CharacterDodge.cs`, `Assets/Scripts/Core/Math/FieldSpace3D.cs`
 - **Integration:** `Assets/Scripts/Field/Prototype/CollisionMapBuilder.cs`, `Assets/Scripts/Field/Prototype/PrototypePlayerSpawner.cs`, `Assets/Scripts/Field/Prototype/PrototypeTilemapContext.cs`
 - **Tests:** `Assets/Tests/PlayMode/FieldPhysics3DPlayModeTests.cs`
@@ -39,8 +40,8 @@ AIエージェントが変更対象に必要な仕様・コード・テストへ
 - **Boundary:** `docs/design/feature-boundaries.md`
 - **Code:** `Assets/Scripts/Gameplay/Dialogue/`
 - **Presentation:** `Assets/Scripts/Presentation/UI/DialogueLogView.cs`
-- **Integration:** `Assets/Scripts/Field/Prototype/PrototypeNpcInteractable.cs`, `Assets/Scripts/Field/Prototype/PrototypeTrainingAreaCoordinator.cs`
-- **Tests:** `Assets/Tests/PlayMode/LinearDialogueSequenceTests.cs`, `Assets/Tests/PlayMode/PrototypeNpcInteractablePlayModeTests.cs`, `Assets/Tests/PlayMode/DialogueLogViewPlayModeTests.cs`
+- **Integration:** `Assets/Scripts/Field/Prototype/PrototypeNpcInteractable.cs`, `Assets/Scripts/Field/Prototype/TrainingQuestFlowController.cs`
+- **Tests:** `Assets/Tests/EditMode/LinearDialogueSequenceTests.cs`, `Assets/Tests/PlayMode/PrototypeNpcInteractablePlayModeTests.cs`, `Assets/Tests/PlayMode/DialogueLogViewPlayModeTests.cs`
 - **Related:** Interaction, Quest, Spawning
 
 ## Combat
@@ -48,7 +49,7 @@ AIエージェントが変更対象に必要な仕様・コード・テストへ
 - **Spec:** `docs/specifications/combat.md`
 - **Boundary:** `docs/design/feature-boundaries.md`
 - **Code:** `Assets/Scripts/Gameplay/Combat/`
-- **Integration:** `Assets/Scripts/Field/Prototype/PrototypeCombatDummy.cs`, `Assets/Scripts/Field/Prototype/PrototypeTrainingAreaCoordinator.cs`
+- **Integration:** `Assets/Scripts/Field/Prototype/PrototypeCombatDummy.cs`, `Assets/Scripts/Field/Prototype/PrototypeGameplayFeatureInstaller.cs`, `Assets/Scripts/Field/Prototype/TrainingDummyEventBridge.cs`
 - **Tests:** `Assets/Tests/EditMode/`, `Assets/Tests/PlayMode/`
 - **Related:** Ability, Reward, Modifiers, Quest, Field Physics / Movement
 
@@ -107,7 +108,7 @@ AIエージェントが変更対象に必要な仕様・コード・テストへ
 - **Spec:** `docs/specifications/combat.md`, `docs/specifications/progression.md`
 - **Boundary:** `docs/design/feature-boundaries.md`
 - **Code:** `Assets/Scripts/Gameplay/Rewards/`
-- **Integration:** `Assets/Scripts/Field/Prototype/PrototypeTrainingAreaCoordinator.cs`
+- **Integration:** `Assets/Scripts/Field/Prototype/PrototypeGameplayFeatureInstaller.cs`
 - **Tests:** `Assets/Tests/EditMode/`, `Assets/Tests/PlayMode/`
 - **Related:** Combat, Progression
 
@@ -142,8 +143,8 @@ AIエージェントが変更対象に必要な仕様・コード・テストへ
 - **Boundary:** `docs/design/feature-boundaries.md`
 - **Code:** `Assets/Scripts/Domain/Quests/`, `Assets/Scripts/Gameplay/Quests/`
 - **Presentation:** `Assets/Scripts/Presentation/UI/QuestTrackerView.cs`
-- **Integration:** `Assets/Scripts/Gameplay/Events/GameplayEventHub.cs`, `Assets/Scripts/Field/Prototype/PrototypeTrainingAreaCoordinator.cs`, `Assets/Scripts/Field/Prototype/PrototypeUiInstaller.cs`
-- **Tests:** `Assets/Tests/PlayMode/QuestProgressionServiceTests.cs`, `Assets/Tests/PlayMode/QuestTrackerViewPlayModeTests.cs`
+- **Integration:** `Assets/Scripts/Gameplay/Events/GameplayEventHub.cs`, `Assets/Scripts/Field/Prototype/TrainingQuestFlowController.cs`, `Assets/Scripts/Field/Prototype/PrototypeUiInstaller.cs`
+- **Tests:** `Assets/Tests/EditMode/QuestProgressionServiceTests.cs`, `Assets/Tests/EditMode/QuestTrackerPresentationTests.cs`, `Assets/Tests/PlayMode/QuestTrackerViewPlayModeTests.cs`
 - **Related:** Gameplay Events, Combat, Dialogue, Interaction
 
 ## Spawning
@@ -151,8 +152,8 @@ AIエージェントが変更対象に必要な仕様・コード・テストへ
 - **Spec:** `docs/specifications/spawning.md`
 - **Boundary:** `docs/design/feature-boundaries.md`
 - **Code:** `Assets/Scripts/Gameplay/Spawning/`
-- **Integration:** `Assets/Scripts/Field/Prototype/PrototypeCombatDummyFactory.cs`, `Assets/Scripts/Field/Prototype/PrototypeTrainingAreaCoordinator.cs`
-- **Tests:** `Assets/Tests/PlayMode/SpawnLifecycleTests.cs`, `Assets/Tests/PlayMode/PrototypeNpcInteractablePlayModeTests.cs`
+- **Integration:** `Assets/Scripts/Field/Prototype/PrototypeCombatDummyFactory.cs`, `Assets/Scripts/Field/Prototype/PrototypeGameplayFeatureInstaller.cs`, `Assets/Scripts/Field/Prototype/TrainingQuestFlowController.cs`, `Assets/Scripts/Field/Prototype/TrainingDummyEventBridge.cs`
+- **Tests:** `Assets/Tests/EditMode/SpawnLifecycleTests.cs`, `Assets/Tests/PlayMode/PrototypeNpcInteractablePlayModeTests.cs`, `Assets/Tests/PlayMode/TrainingAreaCompositionPlayModeTests.cs`
 - **Related:** Combat, Interaction
 
 ## Enemy AI
