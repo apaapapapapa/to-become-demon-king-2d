@@ -1,3 +1,24 @@
+## [1.13.0](https://github.com/apaapapapapa/to-become-demon-king-2d/compare/v1.12.0...v1.13.0) (2026-07-21)
+
+### Features
+
+* add arcane bolt ability ([3751902](https://github.com/apaapapapapa/to-become-demon-king-2d/commit/375190234a277b0fe0e5e5209e3d17359abbd958))
+* add arcane bolt art ([6669ae8](https://github.com/apaapapapapa/to-become-demon-king-2d/commit/6669ae8d62e0061ef7b55e554a58b71abff5347b))
+* add arcane grimoire grant ([0e7c99e](https://github.com/apaapapapapa/to-become-demon-king-2d/commit/0e7c99e4b81b9d7cfbe386299456cfbb65aaccda))
+* add mana crystal grant ([d7b370d](https://github.com/apaapapapapa/to-become-demon-king-2d/commit/d7b370df3985474b70fccc01f1daf416942f8932))
+* add mana flow skill ([b7d7793](https://github.com/apaapapapapa/to-become-demon-king-2d/commit/b7d7793c1346eaa81e6aaffb0da28f5a21c4de51))
+* add progression grant interactable ([349a464](https://github.com/apaapapapapa/to-become-demon-king-2d/commit/349a464d585fb388b29c2d66608e25c610da3389))
+* add prototype progression pickup definition ([a743c94](https://github.com/apaapapapapa/to-become-demon-king-2d/commit/a743c944f86ecb148630c0f67e812973d6093741))
+* compose progression pickups into world ([29f02b4](https://github.com/apaapapapapa/to-become-demon-king-2d/commit/29f02b47fcc9cc9b4b6aeed4de43bed11b1417df))
+* configure field progression pickups ([c36027f](https://github.com/apaapapapapa/to-become-demon-king-2d/commit/c36027f7703d4e454694ce145740fca5d951138c))
+* install progression pickups in prototype field ([9624138](https://github.com/apaapapapapa/to-become-demon-king-2d/commit/96241387227204e307b0dc3bc2b6a8319522f9f0))
+* register additional player art and skill ([bc02078](https://github.com/apaapapapapa/to-become-demon-king-2d/commit/bc02078b96276bab6d78edf1fa79d6bbce4f926a))
+* register progression pickups in project assets ([4bfa2e6](https://github.com/apaapapapapa/to-become-demon-king-2d/commit/4bfa2e6aab745099f39b1f03dea4ec36c3f72d39))
+
+### Bug Fixes
+
+* preserve additional progression content during repair ([5abeb17](https://github.com/apaapapapapa/to-become-demon-king-2d/commit/5abeb17185ce59b4acc5db42c7221718faa99958))
+
 ## [1.12.0](https://github.com/apaapapapapa/to-become-demon-king-2d/compare/v1.11.1...v1.12.0) (2026-07-21)
 
 ### Features
