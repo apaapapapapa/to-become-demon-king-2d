@@ -54,7 +54,8 @@ namespace DemonKing.Core.Application
                 currentExperience = state.CurrentExperience,
                 artProgress = artProgress,
                 unlockedSkillIds = new List<string>(state.UnlockedSkillIds),
-                unlockedEvolutionNodeIds = new List<string>(state.UnlockedEvolutionNodeIds)
+                unlockedEvolutionNodeIds = new List<string>(state.UnlockedEvolutionNodeIds),
+                abilityLoadout = new AbilityLoadoutSaveData()
             };
         }
 
@@ -129,15 +130,39 @@ namespace DemonKing.Core.Application
                 saveData.version = 2;
             }
 
-            NormalizeCollections(saveData.player);
+            if (saveData.version == 2)
+            {
+                // Version 2にはLoadout / Quest / World状態が存在しません。
+                saveData.player.abilityLoadout = new AbilityLoadoutSaveData();
+                saveData.quests = new List<QuestProgressSaveData>();
+                saveData.world = new WorldSaveData();
+                saveData.version = 3;
+            }
+
+            NormalizeCollections(saveData);
             return saveData;
         }
 
-        private static void NormalizeCollections(PlayerSaveData player)
+        private static void NormalizeCollections(GameSaveData saveData)
         {
+            PlayerSaveData player = saveData.player;
             player.artProgress ??= new List<ArtProgressSaveData>();
             player.unlockedSkillIds ??= new List<string>();
             player.unlockedEvolutionNodeIds ??= new List<string>();
+            player.abilityLoadout ??= new AbilityLoadoutSaveData();
+            player.abilityLoadout.slots ??= new List<AbilitySlotSaveData>();
+
+            saveData.quests ??= new List<QuestProgressSaveData>();
+            foreach (QuestProgressSaveData quest in saveData.quests)
+            {
+                if (quest != null)
+                {
+                    quest.objectives ??= new List<ObjectiveProgressSaveData>();
+                }
+            }
+
+            saveData.world ??= new WorldSaveData();
+            saveData.world.consumedProgressionGrantIds ??= new List<string>();
         }
     }
 }
