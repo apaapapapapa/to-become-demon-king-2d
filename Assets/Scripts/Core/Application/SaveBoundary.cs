@@ -93,12 +93,6 @@ namespace DemonKing.Core.Application
                 saveData.unlockedEvolutionNodeIds,
                 artProgress);
         }
-
-        public static CharacterProgressionState FromSaveData(GameSaveData saveData)
-        {
-            GameSaveData migrated = GameSaveDataMigrator.MigrateToCurrent(saveData);
-            return FromSaveData(migrated.player);
-        }
     }
 
     /// <summary>
