@@ -6,14 +6,14 @@ namespace DemonKing.Core.Application
 {
     /// <summary>
     /// ゲーム全体のポーズ状態を管理します。
-    /// Time.timeScaleとInput Contextの切り替えだけを担当し、具体的なUI表示には依存しません。
+    /// Modalの所有権、Time Scale、Input Contextの退避・復元はModalUiCoordinatorへ委譲します。
     /// </summary>
     [DisallowMultipleComponent]
     public sealed class GamePauseController : MonoBehaviour
     {
         private PlayerInputReader inputReader;
+        private ModalUiCoordinator modalUiCoordinator;
         private float pausedTimeScale;
-        private float resumeTimeScale = 1f;
         private bool subscribed;
 
         public event Action<bool> PauseStateChanged;
@@ -22,8 +22,27 @@ namespace DemonKing.Core.Application
 
         public void Initialize(PlayerInputReader reader, float pauseTimeScale = 0f)
         {
+            Initialize(
+                reader,
+                ModalUiCoordinator.GetOrCreate(reader),
+                pauseTimeScale);
+        }
+
+        public void Initialize(
+            PlayerInputReader reader,
+            ModalUiCoordinator coordinator,
+            float pauseTimeScale = 0f)
+        {
+            RestoreActiveState();
             UnsubscribeInput();
-            inputReader = reader;
+
+            inputReader = reader != null
+                ? reader
+                : throw new ArgumentNullException(nameof(reader));
+            modalUiCoordinator = coordinator != null
+                ? coordinator
+                : throw new ArgumentNullException(nameof(coordinator));
+            modalUiCoordinator.Initialize(inputReader);
             pausedTimeScale = Mathf.Clamp(pauseTimeScale, 0f, 1f);
 
             if (isActiveAndEnabled)
@@ -57,16 +76,17 @@ namespace DemonKing.Core.Application
 
         public void PauseGame()
         {
-            if (IsPaused)
+            if (IsPaused || modalUiCoordinator == null)
             {
                 return;
             }
 
-            resumeTimeScale = Time.timeScale <= 0f ? 1f : Time.timeScale;
-            IsPaused = true;
+            if (!modalUiCoordinator.TryOpen(this, pausedTimeScale))
+            {
+                return;
+            }
 
-            inputReader?.EnableUiInput();
-            Time.timeScale = pausedTimeScale;
+            IsPaused = true;
             PauseStateChanged?.Invoke(true);
         }
 
@@ -77,9 +97,8 @@ namespace DemonKing.Core.Application
                 return;
             }
 
+            modalUiCoordinator?.TryClose(this);
             IsPaused = false;
-            Time.timeScale = resumeTimeScale;
-            inputReader?.EnableGameplayInput();
             PauseStateChanged?.Invoke(false);
         }
 
@@ -109,14 +128,6 @@ namespace DemonKing.Core.Application
 
         private void HandlePausePressed()
         {
-            // 別のモーダルUIがUI Contextを所有している間は、Pause画面を重ねません。
-            if (!IsPaused &&
-                inputReader != null &&
-                inputReader.CurrentContext != PlayerInputContext.Gameplay)
-            {
-                return;
-            }
-
             TogglePause();
         }
 
@@ -129,7 +140,8 @@ namespace DemonKing.Core.Application
         }
 
         /// <summary>
-        /// シーン破棄やコンポーネント無効化でTimeScale=0が残留しないよう、通常状態へ戻します。
+        /// シーン破棄やコンポーネント無効化時にModal所有権を解放します。
+        /// Coordinator側が先に復元済みでもPause状態だけは必ず通常状態へ戻します。
         /// </summary>
         private void RestoreActiveState()
         {
@@ -138,9 +150,8 @@ namespace DemonKing.Core.Application
                 return;
             }
 
+            modalUiCoordinator?.TryClose(this);
             IsPaused = false;
-            Time.timeScale = resumeTimeScale;
-            inputReader?.EnableGameplayInput();
             PauseStateChanged?.Invoke(false);
         }
     }
