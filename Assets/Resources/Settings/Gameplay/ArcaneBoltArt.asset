@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8a7f2c1d4e5b4690a1b2c3d4e5f60703, type: 3}
+  m_Name: ArcaneBoltArt
+  m_EditorClassIdentifier:
+  artId: art.magic.arcane_bolt
+  displayName: 魔弾術
+  description: 純粋な魔力を弾として圧縮し、高速で連射するための能動Art。
+  encyclopediaDescription: 属性変換を行わず魔力そのものを射出する基礎魔術。火炎魔法より一撃の威力は低いが、短い間隔で魔力弾を放てるため継続攻撃に向く。
+  icon: {fileID: 0}
+  visibleInEncyclopedia: 1
+  category: magic
+  cumulativeMasteryPointsByRank:
+  - 0
+  - 4
+  - 10
+  abilityUnlocks:
+  - abilityDefinition: {fileID: 11400000, guid: f286b7cd28c742a68f3769a230d724a7, type: 2}
+    requiredRank: 1
+    masteryPointsPerEffectiveUse: 1
