@@ -12,19 +12,11 @@ namespace DemonKing.Gameplay.Abilities
     /// <summary>
     /// プレイヤー個体のAbility Loadout Runtime Stateを保持します。
     /// 初期割当はCharacterDefinitionとRuntime Progression Stateから構築し、
-    /// その後はUI等がRuntime Loadoutだけを更新します。
+    /// その後はRuntime Loadoutだけを更新します。
     /// </summary>
     [DisallowMultipleComponent]
     public sealed class AbilityLoadoutController : MonoBehaviour
     {
-        private static readonly AbilitySlot[] EditableActionSlots =
-        {
-            AbilitySlot.Action1,
-            AbilitySlot.Action2,
-            AbilitySlot.Action3,
-            AbilitySlot.Action4
-        };
-
         public AbilityLoadout Loadout { get; private set; }
         public bool IsInitialized => Loadout != null;
 
@@ -154,7 +146,6 @@ namespace DemonKing.Gameplay.Abilities
         {
             if (progressionState == null)
             {
-                // 互換overloadでは従来どおりランク1解放分だけを扱います。
                 return 1;
             }
 
@@ -176,13 +167,15 @@ namespace DemonKing.Gameplay.Abilities
             ref int nextActionSlot)
         {
             if (definition == null ||
-                nextActionSlot >= EditableActionSlots.Length ||
+                nextActionSlot >= AbilityLoadoutPolicy.EditableSlots.Count ||
                 !assignedAbilityIds.Add(definition.AbilityId))
             {
                 return;
             }
 
-            loadout.Assign(EditableActionSlots[nextActionSlot], definition.AbilityId);
+            loadout.Assign(
+                AbilityLoadoutPolicy.GetEditableSlot(nextActionSlot),
+                definition.AbilityId);
             nextActionSlot++;
         }
 
