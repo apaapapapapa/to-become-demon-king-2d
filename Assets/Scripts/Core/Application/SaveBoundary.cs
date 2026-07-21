@@ -17,19 +17,20 @@ namespace DemonKing.Core.Application
     }
 
     /// <summary>
-    /// 実行時の成長状態と保存DTOの相互変換を一か所へ集約します。
+    /// Runtime State一式から保存時点のGameSaveDataを生成する境界です。
+    /// 保存タイミングを管理する側はFeatureごとのDTO組立を知りません。
+    /// </summary>
+    public interface IGameSaveSnapshotProvider
+    {
+        GameSaveData CreateSnapshot();
+    }
+
+    /// <summary>
+    /// Character / Playerの実行時成長状態とPlayerSaveDataの相互変換を一か所へ集約します。
+    /// Game全体のSave Snapshot生成は担当しません。
     /// </summary>
     public static class CharacterProgressionSaveMapper
     {
-        public static GameSaveData ToGameSaveData(CharacterProgressionState state)
-        {
-            return new GameSaveData
-            {
-                version = GameSaveData.CurrentVersion,
-                player = ToSaveData(state)
-            };
-        }
-
         public static PlayerSaveData ToSaveData(CharacterProgressionState state)
         {
             if (state == null)
