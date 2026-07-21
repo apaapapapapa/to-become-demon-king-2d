@@ -1,5 +1,8 @@
+using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using DemonKing.Core.Application;
+using DemonKing.Core.Input;
+using DemonKing.Domain.Quests;
 using DemonKing.Domain.Save;
 using DemonKing.Field.Prototype;
 using DemonKing.Gameplay.Abilities;
@@ -68,6 +71,80 @@ namespace DemonKing.Tests.EditMode
             finally
             {
                 Object.DestroyImmediate(application);
+                Object.DestroyImmediate(player);
+            }
+        }
+
+        [Test]
+        public void GameSaveRestorer_LoadoutとQuestを構築済みRuntimeへ適用する()
+        {
+            PrototypeProjectAssets projectAssets =
+                Resources.Load<PrototypeProjectAssets>("Settings/PrototypeProjectAssets");
+            string questId = projectAssets.QuestDefinitions[0].QuestId;
+            var saveService = new MemorySaveService(new GameSaveData
+            {
+                version = GameSaveData.CurrentVersion,
+                player = new PlayerSaveData
+                {
+                    characterDefinitionId = projectAssets.PlayerCharacter.CharacterId,
+                    artProgress = new List<ArtProgressSaveData>
+                    {
+                        new()
+                        {
+                            artId = "art.magic.fire",
+                            masteryPoints = 0
+                        }
+                    },
+                    abilityLoadout = new AbilityLoadoutSaveData
+                    {
+                        slots = new List<AbilitySlotSaveData>
+                        {
+                            new()
+                            {
+                                slot = (int)AbilitySlot.Action3,
+                                abilityId = "ability.magic.fire_bolt"
+                            }
+                        }
+                    }
+                },
+                quests = new List<QuestProgressSaveData>
+                {
+                    new()
+                    {
+                        questId = questId,
+                        status = (int)QuestProgressStatus.Active
+                    }
+                },
+                world = new WorldSaveData()
+            });
+            PrototypeSaveSession saveSession = PrototypeSaveSession.Load(
+                saveService,
+                projectAssets.PlayerCharacter.CharacterId);
+
+            GameObject player = new("Save Restore Player");
+            try
+            {
+                AbilityLoadoutController loadout = player.AddComponent<AbilityLoadoutController>();
+                loadout.Initialize(projectAssets.PlayerCharacter, saveSession.ProgressionState);
+                var questService = new QuestProgressionService(projectAssets.QuestDefinitions);
+                var worldResult = new PrototypeWorldBuildResult(
+                    worldRoot: null,
+                    player,
+                    rewardService: null,
+                    gameContentCatalog: null,
+                    questService);
+
+                new PrototypeGameSaveRestorer(projectAssets).Restore(saveSession, worldResult);
+
+                Assert.That(
+                    loadout.TryResolve(AbilitySlot.Action3, out string abilityId),
+                    Is.True);
+                Assert.That(abilityId, Is.EqualTo("ability.magic.fire_bolt"));
+                Assert.That(questService.TryGetState(questId, out var questState), Is.True);
+                Assert.That(questState.Status, Is.EqualTo(QuestProgressStatus.Active));
+            }
+            finally
+            {
                 Object.DestroyImmediate(player);
             }
         }
