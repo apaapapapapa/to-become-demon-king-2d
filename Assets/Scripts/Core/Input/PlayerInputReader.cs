@@ -7,6 +7,7 @@ namespace DemonKing.Core.Input
     /// <summary>
     /// プレイヤー操作に必要な論理入力と入力コンテキストを一か所で管理します。
     /// Gameplay / UI / Disabledのいずれかだけを有効にし、画面状態に応じて入力先を明確に切り替えます。
+    /// Ability系の物理Actionは論理AbilitySlotへ変換して通知します。
     /// </summary>
     [DisallowMultipleComponent]
     public sealed class PlayerInputReader : MonoBehaviour
@@ -40,8 +41,14 @@ namespace DemonKing.Core.Input
 
         private bool componentEnabled;
 
+        public event Action<AbilitySlot> AbilitySlotPressed;
+
+        [Obsolete("Use AbilitySlotPressed instead.")]
         public event Action AttackPressed;
+
+        [Obsolete("Use AbilitySlotPressed instead.")]
         public event Action ArtPressed;
+
         public event Action InteractPressed;
         public event Action DodgePressed;
         public event Action JumpPressed;
@@ -267,8 +274,22 @@ namespace DemonKing.Core.Input
             if (uiPauseAction != null) uiPauseAction.performed -= OnPausePerformed;
         }
 
-        private void OnAttackPerformed(InputAction.CallbackContext context) => AttackPressed?.Invoke();
-        private void OnArtPerformed(InputAction.CallbackContext context) => ArtPressed?.Invoke();
+        private void OnAttackPerformed(InputAction.CallbackContext context)
+        {
+            AbilitySlotPressed?.Invoke(AbilitySlot.Primary);
+#pragma warning disable CS0618
+            AttackPressed?.Invoke();
+#pragma warning restore CS0618
+        }
+
+        private void OnArtPerformed(InputAction.CallbackContext context)
+        {
+            AbilitySlotPressed?.Invoke(AbilitySlot.Action1);
+#pragma warning disable CS0618
+            ArtPressed?.Invoke();
+#pragma warning restore CS0618
+        }
+
         private void OnInteractPerformed(InputAction.CallbackContext context) => InteractPressed?.Invoke();
         private void OnDodgePerformed(InputAction.CallbackContext context) => DodgePressed?.Invoke();
         private void OnJumpPerformed(InputAction.CallbackContext context) => JumpPressed?.Invoke();

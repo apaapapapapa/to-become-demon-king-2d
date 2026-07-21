@@ -43,7 +43,7 @@ namespace DemonKing.Gameplay.Progression.Configuration
     /// 習得状態や熟練ポイントはArtProgressStateへ分離します。
     /// </summary>
     [CreateAssetMenu(fileName = "Art", menuName = "Demon King/Gameplay/Progression/Art")]
-    public sealed class ArtDefinition : ScriptableObject, IGameContentDefinition
+    public sealed class ArtDefinition : ScriptableObject, IGameContentDefinition, IGameContentContainer
     {
         private const string ArtIdPrefix = "art.";
 
@@ -74,6 +74,20 @@ namespace DemonKing.Gameplay.Progression.Configuration
         public IReadOnlyList<ArtAbilityUnlockEntry> AbilityUnlocks =>
             abilityUnlocks ?? Array.Empty<ArtAbilityUnlockEntry>();
         public int MaxRank => cumulativeMasteryPointsByRank?.Length ?? 0;
+
+        public IEnumerable<IGameContentDefinition> ChildContentDefinitions
+        {
+            get
+            {
+                foreach (ArtAbilityUnlockEntry entry in AbilityUnlocks)
+                {
+                    if (entry?.AbilityDefinition != null)
+                    {
+                        yield return entry.AbilityDefinition;
+                    }
+                }
+            }
+        }
 
         public bool IsConfigured
         {

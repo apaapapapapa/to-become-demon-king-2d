@@ -1,12 +1,9 @@
 using System;
+using DemonKing.Field.Prototype.Configuration;
 using DemonKing.Gameplay.AI;
-using DemonKing.Gameplay.AI.Configuration;
 using DemonKing.Gameplay.Dialogue;
 using DemonKing.Gameplay.Dialogue.Configuration;
-using DemonKing.Gameplay.Progression.Configuration;
-using DemonKing.Gameplay.Quests.Configuration;
 using DemonKing.Gameplay.Rewards;
-using DemonKing.Gameplay.Rewards.Configuration;
 using DemonKing.Gameplay.Spawning;
 using UnityEngine;
 
@@ -15,7 +12,6 @@ namespace DemonKing.Field.Prototype
     /// <summary>
     /// InteractionとCombatの最小プレイ可能ループを確認するため、試作NPCと訓練用スライムを配置します。
     /// 恒久機能のロジックは持たず、Prototypeシーン向けの生成と依存注入だけを担当します。
-    /// Feature間のイベント調停はPrototypeTrainingAreaCoordinatorへ委譲します。
     /// </summary>
     internal sealed class PrototypeGameplayFeatureInstaller
     {
@@ -23,14 +19,7 @@ namespace DemonKing.Field.Prototype
             Transform parent,
             GameObject player,
             PrototypeGameplayServices gameplayServices,
-            EnemyAiDefinition trainingSlimeAi,
-            RewardDefinition trainingDummyReward,
-            ProgressionGrantDefinition fireMagicTrainingGrant,
-            DialogueDefinition apprenticeMageOfferDialogue,
-            DialogueDefinition apprenticeMageActiveDialogue,
-            DialogueDefinition apprenticeMageTurnInDialogue,
-            DialogueDefinition apprenticeMageCompletedDialogue,
-            QuestDefinition trainingQuestDefinition,
+            TrainingScenarioDefinition scenario,
             DialogueLog dialogueLog)
         {
             if (player == null)
@@ -43,18 +32,11 @@ namespace DemonKing.Field.Prototype
                 throw new ArgumentNullException(nameof(gameplayServices));
             }
 
-            if (trainingSlimeAi == null || !trainingSlimeAi.IsConfigured)
+            if (scenario == null || !scenario.IsConfigured)
             {
                 throw new ArgumentException(
-                    "訓練用スライムのAI定義が正しく設定されていません。",
-                    nameof(trainingSlimeAi));
-            }
-
-            if (trainingDummyReward == null || !trainingDummyReward.IsConfigured)
-            {
-                throw new ArgumentException(
-                    "訓練用ダミーの報酬定義が正しく設定されていません。",
-                    nameof(trainingDummyReward));
+                    "訓練シナリオ定義が正しく設定されていません。",
+                    nameof(scenario));
             }
 
             if (dialogueLog == null)
@@ -62,70 +44,41 @@ namespace DemonKing.Field.Prototype
                 throw new ArgumentNullException(nameof(dialogueLog));
             }
 
-            ValidateDialogue(apprenticeMageOfferDialogue, nameof(apprenticeMageOfferDialogue));
-            ValidateDialogue(apprenticeMageActiveDialogue, nameof(apprenticeMageActiveDialogue));
-            ValidateDialogue(apprenticeMageTurnInDialogue, nameof(apprenticeMageTurnInDialogue));
-            ValidateDialogue(apprenticeMageCompletedDialogue, nameof(apprenticeMageCompletedDialogue));
-
-            if (trainingQuestDefinition == null || !trainingQuestDefinition.IsConfigured)
-            {
-                throw new ArgumentException(
-                    "訓練Quest定義が正しく設定されていません。",
-                    nameof(trainingQuestDefinition));
-            }
-
-            if (fireMagicTrainingGrant == null || !fireMagicTrainingGrant.IsConfigured)
-            {
-                throw new ArgumentException(
-                    "火炎魔法の訓練取得定義が正しく設定されていません。",
-                    nameof(fireMagicTrainingGrant));
-            }
-
-            PrototypeNpcInteractable npc = CreateNpc(parent, dialogueLog, apprenticeMageOfferDialogue);
+            PrototypeNpcInteractable npc = CreateNpc(parent, dialogueLog, scenario.OfferDialogue);
             var dummyFactory = new PrototypeCombatDummyFactory(
                 parent,
                 new Vector3(1.45f, -0.45f, 0f),
                 dummy => ConfigureCombatDummy(
                     dummy,
                     player,
-                    trainingSlimeAi,
-                    gameplayServices.RewardService,
-                    trainingDummyReward));
+                    scenario,
+                    gameplayServices.RewardService));
             var dummyLifecycle = new SpawnLifecycle<PrototypeCombatDummy>(
                 dummyFactory.Spawn,
                 dummy => dummy != null && dummy.IsAlive,
                 dummy => dummy.RestoreToFull());
 
-            GameObject coordinatorObject = new("訓練エリア制御");
-            coordinatorObject.transform.SetParent(parent, false);
-            PrototypeTrainingAreaCoordinator coordinator =
-                coordinatorObject.AddComponent<PrototypeTrainingAreaCoordinator>();
-            coordinator.Initialize(
+            GameObject controllerObject = new("訓練エリア制御");
+            controllerObject.transform.SetParent(parent, false);
+
+            TrainingQuestFlowController questFlow =
+                controllerObject.AddComponent<TrainingQuestFlowController>();
+            questFlow.Initialize(
                 npc,
                 dummyLifecycle,
                 gameplayServices.ProgressionAcquisitionService,
-                fireMagicTrainingGrant,
                 dialogueLog,
-                gameplayServices.RewardService,
                 gameplayServices.GameplayEventHub,
                 gameplayServices.QuestProgressionService,
-                trainingQuestDefinition,
-                apprenticeMageOfferDialogue,
-                apprenticeMageActiveDialogue,
-                apprenticeMageTurnInDialogue,
-                apprenticeMageCompletedDialogue);
+                scenario);
+
+            TrainingDummyEventBridge dummyEventBridge =
+                controllerObject.AddComponent<TrainingDummyEventBridge>();
+            dummyEventBridge.Initialize(
+                dummyLifecycle,
+                gameplayServices.GameplayEventHub);
 
             dummyLifecycle.SpawnOrRestore();
-        }
-
-        private static void ValidateDialogue(DialogueDefinition dialogueDefinition, string parameterName)
-        {
-            if (dialogueDefinition == null || !dialogueDefinition.IsConfigured)
-            {
-                throw new ArgumentException(
-                    "見習い魔術師の会話定義が正しく設定されていません。",
-                    parameterName);
-            }
         }
 
         private static PrototypeNpcInteractable CreateNpc(
@@ -145,11 +98,10 @@ namespace DemonKing.Field.Prototype
         private static void ConfigureCombatDummy(
             PrototypeCombatDummy dummy,
             GameObject player,
-            EnemyAiDefinition trainingSlimeAi,
-            RewardService rewardService,
-            RewardDefinition trainingDummyReward)
+            TrainingScenarioDefinition scenario,
+            RewardService rewardService)
         {
-            dummy.ConfigureReward(trainingDummyReward);
+            dummy.ConfigureReward(scenario.DefeatReward);
             dummy.gameObject.AddComponent<PrototypeMonsterDefeatEffect>();
 
             EnemyAiController enemyAi = dummy.GetComponent<EnemyAiController>();
@@ -158,12 +110,12 @@ namespace DemonKing.Field.Prototype
                 enemyAi = dummy.gameObject.AddComponent<EnemyAiController>();
             }
 
-            enemyAi.Configure(trainingSlimeAi, player);
+            enemyAi.Configure(scenario.EnemyAiDefinition, player);
             dummy.Defeated += context =>
             {
                 RewardGrantResult result = rewardService.GrantDefeatReward(
                     context,
-                    trainingDummyReward);
+                    scenario.DefeatReward);
                 if (!result.WasGranted)
                 {
                     Debug.LogWarning($"撃破報酬を付与できませんでした: {result.FailureReason}");

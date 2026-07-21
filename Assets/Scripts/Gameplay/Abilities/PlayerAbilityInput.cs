@@ -4,51 +4,49 @@ using UnityEngine;
 namespace DemonKing.Gameplay.Abilities
 {
     /// <summary>
-    /// プレイヤーの論理入力をAbility実行要求へ変換します。効果処理やクールダウン判定は持ちません。
+    /// プレイヤーの論理Ability Slot入力をRuntime LoadoutでAbility IDへ解決し、AbilityControllerへ委譲します。
+    /// 効果処理、クールダウン判定、個別Ability IDは保持しません。
     /// </summary>
     [DisallowMultipleComponent]
     [RequireComponent(typeof(PlayerInputReader))]
     [RequireComponent(typeof(AbilityController))]
+    [RequireComponent(typeof(AbilityLoadoutController))]
     public sealed class PlayerAbilityInput : MonoBehaviour
     {
-        private const string DefaultBasicAttackAbilityId = "ability.basic_melee";
-        private const string DefaultArtAbilityId = "ability.magic.fire_bolt";
-
-        [SerializeField] private string basicAttackAbilityId = DefaultBasicAttackAbilityId;
-        [SerializeField] private string artAbilityId = DefaultArtAbilityId;
-
         private PlayerInputReader inputReader;
         private AbilityController abilityController;
+        private AbilityLoadoutController loadoutController;
         private Vector2 facingDirection = Vector2.down;
 
         private void Awake()
         {
-            inputReader = GetComponent<PlayerInputReader>();
-            abilityController = GetComponent<AbilityController>();
+            ResolveDependencies();
         }
 
         private void OnEnable()
         {
-            if (inputReader == null)
+            ResolveDependencies();
+            if (inputReader != null)
             {
-                inputReader = GetComponent<PlayerInputReader>();
+                inputReader.AbilitySlotPressed += HandleAbilitySlotPressed;
             }
-
-            inputReader.AttackPressed += HandleAttackPressed;
-            inputReader.ArtPressed += HandleArtPressed;
         }
 
         private void OnDisable()
         {
             if (inputReader != null)
             {
-                inputReader.AttackPressed -= HandleAttackPressed;
-                inputReader.ArtPressed -= HandleArtPressed;
+                inputReader.AbilitySlotPressed -= HandleAbilitySlotPressed;
             }
         }
 
         private void Update()
         {
+            if (inputReader == null)
+            {
+                return;
+            }
+
             Vector2 move = inputReader.Move;
             if (move.sqrMagnitude > 0.0001f)
             {
@@ -56,20 +54,33 @@ namespace DemonKing.Gameplay.Abilities
             }
         }
 
-        private void HandleAttackPressed()
+        public bool TryUseSlot(AbilitySlot slot)
         {
+            ResolveDependencies();
+            if (abilityController == null ||
+                loadoutController == null ||
+                !loadoutController.TryResolve(slot, out string abilityId))
+            {
+                return false;
+            }
+
             abilityController.TryUse(
-                basicAttackAbilityId,
+                abilityId,
                 gameObject,
                 new AbilityExecutionInput(facingDirection));
+            return true;
         }
 
-        private void HandleArtPressed()
+        private void HandleAbilitySlotPressed(AbilitySlot slot)
         {
-            abilityController.TryUse(
-                artAbilityId,
-                gameObject,
-                new AbilityExecutionInput(facingDirection));
+            TryUseSlot(slot);
+        }
+
+        private void ResolveDependencies()
+        {
+            inputReader ??= GetComponent<PlayerInputReader>();
+            abilityController ??= GetComponent<AbilityController>();
+            loadoutController ??= GetComponent<AbilityLoadoutController>();
         }
     }
 }

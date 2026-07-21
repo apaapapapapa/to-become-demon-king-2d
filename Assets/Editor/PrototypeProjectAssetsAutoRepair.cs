@@ -5,37 +5,28 @@ using DemonKing.Gameplay.AI.Configuration;
 using DemonKing.Gameplay.Abilities.Configuration;
 using DemonKing.Gameplay.Characters.Configuration;
 using DemonKing.Gameplay.Combat.Configuration;
-using DemonKing.Gameplay.Dialogue.Configuration;
 using DemonKing.Gameplay.Progression.Configuration;
-using DemonKing.Gameplay.Quests.Configuration;
-using DemonKing.Gameplay.Rewards.Configuration;
 using UnityEditor;
 using UnityEngine;
 
 namespace DemonKing.EditorTools
 {
     /// <summary>
-    /// PrototypeProjectAssetsに集約した参照を、Editor上の実アセットから再解決する保守用ツールです。
-    /// 参照切れやImport設定の不整合を復旧する目的で使用し、Runtimeの通常動作が毎回の自動修復へ依存しないことを前提とします。
+    /// PrototypeProjectAssetsの参照状態を検証し、明示的なメニュー操作時だけ既知の主要参照を修復します。
+    /// Editor起動時にSerialized Fieldを自動上書きせず、Runtime / CompositionのSource of Truthはアセット本体に置きます。
     /// </summary>
     [InitializeOnLoad]
     internal static class PrototypeProjectAssetsAutoRepair
     {
-        private const string FontInstallAttemptSessionKey = "DemonKing.FontInstallAttempted";
         private const string ProjectAssetsPath = "Assets/Resources/Settings/PrototypeProjectAssets.asset";
         private const string ApplicationSettingsPath = "Assets/Resources/Settings/PrototypeApplicationSettings.asset";
         private const string PlayerCharacterPath = "Assets/Resources/Settings/Gameplay/PlayerCharacter.asset";
+        private const string TrainingScenarioPath = "Assets/Resources/Settings/Gameplay/TrainingScenario.asset";
+
         private const string PlayerPrefabPath = "Assets/Resources/Prefabs/Characters/PrototypeSlime.prefab";
         private const string PlayerCharacterStatsPath = "Assets/Resources/Settings/Gameplay/PlayerCharacterStats.asset";
         private const string PlayerMeleeAttackPath = "Assets/Resources/Settings/Gameplay/PlayerMeleeAttack.asset";
-        private const string TrainingSlimeAiPath = "Assets/Resources/Settings/Gameplay/TrainingSlimeAi.asset";
         private const string FireMagicArtPath = "Assets/Resources/Settings/Gameplay/FireMagicArt.asset";
-        private const string FireMagicTrainingGrantPath = "Assets/Resources/Settings/Gameplay/FireMagicTrainingGrant.asset";
-        private const string ApprenticeMageDialoguePath = "Assets/Resources/Settings/Gameplay/ApprenticeMageDialogue.asset";
-        private const string ApprenticeMageActiveDialoguePath = "Assets/Resources/Settings/Gameplay/ApprenticeMageActiveDialogue.asset";
-        private const string ApprenticeMageTurnInDialoguePath = "Assets/Resources/Settings/Gameplay/ApprenticeMageTurnInDialogue.asset";
-        private const string ApprenticeMageCompletedDialoguePath = "Assets/Resources/Settings/Gameplay/ApprenticeMageCompletedDialogue.asset";
-        private const string FirstTrainingQuestPath = "Assets/Resources/Settings/Gameplay/FirstTrainingQuest.asset";
         private const string PredatoryInstinctSkillPath = "Assets/Resources/Settings/Gameplay/PredatoryInstinctSkill.asset";
         private const string PredatorSlimeEvolutionPath = "Assets/Resources/Settings/Gameplay/PredatorSlimeEvolution.asset";
         private const string ArcaneSlimeEvolutionPath = "Assets/Resources/Settings/Gameplay/ArcaneSlimeEvolution.asset";
@@ -43,7 +34,7 @@ namespace DemonKing.EditorTools
         private const string ArchmageSlimeEvolutionPath = "Assets/Resources/Settings/Gameplay/ArchmageSlimeEvolution.asset";
         private const string PlayerDodgePath = "Assets/Resources/Settings/Gameplay/PlayerDodge.asset";
         private const string PlayerExperienceTablePath = "Assets/Resources/Settings/Gameplay/PlayerExperienceTable.asset";
-        private const string TrainingDummyRewardPath = "Assets/Resources/Settings/Gameplay/TrainingDummyReward.asset";
+
         private const string CottagePrefabPath = "Assets/Resources/Prefabs/World/PrototypeCottage.prefab";
         private const string TreePrefabPath = "Assets/Resources/Prefabs/World/PrototypeTree.prefab";
         private const string LamppostPrefabPath = "Assets/Resources/Prefabs/World/PrototypeLamppost.prefab";
@@ -55,7 +46,13 @@ namespace DemonKing.EditorTools
 
         static PrototypeProjectAssetsAutoRepair()
         {
-            EditorApplication.delayCall += RepairIfNeeded;
+            EditorApplication.delayCall += ValidateOnEditorLoad;
+        }
+
+        [MenuItem("Demon King/Prototype/Validate Project Assets References")]
+        private static void ValidateFromMenu()
+        {
+            ValidateProjectAssets(forceLog: true);
         }
 
         [MenuItem("Demon King/Prototype/Repair Project Assets References")]
@@ -69,26 +66,42 @@ namespace DemonKing.EditorTools
             Repair(forceLog);
         }
 
-        private static void RepairIfNeeded()
+        private static void ValidateOnEditorLoad()
         {
-            Repair(forceLog: false);
+            ValidateProjectAssets(forceLog: false);
+        }
+
+        private static void ValidateProjectAssets(bool forceLog)
+        {
+            PrototypeProjectAssets projectAssets =
+                AssetDatabase.LoadAssetAtPath<PrototypeProjectAssets>(ProjectAssetsPath);
+            if (projectAssets == null)
+            {
+                Debug.LogError($"PrototypeProjectAssetsが見つかりません: {ProjectAssetsPath}");
+                return;
+            }
+
+            if (!projectAssets.IsConfigured)
+            {
+                Debug.LogWarning(
+                    "PrototypeProjectAssetsの必須参照またはTrainingScenarioDefinitionに不足があります。" +
+                    "必要な場合は Demon King/Prototype/Repair Project Assets References を明示的に実行してください。",
+                    projectAssets);
+                return;
+            }
+
+            if (forceLog)
+            {
+                Debug.Log("PrototypeProjectAssetsの参照は正常です。", projectAssets);
+            }
         }
 
         private static void Repair(bool forceLog)
         {
-            // 自動実行時のネットワーク試行はEditorセッションにつき1回に限定します。
-            // 手動修復時は再試行できるため、オフライン起動時にも開発を妨げません。
-            bool shouldAttemptFontInstall =
-                forceLog ||
-                !SessionState.GetBool(FontInstallAttemptSessionKey, false);
+            JapaneseUiFontInstaller.EnsureInstalled(forceLog: forceLog);
 
-            if (shouldAttemptFontInstall)
-            {
-                SessionState.SetBool(FontInstallAttemptSessionKey, true);
-                JapaneseUiFontInstaller.EnsureInstalled(forceLog: forceLog);
-            }
-
-            PrototypeProjectAssets projectAssets = AssetDatabase.LoadAssetAtPath<PrototypeProjectAssets>(ProjectAssetsPath);
+            PrototypeProjectAssets projectAssets =
+                AssetDatabase.LoadAssetAtPath<PrototypeProjectAssets>(ProjectAssetsPath);
             if (projectAssets == null)
             {
                 Debug.LogError($"PrototypeProjectAssetsが見つかりません: {ProjectAssetsPath}");
@@ -100,17 +113,19 @@ namespace DemonKing.EditorTools
             CharacterDefinition playerCharacter = Load<CharacterDefinition>(PlayerCharacterPath);
             bool characterDefinitionChanged = RepairPlayerCharacterDefinition(playerCharacter);
 
-            changed |= AssignIfDifferent(serializedObject, "applicationSettings", Load<PrototypeApplicationSettings>(ApplicationSettingsPath));
+            changed |= AssignIfDifferent(
+                serializedObject,
+                "applicationSettings",
+                Load<PrototypeApplicationSettings>(ApplicationSettingsPath));
             changed |= AssignIfDifferent(serializedObject, "playerCharacter", playerCharacter);
-            changed |= AssignIfDifferent(serializedObject, "trainingSlimeAi", Load<EnemyAiDefinition>(TrainingSlimeAiPath));
-            changed |= AssignIfDifferent(serializedObject, "apprenticeMageDialogue", Load<DialogueDefinition>(ApprenticeMageDialoguePath));
-            changed |= AssignIfDifferent(serializedObject, "apprenticeMageActiveDialogue", Load<DialogueDefinition>(ApprenticeMageActiveDialoguePath));
-            changed |= AssignIfDifferent(serializedObject, "apprenticeMageTurnInDialogue", Load<DialogueDefinition>(ApprenticeMageTurnInDialoguePath));
-            changed |= AssignIfDifferent(serializedObject, "apprenticeMageCompletedDialogue", Load<DialogueDefinition>(ApprenticeMageCompletedDialoguePath));
-            changed |= AssignArrayIfDifferent(serializedObject, "questDefinitions", Load<QuestDefinition>(FirstTrainingQuestPath));
-            changed |= AssignIfDifferent(serializedObject, "trainingDummyReward", Load<RewardDefinition>(TrainingDummyRewardPath));
-            changed |= AssignIfDifferent(serializedObject, "fireMagicTrainingGrant", Load<ProgressionGrantDefinition>(FireMagicTrainingGrantPath));
-            changed |= AssignIfDifferent(serializedObject, "uiFont", Load<Font>(JapaneseUiFontInstaller.FontAssetPath, logIfMissing: forceLog));
+            changed |= AssignIfDifferent(
+                serializedObject,
+                "trainingScenario",
+                Load<TrainingScenarioDefinition>(TrainingScenarioPath));
+            changed |= AssignIfDifferent(
+                serializedObject,
+                "uiFont",
+                Load<Font>(JapaneseUiFontInstaller.FontAssetPath, logIfMissing: forceLog));
             changed |= AssignIfDifferent(serializedObject, "cottagePrefab", Load<GameObject>(CottagePrefabPath));
             changed |= AssignIfDifferent(serializedObject, "treePrefab", Load<GameObject>(TreePrefabPath));
             changed |= AssignIfDifferent(serializedObject, "lamppostPrefab", Load<GameObject>(LamppostPrefabPath));
@@ -129,12 +144,14 @@ namespace DemonKing.EditorTools
                 }
 
                 AssetDatabase.SaveAssets();
-                Debug.Log("PrototypeProjectAssetsとCharacterDefinitionの参照切れを自動修復しました。");
+                Debug.Log("PrototypeProjectAssetsとCharacterDefinitionの主要参照を手動修復しました。");
             }
             else if (forceLog)
             {
-                Debug.Log("PrototypeProjectAssetsの参照は正常です。");
+                Debug.Log("PrototypeProjectAssetsの修復対象はありませんでした。");
             }
+
+            ValidateProjectAssets(forceLog: false);
         }
 
         private static bool RepairPlayerCharacterDefinition(CharacterDefinition definition)
@@ -147,7 +164,10 @@ namespace DemonKing.EditorTools
             SerializedObject serializedObject = new(definition);
             bool changed = false;
             changed |= AssignIfDifferent(serializedObject, "prefab", Load<GameObject>(PlayerPrefabPath));
-            changed |= AssignIfDifferent(serializedObject, "statsDefinition", Load<CharacterStatsDefinition>(PlayerCharacterStatsPath));
+            changed |= AssignIfDifferent(
+                serializedObject,
+                "statsDefinition",
+                Load<CharacterStatsDefinition>(PlayerCharacterStatsPath));
             changed |= AssignArrayIfDifferent(
                 serializedObject,
                 "abilityDefinitions",
@@ -167,8 +187,14 @@ namespace DemonKing.EditorTools
                 Load<EvolutionDefinition>(ArcaneSlimeEvolutionPath),
                 Load<EvolutionDefinition>(ApexPredatorSlimeEvolutionPath),
                 Load<EvolutionDefinition>(ArchmageSlimeEvolutionPath));
-            changed |= AssignIfDifferent(serializedObject, "dodgeDefinition", Load<DodgeDefinition>(PlayerDodgePath));
-            changed |= AssignIfDifferent(serializedObject, "experienceTableDefinition", Load<ExperienceTableDefinition>(PlayerExperienceTablePath));
+            changed |= AssignIfDifferent(
+                serializedObject,
+                "dodgeDefinition",
+                Load<DodgeDefinition>(PlayerDodgePath));
+            changed |= AssignIfDifferent(
+                serializedObject,
+                "experienceTableDefinition",
+                Load<ExperienceTableDefinition>(PlayerExperienceTablePath));
 
             if (changed)
             {
@@ -190,9 +216,6 @@ namespace DemonKing.EditorTools
             return asset;
         }
 
-        /// <summary>
-        /// 指定画像をSpriteとして再解決し、必要な場合だけTextureImporterをSprite / Singleへ補正して再インポートします。
-        /// </summary>
         private static Sprite LoadSprite(string path)
         {
             Sprite sprite = FindImportedSprite(path);
