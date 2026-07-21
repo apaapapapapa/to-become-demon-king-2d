@@ -16,7 +16,7 @@ namespace DemonKing.Tests.PlayMode
     public sealed class QuestTrackerViewPlayModeTests
     {
         [UnityTest]
-        public IEnumerator QuestTrackerView_受注進捗報告可能完了を表示する()
+        public IEnumerator QuestTrackerとNotificationが独立して受注進捗報告可能完了を表示する()
         {
             QuestDefinition quest = QuestDefinition.CreateRuntime(
                 "quest.test.ui",
@@ -31,44 +31,55 @@ namespace DemonKing.Tests.PlayMode
 
             GameObject uiRoot = new("Quest UI Test", typeof(RectTransform));
             uiRoot.AddComponent<Canvas>();
-            QuestTrackerView view = uiRoot.AddComponent<QuestTrackerView>();
-            Font font = Resources.Load<PrototypeProjectAssets>("Settings/PrototypeProjectAssets").UiFont;
-            view.Initialize(font, service);
+            Font font = Resources.Load<PrototypeProjectAssets>(
+                "Settings/PrototypeProjectAssets").UiFont;
 
-            Assert.That(view.IsVisible, Is.False);
-            Assert.That(view.IsNotificationVisible, Is.False);
+            QuestNotificationView notification =
+                uiRoot.AddComponent<QuestNotificationView>();
+            notification.Initialize(font, displayDurationSeconds: 0.05f);
+            QuestTrackerView tracker = uiRoot.AddComponent<QuestTrackerView>();
+            tracker.Initialize(font, service, notification);
+
+            Assert.That(tracker.IsVisible, Is.False);
+            Assert.That(notification.IsVisible, Is.False);
 
             service.AcceptQuest(quest.QuestId);
 
-            Assert.That(view.IsVisible, Is.True);
-            Assert.That(view.DisplayedStatusText, Is.EqualTo("受注中"));
-            Assert.That(view.DisplayedQuestTitle, Is.EqualTo("表示テストQuest"));
-            Assert.That(view.DisplayedObjectiveText, Does.Contain("訓練用スライムを倒す"));
-            Assert.That(view.DisplayedObjectiveText, Does.Contain("0/2"));
-            Assert.That(view.IsNotificationVisible, Is.True);
-            Assert.That(view.DisplayedNotificationText, Does.Contain("クエスト受注"));
+            Assert.That(tracker.IsVisible, Is.True);
+            Assert.That(tracker.DisplayedStatusText, Is.EqualTo("受注中"));
+            Assert.That(tracker.DisplayedQuestTitle, Is.EqualTo("表示テストQuest"));
+            Assert.That(tracker.DisplayedObjectiveText, Does.Contain("訓練用スライムを倒す"));
+            Assert.That(tracker.DisplayedObjectiveText, Does.Contain("0/2"));
+            Assert.That(notification.IsVisible, Is.True);
+            Assert.That(notification.DisplayedText, Does.Contain("クエスト受注"));
 
             service.Handle(new GameplayEvent(
                 GameplayEventIds.EnemyDefeated,
                 "character.training_dummy"));
 
-            Assert.That(view.DisplayedStatusText, Is.EqualTo("受注中"));
-            Assert.That(view.DisplayedObjectiveText, Does.Contain("1/2"));
-            Assert.That(view.DisplayedNotificationText, Does.Contain("クエスト進捗"));
+            Assert.That(tracker.DisplayedStatusText, Is.EqualTo("受注中"));
+            Assert.That(tracker.DisplayedObjectiveText, Does.Contain("1/2"));
+            Assert.That(notification.DisplayedText, Does.Contain("クエスト進捗"));
+
+            yield return new WaitForSecondsRealtime(0.08f);
+
+            Assert.That(notification.IsVisible, Is.False);
+            Assert.That(tracker.IsVisible, Is.True);
+            Assert.That(tracker.DisplayedObjectiveText, Does.Contain("1/2"));
 
             service.Handle(new GameplayEvent(
                 GameplayEventIds.EnemyDefeated,
                 "character.training_dummy"));
 
-            Assert.That(view.DisplayedStatusText, Is.EqualTo("報告可能"));
-            Assert.That(view.DisplayedObjectiveText, Does.Contain("2/2"));
-            Assert.That(view.DisplayedObjectiveText, Does.Contain("✓"));
-            Assert.That(view.DisplayedNotificationText, Does.Contain("見習い魔術師に報告"));
+            Assert.That(tracker.DisplayedStatusText, Is.EqualTo("報告可能"));
+            Assert.That(tracker.DisplayedObjectiveText, Does.Contain("2/2"));
+            Assert.That(tracker.DisplayedObjectiveText, Does.Contain("✓"));
+            Assert.That(notification.DisplayedText, Does.Contain("見習い魔術師に報告"));
 
             service.CompleteQuest(quest.QuestId);
 
-            Assert.That(view.DisplayedStatusText, Is.EqualTo("完了"));
-            Assert.That(view.DisplayedNotificationText, Does.Contain("クエスト完了"));
+            Assert.That(tracker.DisplayedStatusText, Is.EqualTo("完了"));
+            Assert.That(notification.DisplayedText, Does.Contain("クエスト完了"));
             Assert.That(
                 uiRoot.GetComponentsInChildren<Text>(includeInactive: true).Length,
                 Is.GreaterThanOrEqualTo(4));
