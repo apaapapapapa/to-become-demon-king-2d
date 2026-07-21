@@ -1,3 +1,16 @@
+## [1.12.0](https://github.com/apaapapapapa/to-become-demon-king-2d/compare/v1.11.1...v1.12.0) (2026-07-21)
+
+### Features
+
+* add ability loadout menu view ([ee81304](https://github.com/apaapapapapa/to-become-demon-king-2d/commit/ee8130491759c77877ab10faa1b5eb8f97f7b797))
+* add loadout menu projection ([4ae6fd8](https://github.com/apaapapapapa/to-become-demon-king-2d/commit/4ae6fd8bc54773d36d45aed166f0f6e3f96db854))
+* add loadout menu view ([fb23386](https://github.com/apaapapapapa/to-become-demon-king-2d/commit/fb2338643db6fba6c11365e302608e2d5cf40f32))
+* add loadout selection controller ([8dd9b23](https://github.com/apaapapapapa/to-become-demon-king-2d/commit/8dd9b23a7e9396f6f90d70019387f8005cf164ac))
+* add logical ability slot and loadout inputs ([13df291](https://github.com/apaapapapapa/to-become-demon-king-2d/commit/13df2910f24e885c28d33586b0921318f36f4f4e))
+* connect loadout selection UI ([2931b2e](https://github.com/apaapapapapa/to-become-demon-king-2d/commit/2931b2e79b37b2f6feb596f6136e29008232b7b7))
+* expose Action1 to Action4 and loadout inputs ([35eae04](https://github.com/apaapapapapa/to-become-demon-king-2d/commit/35eae04c119b93929b1e799e32c3aef85d32b469))
+* initialize runtime loadout selection ([c3b2a40](https://github.com/apaapapapapa/to-become-demon-king-2d/commit/c3b2a407a73e1cab8bd9ece04eda88b9b97e65a7))
+
 ## [1.11.1](https://github.com/apaapapapapa/to-become-demon-king-2d/compare/v1.11.0...v1.11.1) (2026-07-21)
 
 ### Bug Fixes
