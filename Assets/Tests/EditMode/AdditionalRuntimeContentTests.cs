@@ -17,9 +17,9 @@ namespace DemonKing.Tests.EditMode
 
             Assert.That(projectAssets, Is.Not.Null);
             Assert.That(projectAssets.IsConfigured, Is.True);
-            Assert.That(projectAssets.PlayerCharacter.ArtDefinitions, Has.Count.EqualTo(2));
-            Assert.That(projectAssets.PlayerCharacter.SkillDefinitions, Has.Count.EqualTo(2));
-            Assert.That(projectAssets.ProgressionPickups, Has.Count.EqualTo(2));
+            Assert.That(projectAssets.PlayerCharacter.ArtDefinitions.Count, Is.EqualTo(2));
+            Assert.That(projectAssets.PlayerCharacter.SkillDefinitions.Count, Is.EqualTo(2));
+            Assert.That(projectAssets.ProgressionPickups.Count, Is.EqualTo(2));
 
             GameContentCatalog catalog = projectAssets.CreateGameContentCatalog();
             Assert.That(catalog.TryGet("art.magic.arcane_bolt", out var artContent), Is.True);
@@ -28,7 +28,7 @@ namespace DemonKing.Tests.EditMode
             Assert.That(catalog.TryGet("skill.magic.mana_flow", out var skillContent), Is.True);
 
             var manaFlow = (SkillDefinition)skillContent;
-            Assert.That(manaFlow.Modifiers, Has.Count.EqualTo(1));
+            Assert.That(manaFlow.Modifiers.Count, Is.EqualTo(1));
             Assert.That(
                 manaFlow.Modifiers[0].Target,
                 Is.EqualTo(GameplayModifierTarget.AbilityCooldown));
