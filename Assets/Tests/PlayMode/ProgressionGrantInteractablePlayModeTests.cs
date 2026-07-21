@@ -20,7 +20,7 @@ namespace DemonKing.Tests.PlayMode
                 Resources.Load<PrototypeProjectAssets>("Settings/PrototypeProjectAssets");
             Assert.That(projectAssets, Is.Not.Null);
             Assert.That(projectAssets.IsConfigured, Is.True);
-            Assert.That(projectAssets.ProgressionPickups, Has.Count.EqualTo(2));
+            Assert.That(projectAssets.ProgressionPickups.Count, Is.EqualTo(2));
 
             GameObject player = new("Progression Pickup Test Player");
             player.AddComponent<MeleeAttackExecutor>();
