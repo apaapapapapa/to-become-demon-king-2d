@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using DemonKing.Core.Input;
+using DemonKing.Domain.Progression;
 using DemonKing.Gameplay.Abilities.Configuration;
 using DemonKing.Gameplay.Characters.Configuration;
 using DemonKing.Gameplay.Progression.Configuration;
@@ -10,7 +11,8 @@ namespace DemonKing.Gameplay.Abilities
 {
     /// <summary>
     /// プレイヤー個体のAbility Loadout Runtime Stateを保持します。
-    /// 初期割当はCharacterDefinitionから構築し、その後はUI等がRuntime Loadoutだけを更新します。
+    /// 初期割当はCharacterDefinitionとRuntime Progression Stateから構築し、
+    /// その後はUI等がRuntime Loadoutだけを更新します。
     /// </summary>
     [DisallowMultipleComponent]
     public sealed class AbilityLoadoutController : MonoBehaviour
@@ -26,7 +28,69 @@ namespace DemonKing.Gameplay.Abilities
         public AbilityLoadout Loadout { get; private set; }
         public bool IsInitialized => Loadout != null;
 
+        /// <summary>
+        /// 既存利用側との互換用初期化です。ArtのRuntime習得状態を持たないため、
+        /// CharacterDefinition上のランク1 Abilityまでを初期割当します。
+        /// 実ゲームプレイヤーはProgression Stateを受け取るoverloadを使用します。
+        /// </summary>
         public void Initialize(CharacterDefinition characterDefinition)
+        {
+            InitializeInternal(characterDefinition, progressionState: null);
+        }
+
+        public void Initialize(
+            CharacterDefinition characterDefinition,
+            CharacterProgressionState progressionState)
+        {
+            if (progressionState == null)
+            {
+                throw new ArgumentNullException(nameof(progressionState));
+            }
+
+            if (characterDefinition == null)
+            {
+                throw new ArgumentNullException(nameof(characterDefinition));
+            }
+
+            if (!string.Equals(
+                    characterDefinition.CharacterId,
+                    progressionState.CharacterDefinitionId,
+                    StringComparison.Ordinal))
+            {
+                throw new ArgumentException(
+                    "CharacterDefinitionとProgression StateのCharacter IDが一致していません。",
+                    nameof(progressionState));
+            }
+
+            InitializeInternal(characterDefinition, progressionState);
+        }
+
+        public void Initialize(AbilityLoadout loadout)
+        {
+            Loadout = loadout ?? throw new ArgumentNullException(nameof(loadout));
+        }
+
+        public bool Assign(AbilitySlot slot, string abilityId)
+        {
+            EnsureInitialized();
+            return Loadout.Assign(slot, abilityId);
+        }
+
+        public bool Clear(AbilitySlot slot)
+        {
+            EnsureInitialized();
+            return Loadout.Clear(slot);
+        }
+
+        public bool TryResolve(AbilitySlot slot, out string abilityId)
+        {
+            abilityId = string.Empty;
+            return Loadout != null && Loadout.TryResolve(slot, out abilityId);
+        }
+
+        private void InitializeInternal(
+            CharacterDefinition characterDefinition,
+            CharacterProgressionState progressionState)
         {
             if (characterDefinition == null)
             {
@@ -60,9 +124,15 @@ namespace DemonKing.Gameplay.Abilities
                     continue;
                 }
 
+                int currentRank = ResolveInitialArtRank(artDefinition, progressionState);
+                if (currentRank <= 0)
+                {
+                    continue;
+                }
+
                 foreach (ArtAbilityUnlockEntry unlockEntry in artDefinition.AbilityUnlocks)
                 {
-                    if (unlockEntry == null || unlockEntry.RequiredRank != 1)
+                    if (unlockEntry == null || unlockEntry.RequiredRank > currentRank)
                     {
                         continue;
                     }
@@ -78,27 +148,25 @@ namespace DemonKing.Gameplay.Abilities
             Initialize(loadout);
         }
 
-        public void Initialize(AbilityLoadout loadout)
+        private static int ResolveInitialArtRank(
+            ArtDefinition artDefinition,
+            CharacterProgressionState progressionState)
         {
-            Loadout = loadout ?? throw new ArgumentNullException(nameof(loadout));
-        }
+            if (progressionState == null)
+            {
+                // 互換overloadでは従来どおりランク1解放分だけを扱います。
+                return 1;
+            }
 
-        public bool Assign(AbilitySlot slot, string abilityId)
-        {
-            EnsureInitialized();
-            return Loadout.Assign(slot, abilityId);
-        }
+            if (!progressionState.TryGetArtProgress(
+                    artDefinition.ArtId,
+                    out ArtProgressState progressState))
+            {
+                return 0;
+            }
 
-        public bool Clear(AbilitySlot slot)
-        {
-            EnsureInitialized();
-            return Loadout.Clear(slot);
-        }
-
-        public bool TryResolve(AbilitySlot slot, out string abilityId)
-        {
-            abilityId = string.Empty;
-            return Loadout != null && Loadout.TryResolve(slot, out abilityId);
+            return artDefinition.CreateMasteryTable()
+                .GetRankForTotalMasteryPoints(progressState.MasteryPoints);
         }
 
         private static void TryAssignNextActionSlot(

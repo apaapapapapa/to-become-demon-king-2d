@@ -1,3 +1,4 @@
+using DemonKing.Core.Input;
 using DemonKing.Domain.Progression;
 using DemonKing.Gameplay.Abilities;
 using DemonKing.Gameplay.Characters;
@@ -134,7 +135,7 @@ namespace DemonKing.Field.Prototype
                 loadoutController = root.AddComponent<AbilityLoadoutController>();
             }
 
-            loadoutController.Initialize(characterDefinition);
+            loadoutController.Initialize(characterDefinition, state);
 
             if (root.GetComponent<PlayerAbilityInput>() == null)
             {
@@ -179,6 +180,27 @@ namespace DemonKing.Field.Prototype
             }
 
             artProgressionController.Initialize(state, characterDefinition.ArtDefinitions);
+
+            PlayerInputReader inputReader = root.GetComponent<PlayerInputReader>();
+            if (inputReader == null)
+            {
+                Debug.LogError("Ability Loadout選択を初期化するためのPlayerInputReaderが見つかりません。", root);
+            }
+            else
+            {
+                AbilityLoadoutSelectionController selectionController =
+                    root.GetComponent<AbilityLoadoutSelectionController>();
+                if (selectionController == null)
+                {
+                    selectionController = root.AddComponent<AbilityLoadoutSelectionController>();
+                }
+
+                selectionController.Initialize(
+                    inputReader,
+                    loadoutController,
+                    characterDefinition,
+                    state);
+            }
 
             if (root.GetComponent<PrototypeMeleeAttackEffect>() == null)
             {

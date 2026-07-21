@@ -67,7 +67,25 @@ Input System Action
   -> AbilityController
 ```
 
-`AbilityLoadout` をプレイヤー個体のRuntime割当のSource of Truthとします。`Primary` は基本攻撃等の予約枠、`Action1` 以降は将来の選択UIから差し替え可能な枠です。ArtはAbilityを解放する進行要素、現在のSkillは受動Modifier要素です。AIはPlayer Loadoutを経由せず `AbilityController` を直接利用します。
+`AbilityLoadout` をプレイヤー個体のRuntime割当のSource of Truthとします。`Primary` は基本攻撃等の予約枠、`Action1` から `Action4` はRuntime選択UIから差し替え可能な枠です。初期Loadoutは `CharacterDefinition` と `CharacterProgressionState` の両方から構築し、未習得ArtのAbilityを先回りして割り当てません。
+
+Loadout選択は次の境界で構成します。
+
+```text
+CharacterDefinition + CharacterProgressionState
+  -> AbilityLoadoutMenuProjection
+  -> AbilityLoadoutSelectionController
+  -> AbilityLoadout
+  -> AbilityLoadoutMenuView
+```
+
+- `AbilityLoadoutMenuProjection`: 取得済みArtの現在Rankで解放済みAbilityと取得済み受動SkillをuGUI非依存の表示要素へ変換する
+- `AbilityLoadoutSelectionController`: モーダル開閉、候補・Action Slot選択、Runtime Loadout更新を担当する
+- `AbilityLoadoutMenuView`: 選択状態と現在のAction1〜4割当をuGUIへ反映する
+- Art由来AbilityだけをAction Slotへ割当可能とし、現在のSkillは受動Modifier要素なので状態確認用に表示するだけとする
+- 同じAbilityを複数Action Slotへ重複配置せず、別Slotへの割当は移動として扱う
+
+Art / Skill固有のInput Actionは増やしません。新しい能動Abilityが増えても物理入力は論理 `AbilitySlot` を維持します。AIはPlayer Loadoutを経由せず `AbilityController` を直接利用します。
 
 Jump / Flight入力は `PlayerElevationInput` が `CharacterElevationMotor` の論理操作へ変換します。具体的なBindingは [入力仕様](../specifications/input.md) を参照してください。
 
@@ -95,6 +113,8 @@ Quest Trackerは次の境界で構成します。
 
 常設Trackerの表示ポリシーと一時通知の寿命を分離し、通知Coroutineの変更が常設Trackerへ波及しない構造とします。プレイヤーが追跡Questを手動選択する仕様が追加されるまでは、状態保持型 `QuestTrackingService` を導入しません。具体的な表示ルールは [Quest仕様](../specifications/quest.md) を参照してください。
 
+EvolutionメニューとAbility Loadoutメニューは同じInput Context原則に従うモーダルUIです。開いている間はUI Contextと停止Time Scaleを所有し、確定またはキャンセルで直前状態へ戻します。別モーダルがUI Contextを所有している場合は重ねて開きません。
+
 ## ScriptableObject / Resources
 
 静的コンテンツ定義、バランス値、Asset参照はScriptableObject Definitionとして管理します。Definition / Runtime State / Save DTOの責務分離は [アーキテクチャ](./architecture.md) を参照してください。
@@ -113,6 +133,7 @@ EditModeで検証する対象:
 
 - Unity Runtimeのフレーム進行を必要としないRuntime State / Service状態遷移
 - Content収集、共有参照の重複排除、Stable Content ID衝突、Ability LoadoutのSlot解決
+- Ability LoadoutのRuntime進捗初期化、取得済みArt / Skillの表示Projection
 - Quest TrackerのProjection / Selector / Notification Formatter
 - `LinearDialogueSequence`、`SpawnLifecycle<T>` の純粋ロジック
 - フレーム進行を必要としないScriptableObject Definition検証
@@ -126,7 +147,7 @@ PlayModeで検証する対象:
 - Jump / Fall / Flight、Combat / Interaction、Enemy AI
 - Training Quest Flow、Dummy Defeat Event Bridge、Spawn / Interaction / Combatをまたぐ縦切り統合
 
-Quest UIのPlayModeテストは、uGUI階層生成、Questイベント購読、`QuestNotificationView` の通知寿命といったRuntime統合へ集中させ、状態文言・表示対象選択などの純粋な表示ポリシーはEditModeで検証します。CIでは引き続きEditMode / PlayModeの両方を実行します。
+Quest UIのPlayModeテストは、uGUI階層生成、Questイベント購読、`QuestNotificationView` の通知寿命といったRuntime統合へ集中させ、状態文言・表示対象選択などの純粋な表示ポリシーはEditModeで検証します。Ability Loadoutも候補生成と割当可否はEditMode、Runtime uGUIとInput Context統合はPlayMode側の責務とします。CIでは引き続きEditMode / PlayModeの両方を実行します。
 
 ## Platform実装
 

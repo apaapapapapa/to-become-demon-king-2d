@@ -17,6 +17,8 @@
 
 - Ability共通実行基盤と基本近接攻撃
 - 論理 `AbilitySlot` とRuntime `AbilityLoadout` によるPlayer入力割当
+- `Primary` / `Action1`〜`Action4` の論理入力とRuntime Loadout選択UI
+- 取得済みArt AbilityのAction Slot割当と、取得済み受動SkillのLoadout画面表示
 - Player入力とAbility IDの分離、AIからの `AbilityController` 直接利用
 - DamageResult / DefeatContext / RewardService
 - 敵AIのIdle / Chase / Attack、索敵・離脱、高度差制御
@@ -89,9 +91,8 @@
 
 ## 次の開発フェーズ
 
-1. 複数Art / Skillの選択UIと入力割当
-2. 追加の正式Runtimeコンテンツと取得経路
-3. 実際のローカルSave実装
+1. 追加の正式Runtimeコンテンツと取得経路
+2. 実際のローカルSave実装
 
 ## 将来候補
 

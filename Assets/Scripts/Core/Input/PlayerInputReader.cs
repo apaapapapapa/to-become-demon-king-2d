@@ -26,6 +26,10 @@ namespace DemonKing.Core.Input
         private InputAction moveAction;
         private InputAction attackAction;
         private InputAction artAction;
+        private InputAction action2Action;
+        private InputAction action3Action;
+        private InputAction action4Action;
+        private InputAction loadoutAction;
         private InputAction interactAction;
         private InputAction dodgeAction;
         private InputAction jumpAction;
@@ -49,6 +53,7 @@ namespace DemonKing.Core.Input
         [Obsolete("Use AbilitySlotPressed instead.")]
         public event Action ArtPressed;
 
+        public event Action LoadoutPressed;
         public event Action InteractPressed;
         public event Action DodgePressed;
         public event Action JumpPressed;
@@ -181,6 +186,10 @@ namespace DemonKing.Core.Input
             moveAction = FindAction(gameplayActionMap, "Move");
             attackAction = FindAction(gameplayActionMap, "Attack");
             artAction = FindAction(gameplayActionMap, "Art");
+            action2Action = FindAction(gameplayActionMap, "Action2");
+            action3Action = FindAction(gameplayActionMap, "Action3");
+            action4Action = FindAction(gameplayActionMap, "Action4");
+            loadoutAction = FindAction(gameplayActionMap, "Loadout");
             interactAction = FindAction(gameplayActionMap, "Interact");
             dodgeAction = FindAction(gameplayActionMap, "Dodge");
             jumpAction = FindAction(gameplayActionMap, "Jump");
@@ -248,6 +257,10 @@ namespace DemonKing.Core.Input
         {
             if (attackAction != null) attackAction.performed += OnAttackPerformed;
             if (artAction != null) artAction.performed += OnArtPerformed;
+            if (action2Action != null) action2Action.performed += OnAction2Performed;
+            if (action3Action != null) action3Action.performed += OnAction3Performed;
+            if (action4Action != null) action4Action.performed += OnAction4Performed;
+            if (loadoutAction != null) loadoutAction.performed += OnLoadoutPerformed;
             if (interactAction != null) interactAction.performed += OnInteractPerformed;
             if (dodgeAction != null) dodgeAction.performed += OnDodgePerformed;
             if (jumpAction != null) jumpAction.performed += OnJumpPerformed;
@@ -263,6 +276,10 @@ namespace DemonKing.Core.Input
         {
             if (attackAction != null) attackAction.performed -= OnAttackPerformed;
             if (artAction != null) artAction.performed -= OnArtPerformed;
+            if (action2Action != null) action2Action.performed -= OnAction2Performed;
+            if (action3Action != null) action3Action.performed -= OnAction3Performed;
+            if (action4Action != null) action4Action.performed -= OnAction4Performed;
+            if (loadoutAction != null) loadoutAction.performed -= OnLoadoutPerformed;
             if (interactAction != null) interactAction.performed -= OnInteractPerformed;
             if (dodgeAction != null) dodgeAction.performed -= OnDodgePerformed;
             if (jumpAction != null) jumpAction.performed -= OnJumpPerformed;
@@ -290,6 +307,16 @@ namespace DemonKing.Core.Input
 #pragma warning restore CS0618
         }
 
+        private void OnAction2Performed(InputAction.CallbackContext context) =>
+            AbilitySlotPressed?.Invoke(AbilitySlot.Action2);
+
+        private void OnAction3Performed(InputAction.CallbackContext context) =>
+            AbilitySlotPressed?.Invoke(AbilitySlot.Action3);
+
+        private void OnAction4Performed(InputAction.CallbackContext context) =>
+            AbilitySlotPressed?.Invoke(AbilitySlot.Action4);
+
+        private void OnLoadoutPerformed(InputAction.CallbackContext context) => LoadoutPressed?.Invoke();
         private void OnInteractPerformed(InputAction.CallbackContext context) => InteractPressed?.Invoke();
         private void OnDodgePerformed(InputAction.CallbackContext context) => DodgePressed?.Invoke();
         private void OnJumpPerformed(InputAction.CallbackContext context) => JumpPressed?.Invoke();

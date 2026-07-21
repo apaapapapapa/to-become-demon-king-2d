@@ -1,6 +1,7 @@
 using DemonKing.Core.Application;
 using DemonKing.Core.Input;
 using DemonKing.Field.Prototype.Configuration;
+using DemonKing.Gameplay.Abilities;
 using DemonKing.Gameplay.Dialogue;
 using DemonKing.Gameplay.Progression;
 using UnityEngine;
@@ -72,11 +73,21 @@ namespace DemonKing.Field.Prototype
                 Debug.LogError("Evolution選択を初期化するためのPlayerコンポーネントが見つかりません。");
             }
 
+            AbilityLoadoutSelectionController abilityLoadoutSelectionController =
+                worldResult.Player == null
+                    ? null
+                    : worldResult.Player.GetComponent<AbilityLoadoutSelectionController>();
+            if (abilityLoadoutSelectionController == null)
+            {
+                Debug.LogError("Ability Loadout選択を初期化するためのPlayerコンポーネントが見つかりません。");
+            }
+
             PrototypeUiInstaller.Create(
                 projectAssets.UiFont,
                 pauseController,
                 dialogueLog,
                 evolutionSelectionController,
+                abilityLoadoutSelectionController,
                 worldResult.QuestProgressionService);
             return applicationRoot;
         }

@@ -1,4 +1,5 @@
 using DemonKing.Core.Application;
+using DemonKing.Gameplay.Abilities;
 using DemonKing.Gameplay.Dialogue;
 using DemonKing.Gameplay.Progression;
 using DemonKing.Gameplay.Quests;
@@ -19,6 +20,7 @@ namespace DemonKing.Field.Prototype
             GamePauseController pauseController,
             DialogueLog dialogueLog,
             EvolutionSelectionController evolutionSelectionController,
+            AbilityLoadoutSelectionController abilityLoadoutSelectionController,
             QuestProgressionService questProgressionService)
         {
             GameObject uiRoot = new("UI Root", typeof(RectTransform));
@@ -57,6 +59,9 @@ namespace DemonKing.Field.Prototype
 
             EvolutionMenuView evolutionMenuView = uiRoot.AddComponent<EvolutionMenuView>();
             evolutionMenuView.Initialize(uiFont, evolutionSelectionController);
+
+            AbilityLoadoutMenuView loadoutMenuView = uiRoot.AddComponent<AbilityLoadoutMenuView>();
+            loadoutMenuView.Initialize(uiFont, abilityLoadoutSelectionController);
             return uiRoot;
         }
     }
