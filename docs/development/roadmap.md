@@ -44,6 +44,17 @@
 - `ProgressionGrantInteractable` による一度きりのフィールド取得経路
 - 古びた魔導書から魔弾術、魔力結晶から魔力循環を取得するPrototype導線
 
+### Local Save
+
+- `JsonFileSaveService` による `Application.persistentDataPath/save.json` へのJSON保存
+- 起動時LoadとRuntime State復元、15秒間隔・Pause・Quit時の自動保存
+- Save Version 1 → 2 → 3 MigrationとCollection正規化
+- Character Progression、Art / Skill / Evolution状態の復元
+- `Action1`〜`Action4` のAbility Loadout保存・復元
+- Quest Status / Objective進捗の保存・復元
+- フィールド上の一度きりProgression Grant消費状態の保存・復元
+- 破損・未対応Saveを復元できない場合の既存ファイル保護
+
 ### Content / Composition / Delivery
 
 - `IGameContentDefinition`、Stable Content ID相互リンク、Data Loader検証
@@ -94,7 +105,9 @@
 
 ## 次の開発フェーズ
 
-1. 実際のローカルSave実装
+1. Save SlotとNew Game / Continue導線
+   - 現在の単一 `save.json` を前提にした自動保存から、明示的な新規開始・継続開始へ接続する
+   - 複数Slotが必要になった場合も `ISaveService` とSave DTO境界を維持する
 
 ## 将来候補
 

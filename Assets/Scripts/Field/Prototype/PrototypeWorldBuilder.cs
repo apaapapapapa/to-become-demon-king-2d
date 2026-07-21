@@ -1,5 +1,11 @@
+using System;
+using System.Collections.Generic;
+using DemonKing.Domain.Progression;
+using DemonKing.Domain.Quests;
+using DemonKing.Domain.Save;
 using DemonKing.Gameplay.Content;
 using DemonKing.Gameplay.Dialogue;
+using DemonKing.Gameplay.Quests;
 using UnityEngine;
 
 namespace DemonKing.Field.Prototype
@@ -14,17 +20,27 @@ namespace DemonKing.Field.Prototype
         private readonly int playableTileRadius;
         private readonly PrototypeProjectAssets projectAssets;
         private readonly DialogueLog dialogueLog;
+        private readonly CharacterProgressionState progressionState;
+        private readonly ProgressionGrantConsumptionState grantConsumptionState;
+        private readonly IReadOnlyList<QuestProgressSaveData> questSaveData;
 
         public PrototypeWorldBuilder(
             Vector3 playerSpawnPosition,
             int playableTileRadius,
             PrototypeProjectAssets projectAssets,
-            DialogueLog dialogueLog)
+            DialogueLog dialogueLog,
+            CharacterProgressionState progressionState = null,
+            ProgressionGrantConsumptionState grantConsumptionState = null,
+            IReadOnlyList<QuestProgressSaveData> questSaveData = null)
         {
             this.playerSpawnPosition = playerSpawnPosition;
             this.playableTileRadius = Mathf.Max(4, playableTileRadius);
             this.projectAssets = projectAssets;
             this.dialogueLog = dialogueLog;
+            this.progressionState = progressionState;
+            this.grantConsumptionState = grantConsumptionState ??
+                ProgressionGrantConsumptionState.CreateInitial();
+            this.questSaveData = questSaveData ?? Array.Empty<QuestProgressSaveData>();
         }
 
         public PrototypeWorldBuildResult Build()
@@ -47,7 +63,8 @@ namespace DemonKing.Field.Prototype
             new AtmosphereBuilder(shapes, ambientEffects).Build(world);
             GameObject player = new PrototypePlayerSpawner(
                     playerSpawnPosition,
-                    projectAssets.PlayerCharacter)
+                    projectAssets.PlayerCharacter,
+                    progressionState)
                 .Spawn(world);
 
             GameContentCatalog gameContentCatalog = projectAssets.CreateGameContentCatalog();
@@ -58,6 +75,12 @@ namespace DemonKing.Field.Prototype
                     gameContentCatalog,
                     out gameplayServices))
             {
+                IReadOnlyList<QuestProgressState> restoredQuestStates =
+                    QuestProgressSaveMapper.FromSaveData(
+                        projectAssets.QuestDefinitions,
+                        questSaveData);
+                gameplayServices.QuestProgressionService.Restore(restoredQuestStates);
+
                 new PrototypeGameplayFeatureInstaller().Install(
                     world,
                     player,
@@ -68,6 +91,7 @@ namespace DemonKing.Field.Prototype
                 new PrototypeProgressionPickupInstaller().Install(
                     world,
                     gameplayServices.ProgressionAcquisitionService,
+                    grantConsumptionState,
                     projectAssets.ProgressionPickups);
             }
 

@@ -1,4 +1,5 @@
 using System;
+using DemonKing.Domain.Progression;
 using DemonKing.Gameplay.Interaction;
 using DemonKing.Gameplay.Progression.Configuration;
 using UnityEngine;
@@ -15,16 +16,32 @@ namespace DemonKing.Gameplay.Progression
     {
         private ProgressionGrantDefinition grantDefinition;
         private ProgressionAcquisitionService acquisitionService;
+        private ProgressionGrantConsumptionState consumptionState;
 
         public event Action<ProgressionGrantResult> InteractionCompleted;
 
-        public bool IsInitialized => grantDefinition != null && acquisitionService != null;
-        public bool IsConsumed { get; private set; }
+        public bool IsInitialized =>
+            grantDefinition != null && acquisitionService != null && consumptionState != null;
+        public bool IsConsumed =>
+            grantDefinition != null &&
+            consumptionState != null &&
+            consumptionState.IsConsumed(grantDefinition.GrantId);
         public string GrantId => grantDefinition == null ? string.Empty : grantDefinition.GrantId;
 
+        /// <summary>
+        /// Save状態を必要としないテスト・単独利用向けの互換初期化です。
+        /// </summary>
         public void Initialize(
             ProgressionGrantDefinition definition,
             ProgressionAcquisitionService service)
+        {
+            Initialize(definition, service, ProgressionGrantConsumptionState.CreateInitial());
+        }
+
+        public void Initialize(
+            ProgressionGrantDefinition definition,
+            ProgressionAcquisitionService service,
+            ProgressionGrantConsumptionState restoredConsumptionState)
         {
             if (definition == null || !definition.IsConfigured)
             {
@@ -35,13 +52,19 @@ namespace DemonKing.Gameplay.Progression
 
             grantDefinition = definition;
             acquisitionService = service ?? throw new ArgumentNullException(nameof(service));
-            IsConsumed = false;
+            consumptionState = restoredConsumptionState ??
+                throw new ArgumentNullException(nameof(restoredConsumptionState));
 
             SphereCollider interactionCollider = GetComponent<SphereCollider>();
             interactionCollider.isTrigger = true;
             interactionCollider.radius = 0.6f;
             interactionCollider.center = new Vector3(0f, 0.2f, 0.45f);
-            interactionCollider.enabled = true;
+            interactionCollider.enabled = !IsConsumed;
+
+            if (IsConsumed)
+            {
+                gameObject.SetActive(false);
+            }
         }
 
         public bool CanInteract(GameObject interactor)
@@ -61,11 +84,10 @@ namespace DemonKing.Gameplay.Progression
             }
 
             ProgressionGrantResult result = acquisitionService.Grant(grantDefinition);
-            IsConsumed = true;
+            consumptionState.TryConsume(grantDefinition.GrantId);
             InteractionCompleted?.Invoke(result);
 
-            // 一度きりの取得物として、取得済みコンテンツだった場合も再Interactionさせません。
-            // Save復元時の配置制御はローカルSave実装フェーズで永続状態と接続します。
+            // Grantの付与結果が既取得であっても、このフィールド取得物自体は一度きりとして消費します。
             gameObject.SetActive(false);
         }
     }

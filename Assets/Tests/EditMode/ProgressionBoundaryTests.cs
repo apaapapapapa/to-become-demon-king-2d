@@ -70,7 +70,7 @@ namespace DemonKing.Tests.EditMode
         }
 
         [Test]
-        public void GameSaveData_Version1を空のArt進捗を持つVersion2へ移行する()
+        public void GameSaveData_Version1を現在Versionへ移行する()
         {
             var saveData = new GameSaveData
             {
@@ -85,8 +85,11 @@ namespace DemonKing.Tests.EditMode
             GameSaveData migrated = GameSaveDataMigrator.MigrateToCurrent(saveData);
 
             Assert.That(migrated, Is.SameAs(saveData));
-            Assert.That(migrated.version, Is.EqualTo(2));
+            Assert.That(migrated.version, Is.EqualTo(GameSaveData.CurrentVersion));
             Assert.That(migrated.player.artProgress, Is.Not.Null.And.Empty);
+            Assert.That(migrated.player.abilityLoadout, Is.Not.Null);
+            Assert.That(migrated.quests, Is.Not.Null.And.Empty);
+            Assert.That(migrated.world, Is.Not.Null);
         }
 
         [Test]

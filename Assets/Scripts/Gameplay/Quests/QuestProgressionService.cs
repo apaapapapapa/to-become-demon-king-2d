@@ -71,6 +71,49 @@ namespace DemonKing.Gameplay.Quests
             return states.TryGetValue(questId ?? string.Empty, out state);
         }
 
+        /// <summary>
+        /// Saveから復元したQuest Stateを現在のDefinitionへ適用します。
+        /// 未知のQuestは無視し、既知QuestのObjective構成不一致は設定エラーとして拒否します。
+        /// </summary>
+        public void Restore(IEnumerable<QuestProgressState> restoredStates)
+        {
+            if (restoredStates == null)
+            {
+                return;
+            }
+
+            foreach (QuestProgressState restoredState in restoredStates)
+            {
+                if (restoredState == null ||
+                    !definitions.TryGetValue(restoredState.QuestId, out QuestDefinition definition))
+                {
+                    continue;
+                }
+
+                foreach (QuestObjectiveDefinition objectiveDefinition in definition.Objectives)
+                {
+                    if (!restoredState.TryGetObjective(
+                            objectiveDefinition.ObjectiveId,
+                            out ObjectiveProgressState objectiveState) ||
+                        objectiveState.RequiredCount != objectiveDefinition.RequiredCount)
+                    {
+                        throw new ArgumentException(
+                            $"Quest SaveのObjective構成が現在のDefinitionと一致しません: {definition.QuestId}",
+                            nameof(restoredStates));
+                    }
+                }
+
+                if (restoredState.Objectives.Count != definition.Objectives.Count)
+                {
+                    throw new ArgumentException(
+                        $"Quest SaveのObjective数が現在のDefinitionと一致しません: {definition.QuestId}",
+                        nameof(restoredStates));
+                }
+
+                states[definition.QuestId] = restoredState;
+            }
+        }
+
         public bool AcceptQuest(string questId)
         {
             if (!TryGetState(questId, out QuestProgressState state) || !state.Accept())
@@ -124,7 +167,6 @@ namespace DemonKing.Gameplay.Quests
                         previousCount,
                         objectiveState.CurrentCount,
                         becameReadyToTurnIn));
-
                     if (becameReadyToTurnIn)
                     {
                         QuestReadyToTurnIn?.Invoke(state);
