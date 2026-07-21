@@ -11,6 +11,7 @@ using DemonKing.Gameplay.Spawning;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.TestTools;
+using Object = UnityEngine.Object;
 
 namespace DemonKing.Tests.PlayMode
 {
