@@ -1,7 +1,7 @@
 using DemonKing.Gameplay.Dialogue;
 using NUnit.Framework;
 
-namespace DemonKing.Tests.PlayMode
+namespace DemonKing.Tests.EditMode
 {
     public sealed class LinearDialogueSequenceTests
     {

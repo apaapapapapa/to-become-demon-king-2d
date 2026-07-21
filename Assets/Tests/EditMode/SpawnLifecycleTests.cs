@@ -1,7 +1,7 @@
 using DemonKing.Gameplay.Spawning;
 using NUnit.Framework;
 
-namespace DemonKing.Tests.PlayMode
+namespace DemonKing.Tests.EditMode
 {
     public sealed class SpawnLifecycleTests
     {

@@ -1,5 +1,3 @@
-using System.Collections;
-using System.Text;
 using DemonKing.Domain.Quests;
 using DemonKing.Gameplay.Quests;
 using DemonKing.Gameplay.Quests.Configuration;
@@ -9,8 +7,8 @@ using UnityEngine.UI;
 namespace DemonKing.Presentation.UI
 {
     /// <summary>
-    /// 受注済みQuestの進捗を常設表示し、受注・進捗・報告可能・完了の状態遷移を非モーダル通知で提示します。
-    /// Questの進行ルールは持たず、QuestProgressionServiceの状態とイベントだけを表示します。
+    /// 選択されたQuestの表示Modelを常設Trackerへ反映します。
+    /// 表示ポリシー、通知寿命、Quest進行ルールは担当しません。
     /// </summary>
     [DisallowMultipleComponent]
     [RequireComponent(typeof(Canvas))]
@@ -22,34 +20,33 @@ namespace DemonKing.Presentation.UI
         private static readonly Color ReadyColor = new(0.45f, 0.82f, 1f, 1f);
         private static readonly Color CompletedColor = new(0.52f, 0.92f, 0.62f, 1f);
         private static readonly Color TextColor = new(0.95f, 0.95f, 0.88f, 1f);
-        private const float NotificationDurationSeconds = 2.5f;
 
         private QuestProgressionService questService;
+        private QuestNotificationView notificationView;
         private Font uiFont;
         private GameObject trackerPanel;
-        private GameObject notificationPanel;
         private Text statusText;
         private Text titleText;
         private Text objectiveText;
-        private Text notificationText;
         private string displayedQuestId = string.Empty;
-        private Coroutine hideNotificationCoroutine;
 
         public bool IsVisible => trackerPanel != null && trackerPanel.activeSelf;
-        public bool IsNotificationVisible => notificationPanel != null && notificationPanel.activeSelf;
         public string DisplayedStatusText => statusText == null ? string.Empty : statusText.text;
         public string DisplayedQuestTitle => titleText == null ? string.Empty : titleText.text;
         public string DisplayedObjectiveText => objectiveText == null ? string.Empty : objectiveText.text;
-        public string DisplayedNotificationText => notificationText == null ? string.Empty : notificationText.text;
+        public string DisplayedQuestId => displayedQuestId;
 
-        public void Initialize(Font font, QuestProgressionService service)
+        public void Initialize(
+            Font font,
+            QuestProgressionService service,
+            QuestNotificationView notifications)
         {
             Unbind();
             uiFont = font != null
                 ? font
                 : Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
             questService = service;
-
+            notificationView = notifications;
             BuildHierarchy();
 
             if (questService != null)
@@ -58,11 +55,10 @@ namespace DemonKing.Presentation.UI
                 questService.ProgressChanged += HandleProgressChanged;
                 questService.QuestReadyToTurnIn += HandleQuestReadyToTurnIn;
                 questService.QuestCompleted += HandleQuestCompleted;
-                displayedQuestId = ResolveInitialDisplayedQuestId();
+                displayedQuestId = QuestTrackerSelector.SelectInitialQuestId(questService.States);
             }
 
             Refresh();
-            HideNotification();
         }
 
         private void OnDestroy()
@@ -78,54 +74,63 @@ namespace DemonKing.Presentation.UI
                 questService.ProgressChanged -= HandleProgressChanged;
                 questService.QuestReadyToTurnIn -= HandleQuestReadyToTurnIn;
                 questService.QuestCompleted -= HandleQuestCompleted;
-                questService = null;
             }
 
-            if (hideNotificationCoroutine != null)
-            {
-                StopCoroutine(hideNotificationCoroutine);
-                hideNotificationCoroutine = null;
-            }
+            questService = null;
+            notificationView = null;
         }
 
         private void HandleQuestAccepted(QuestProgressState state)
         {
             displayedQuestId = state.QuestId;
             Refresh();
-            ShowNotification($"クエスト受注\n{ResolveQuestName(state.QuestId)}");
+            notificationView?.Show(QuestNotificationFormatter.Accepted(
+                GetDefinition(state.QuestId),
+                state.QuestId));
         }
 
         private void HandleProgressChanged(QuestProgressUpdate update)
         {
             displayedQuestId = update.QuestId;
             Refresh();
-
-            if (update.QuestReadyToTurnIn)
+            if (!update.QuestReadyToTurnIn)
             {
-                return;
+                notificationView?.Show(QuestNotificationFormatter.Progress(
+                    GetDefinition(update.QuestId),
+                    update));
             }
-
-            string objectiveName = ResolveObjectiveName(update.QuestId, update.ObjectiveId);
-            ShowNotification($"クエスト進捗\n{objectiveName}  {update.CurrentCount}");
         }
 
         private void HandleQuestReadyToTurnIn(QuestProgressState state)
         {
             displayedQuestId = state.QuestId;
             Refresh();
-            ShowNotification($"目標達成\n{ResolveQuestName(state.QuestId)}\n見習い魔術師に報告しよう");
+            notificationView?.Show(QuestNotificationFormatter.ReadyToTurnIn(
+                GetDefinition(state.QuestId),
+                state.QuestId));
         }
 
         private void HandleQuestCompleted(QuestProgressState state)
         {
             displayedQuestId = state.QuestId;
             Refresh();
-            ShowNotification($"クエスト完了\n{ResolveQuestName(state.QuestId)}");
+            notificationView?.Show(QuestNotificationFormatter.Completed(
+                GetDefinition(state.QuestId),
+                state.QuestId));
+        }
+
+        private QuestDefinition GetDefinition(string questId)
+        {
+            return questService != null &&
+                   questService.TryGetDefinition(questId, out QuestDefinition definition)
+                ? definition
+                : null;
         }
 
         private void Refresh()
         {
-            if (trackerPanel == null || statusText == null || titleText == null || objectiveText == null)
+            if (trackerPanel == null || statusText == null ||
+                titleText == null || objectiveText == null)
             {
                 return;
             }
@@ -133,152 +138,40 @@ namespace DemonKing.Presentation.UI
             if (questService == null ||
                 string.IsNullOrWhiteSpace(displayedQuestId) ||
                 !questService.TryGetState(displayedQuestId, out QuestProgressState state) ||
-                !state.IsAccepted ||
-                !questService.TryGetDefinition(displayedQuestId, out QuestDefinition definition))
+                !questService.TryGetDefinition(displayedQuestId, out QuestDefinition definition) ||
+                !QuestTrackerProjection.TryCreate(definition, state, out QuestTrackerDisplayModel model))
             {
-                trackerPanel.SetActive(false);
-                statusText.text = string.Empty;
-                titleText.text = string.Empty;
-                objectiveText.text = string.Empty;
+                HideTracker();
                 return;
             }
 
             trackerPanel.SetActive(true);
-            if (state.IsCompleted)
+            statusText.text = model.StatusText;
+            statusText.color = model.Status switch
             {
-                statusText.text = "完了";
-                statusText.color = CompletedColor;
-            }
-            else if (state.IsReadyToTurnIn)
-            {
-                statusText.text = "報告可能";
-                statusText.color = ReadyColor;
-            }
-            else
-            {
-                statusText.text = "受注中";
-                statusText.color = ActiveColor;
-            }
-
-            titleText.text = definition.DisplayName;
-            objectiveText.text = BuildObjectiveText(definition, state);
+                QuestTrackerDisplayStatus.ReadyToTurnIn => ReadyColor,
+                QuestTrackerDisplayStatus.Completed => CompletedColor,
+                _ => ActiveColor,
+            };
+            titleText.text = model.Title;
+            objectiveText.text = model.ObjectiveText;
         }
 
-        private string ResolveInitialDisplayedQuestId()
+        private void HideTracker()
         {
-            string readyQuestId = string.Empty;
-            string completedQuestId = string.Empty;
-            foreach (QuestProgressState state in questService.States)
-            {
-                if (state.IsActive)
-                {
-                    return state.QuestId;
-                }
-
-                if (state.IsReadyToTurnIn && string.IsNullOrWhiteSpace(readyQuestId))
-                {
-                    readyQuestId = state.QuestId;
-                }
-
-                if (state.IsCompleted && string.IsNullOrWhiteSpace(completedQuestId))
-                {
-                    completedQuestId = state.QuestId;
-                }
-            }
-
-            return !string.IsNullOrWhiteSpace(readyQuestId) ? readyQuestId : completedQuestId;
-        }
-
-        private string ResolveQuestName(string questId)
-        {
-            return questService != null && questService.TryGetDefinition(questId, out QuestDefinition definition)
-                ? definition.DisplayName
-                : questId;
-        }
-
-        private string ResolveObjectiveName(string questId, string objectiveId)
-        {
-            if (questService != null && questService.TryGetDefinition(questId, out QuestDefinition definition))
-            {
-                foreach (QuestObjectiveDefinition objective in definition.Objectives)
-                {
-                    if (objective.ObjectiveId == objectiveId)
-                    {
-                        return objective.DisplayName;
-                    }
-                }
-            }
-
-            return objectiveId;
-        }
-
-        private static string BuildObjectiveText(QuestDefinition definition, QuestProgressState state)
-        {
-            var builder = new StringBuilder();
-            foreach (QuestObjectiveDefinition objectiveDefinition in definition.Objectives)
-            {
-                if (!state.TryGetObjective(objectiveDefinition.ObjectiveId, out ObjectiveProgressState objectiveState))
-                {
-                    continue;
-                }
-
-                if (builder.Length > 0)
-                {
-                    builder.AppendLine();
-                }
-
-                builder.Append(objectiveState.IsCompleted ? "✓ " : "□ ");
-                builder.Append(objectiveDefinition.DisplayName);
-                builder.Append("  ");
-                builder.Append(objectiveState.CurrentCount);
-                builder.Append('/');
-                builder.Append(objectiveState.RequiredCount);
-            }
-
-            return builder.ToString();
-        }
-
-        private void ShowNotification(string message)
-        {
-            if (notificationPanel == null || notificationText == null)
-            {
-                return;
-            }
-
-            if (hideNotificationCoroutine != null)
-            {
-                StopCoroutine(hideNotificationCoroutine);
-            }
-
-            notificationText.text = message;
-            notificationPanel.SetActive(true);
-            hideNotificationCoroutine = StartCoroutine(HideNotificationAfterDelay());
-        }
-
-        private IEnumerator HideNotificationAfterDelay()
-        {
-            yield return new WaitForSecondsRealtime(NotificationDurationSeconds);
-            HideNotification();
-        }
-
-        private void HideNotification()
-        {
-            if (notificationPanel != null)
-            {
-                notificationPanel.SetActive(false);
-            }
-
-            hideNotificationCoroutine = null;
+            trackerPanel.SetActive(false);
+            statusText.text = string.Empty;
+            titleText.text = string.Empty;
+            objectiveText.text = string.Empty;
         }
 
         private void BuildHierarchy()
         {
-            BuildTrackerPanel();
-            BuildNotificationPanel();
-        }
+            if (trackerPanel != null)
+            {
+                Destroy(trackerPanel);
+            }
 
-        private void BuildTrackerPanel()
-        {
             RectTransform panel = CreatePanel(
                 "Quest Tracker",
                 transform,
@@ -299,78 +192,34 @@ namespace DemonKing.Presentation.UI
             accentImage.raycastTarget = false;
 
             statusText = CreateText(
-                "Quest Status",
-                panel,
-                string.Empty,
-                15,
-                ActiveColor,
-                FontStyle.Bold,
+                "Quest Status", panel, 15, ActiveColor, FontStyle.Bold,
                 TextAnchor.MiddleRight,
-                new Vector2(0f, 1f),
-                new Vector2(1f, 1f),
-                new Vector2(0.5f, 1f),
-                new Vector2(-18f, -8f),
-                new Vector2(-36f, 26f));
+                new Vector2(0f, 1f), new Vector2(1f, 1f), new Vector2(0.5f, 1f),
+                new Vector2(-18f, -8f), new Vector2(-36f, 26f));
 
             titleText = CreateText(
-                "Quest Title",
-                panel,
-                string.Empty,
-                22,
-                TextColor,
-                FontStyle.Bold,
+                "Quest Title", panel, 22, TextColor, FontStyle.Bold,
                 TextAnchor.MiddleLeft,
-                new Vector2(0f, 1f),
-                new Vector2(1f, 1f),
-                new Vector2(0.5f, 1f),
-                new Vector2(18f, -38f),
-                new Vector2(-36f, 38f));
+                new Vector2(0f, 1f), new Vector2(1f, 1f), new Vector2(0.5f, 1f),
+                new Vector2(18f, -38f), new Vector2(-36f, 38f));
 
             objectiveText = CreateText(
-                "Quest Objectives",
-                panel,
-                string.Empty,
-                17,
-                TextColor,
-                FontStyle.Normal,
+                "Quest Objectives", panel, 17, TextColor, FontStyle.Normal,
                 TextAnchor.UpperLeft,
-                Vector2.zero,
-                Vector2.one,
-                new Vector2(0.5f, 0.5f),
-                new Vector2(18f, -32f),
-                new Vector2(-36f, -82f));
+                Vector2.zero, Vector2.one, new Vector2(0.5f, 0.5f),
+                new Vector2(18f, -32f), new Vector2(-36f, -82f));
             objectiveText.horizontalOverflow = HorizontalWrapMode.Wrap;
             objectiveText.verticalOverflow = VerticalWrapMode.Truncate;
         }
 
-        private void BuildNotificationPanel()
+        private static RectTransform CreateRect(string name, Transform parent)
         {
-            RectTransform panel = CreatePanel(
-                "Quest Notification",
-                transform,
-                new Vector2(0.5f, 1f),
-                new Vector2(0.5f, 1f),
-                new Vector2(0.5f, 1f),
-                new Vector2(0f, -28f),
-                new Vector2(520f, 110f));
-            notificationPanel = panel.gameObject;
-
-            notificationText = CreateText(
-                "Quest Notification Text",
-                panel,
-                string.Empty,
-                19,
-                ActiveColor,
-                FontStyle.Bold,
-                TextAnchor.MiddleCenter,
-                Vector2.zero,
-                Vector2.one,
-                new Vector2(0.5f, 0.5f),
-                Vector2.zero,
-                new Vector2(-24f, -12f));
+            GameObject child = new(name, typeof(RectTransform));
+            child.transform.SetParent(parent, false);
+            return child.GetComponent<RectTransform>();
         }
 
-        private RectTransform CreatePanel(
+        private static RectTransform CreatePanel(
             string name,
             Transform parent,
             Vector2 anchorMin,
@@ -385,7 +234,6 @@ namespace DemonKing.Presentation.UI
             rect.pivot = pivot;
             rect.anchoredPosition = anchoredPosition;
             rect.sizeDelta = size;
-
             Image image = rect.gameObject.AddComponent<Image>();
             image.color = PanelColor;
             image.raycastTarget = false;
@@ -395,7 +243,6 @@ namespace DemonKing.Presentation.UI
         private Text CreateText(
             string name,
             Transform parent,
-            string value,
             int fontSize,
             Color color,
             FontStyle fontStyle,
@@ -404,17 +251,16 @@ namespace DemonKing.Presentation.UI
             Vector2 anchorMax,
             Vector2 pivot,
             Vector2 anchoredPosition,
-            Vector2 size)
+            Vector2 sizeDelta)
         {
             RectTransform rect = CreateRect(name, parent);
             rect.anchorMin = anchorMin;
             rect.anchorMax = anchorMax;
             rect.pivot = pivot;
             rect.anchoredPosition = anchoredPosition;
-            rect.sizeDelta = size;
+            rect.sizeDelta = sizeDelta;
 
             Text text = rect.gameObject.AddComponent<Text>();
-            text.text = value;
             text.font = uiFont;
             text.fontSize = fontSize;
             text.fontStyle = fontStyle;
@@ -423,14 +269,6 @@ namespace DemonKing.Presentation.UI
             text.supportRichText = false;
             text.raycastTarget = false;
             return text;
-        }
-
-        private static RectTransform CreateRect(string name, Transform parent)
-        {
-            GameObject gameObject = new(name, typeof(RectTransform));
-            RectTransform rect = gameObject.GetComponent<RectTransform>();
-            rect.SetParent(parent, false);
-            return rect;
         }
     }
 }

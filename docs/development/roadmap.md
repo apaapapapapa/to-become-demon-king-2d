@@ -32,6 +32,7 @@
 - Gameplay Event Hub
 - Quest / Objective Runtime StateとAvailable / Active / ReadyToTurnIn / Completedライフサイクル
 - Quest常設トラッカーと非モーダル通知
+- Quest表示Projection / 初期表示Selector / Notification Viewの責務分離
 - 依頼会話→受注→討伐→報告会話→報酬の縦切りゲームループ
 - 汎用 `SpawnLifecycle<T>` と訓練対象の再生成・復元
 - `TrainingScenarioDefinition` による訓練シナリオ参照の集約
@@ -46,7 +47,7 @@
 - `PrototypeProjectAssets` をComposition Manifestとして維持
 - `PrototypeProjectAssetsAutoRepair` のEditor起動時自動書き換え廃止、検証と明示的手動Repairへの分離
 - VitePress Knowledge Base
-- EditMode / PlayModeテスト
+- 実行要件に基づくEditMode / PlayModeテスト境界
 - semantic-releaseによるリリース自動化
 
 ## 優先リファクタリング
@@ -60,44 +61,21 @@
 3. TrainingScenarioDefinitionとProjectAssets / AutoRepair整理
 4. Training Area Composition分割
 
-### P1: 次に対応
+### P1: 完了
 
-#### Quest Tracker Presentation分割
+次の2項目は実装済みです。正式な実装境界は [技術設計](../design/technical-design.md) を参照してください。
 
-- Quest状態から表示Modelを作る純粋なProjectionを抽出する
-- 初期表示対象を決める副作用のないSelectorを分離する
-- 一時通知を `QuestNotificationView` へ分離する
-- `QuestTrackerView` は表示Modelの反映を中心にする
-- 手動追跡仕様がないため状態保持型 `QuestTrackingService` は導入しない
-
-完了条件:
-
-- 表示順と状態文言をEditModeでテストできる
-- 通知Coroutineの変更が常設Trackerへ影響しない
-- UI階層生成方式を変えず表示ポリシーを交換できる
-
-#### EditMode / PlayModeテスト境界の整理
-
-EditModeへ寄せる対象:
-
-- 純粋なRuntime State / Service状態遷移
-- Content ID収集・重複検証、Loadout解決
-- Quest表示Model / Selector
-- フレーム進行不要なDefinition検証
-
-PlayModeへ残す対象:
-
-- `MonoBehaviour` Lifecycle / Event購読解除
-- Coroutine / 時間経過
-- Physics / Collider / Rigidbody
-- Runtime uGUI実表示
-- Spawn / Interaction / Combatをまたぐ統合
-
-完了条件:
-
-- Pure Logicの確認にPlayMode起動を必要としない
-- PlayModeはUnity Runtime統合へ集中する
-- CIではEditMode / PlayModeの両方を実行する
+1. Quest Tracker Presentation分割
+   - Quest状態から表示Modelを作る `QuestTrackerProjection` を抽出
+   - 初期表示対象を副作用なく決める `QuestTrackerSelector` を分離
+   - 一時通知と通知寿命を `QuestNotificationView` へ分離
+   - `QuestTrackerView` は購読と表示ModelのuGUI反映を中心に整理
+   - 手動追跡仕様がないため状態保持型 `QuestTrackingService` は導入しない
+2. EditMode / PlayModeテスト境界の整理
+   - Quest Runtime State / Service、Quest表示Model / Selector、`LinearDialogueSequence`、`SpawnLifecycle<T>` の純粋ロジックをEditModeで検証
+   - PlayModeは `MonoBehaviour` Lifecycle / Event購読、Coroutine / 時間経過、Physics、Runtime uGUI、縦切り統合へ集中
+   - Quest UIのPlayModeテストはuGUI生成、Questイベント購読、通知寿命のRuntime統合を検証
+   - CIではEditMode / PlayModeの両方を継続実行
 
 ### 対象外
 
@@ -111,10 +89,9 @@ PlayModeへ残す対象:
 
 ## 次の開発フェーズ
 
-1. P1リファクタリング
-2. 複数Art / Skillの選択UIと入力割当
-3. 追加の正式Runtimeコンテンツと取得経路
-4. 実際のローカルSave実装
+1. 複数Art / Skillの選択UIと入力割当
+2. 追加の正式Runtimeコンテンツと取得経路
+3. 実際のローカルSave実装
 
 ## 将来候補
 

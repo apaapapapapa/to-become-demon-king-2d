@@ -5,7 +5,7 @@ using DemonKing.Gameplay.Quests.Configuration;
 using NUnit.Framework;
 using UnityEngine;
 
-namespace DemonKing.Tests.PlayMode
+namespace DemonKing.Tests.EditMode
 {
     public sealed class QuestProgressionServiceTests
     {
