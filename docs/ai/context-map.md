@@ -91,9 +91,9 @@ AIエージェントが変更対象に必要な仕様・コード・テストへ
 - **Spec:** `docs/specifications/evolution.md`
 - **Code:** `Assets/Scripts/Domain/Progression/`, `Assets/Scripts/Gameplay/Progression/`
 - **Presentation:** `Assets/Scripts/Presentation/UI/`
-- **Integration:** `Assets/Scripts/Field/Prototype/`, `Assets/Scripts/Gameplay/Modifiers/`
+- **Integration:** `Assets/Scripts/Field/Prototype/`, `Assets/Scripts/Gameplay/Modifiers/`, `Assets/Scripts/Core/Application/ModalUiCoordinator.cs`
 - **Tests:** `Assets/Tests/EditMode/`, `Assets/Tests/PlayMode/`
-- **Related:** Progression, Skill, Art, Input, Save
+- **Related:** Progression, Skill, Art, Input, Save, Modal UI
 
 ## Progression
 
@@ -116,18 +116,20 @@ AIエージェントが変更対象に必要な仕様・コード・テストへ
 
 - **Spec:** `docs/specifications/save.md`
 - **Design:** `docs/design/technical-design.md#local-save`
-- **Code:** `Assets/Scripts/Domain/Save/`, `Assets/Scripts/Core/Application/`, `Assets/Scripts/Gameplay/Abilities/AbilityLoadoutSaveMapper.cs`, `Assets/Scripts/Gameplay/Quests/QuestProgressSaveMapper.cs`
-- **Integration:** `Assets/Scripts/Field/Prototype/PrototypeSaveSession.cs`, `Assets/Scripts/Field/Prototype/PrototypeLocalSaveCoordinator.cs`, `Assets/Scripts/Field/Prototype/PrototypeApplicationInstaller.cs`, `Assets/Scripts/Field/Prototype/PrototypeWorldBuilder.cs`
-- **Tests:** `Assets/Tests/EditMode/LocalSaveTests.cs`
+- **Code:** `Assets/Scripts/Domain/Save/`, `Assets/Scripts/Core/Application/SaveBoundary.cs`, `Assets/Scripts/Core/Application/JsonFileSaveService.cs`, `Assets/Scripts/Gameplay/Abilities/AbilityLoadoutSaveMapper.cs`, `Assets/Scripts/Gameplay/Quests/QuestProgressSaveMapper.cs`
+- **Integration:** `Assets/Scripts/Field/Prototype/PrototypeGameSession.cs`, `Assets/Scripts/Field/Prototype/PrototypeSaveSession.cs`, `Assets/Scripts/Field/Prototype/PrototypeLocalSaveCoordinator.cs`, `Assets/Scripts/Field/Prototype/PrototypeApplicationInstaller.cs`
+- **Tests:** `Assets/Tests/EditMode/LocalSaveTests.cs`, `Assets/Tests/EditMode/GameSessionSaveEditModeTests.cs`
 - **Related:** Progression, Art, Skill, Evolution, Quest, Ability, Content / Encyclopedia
 
-## Pause
+## Modal UI / Pause
 
 - **Spec:** `docs/specifications/input.md`
-- **Code:** `Assets/Scripts/Core/Application/GamePauseController.cs`, `Assets/Scripts/Core/Input/`
+- **Design:** `docs/design/technical-design.md#ui`
+- **Code:** `Assets/Scripts/Core/Application/ModalUiCoordinator.cs`, `Assets/Scripts/Core/Application/GamePauseController.cs`, `Assets/Scripts/Gameplay/Progression/EvolutionSelectionController.cs`, `Assets/Scripts/Gameplay/Abilities/AbilityLoadoutSelectionController.cs`
 - **Presentation:** `Assets/Scripts/Presentation/UI/`
-- **Tests:** `Assets/Tests/PlayMode/`
-- **Related:** Input, Evolution
+- **Integration:** `Assets/Scripts/Field/Prototype/PrototypeApplicationInstaller.cs`
+- **Tests:** `Assets/Tests/PlayMode/ModalUiCoordinatorPlayModeTests.cs`, `Assets/Tests/PlayMode/DodgeAndPausePlayModeTests.cs`, `Assets/Tests/PlayMode/GameplayAndCameraPlayModeTests.cs`
+- **Related:** Input, Evolution, Ability
 
 ## Dodge
 
