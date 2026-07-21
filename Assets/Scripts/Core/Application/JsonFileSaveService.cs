@@ -31,7 +31,7 @@ namespace DemonKing.Core.Application
         public static JsonFileSaveService CreateDefault()
         {
             return new JsonFileSaveService(
-                Path.Combine(Application.persistentDataPath, DefaultFileName));
+                Path.Combine(UnityEngine.Application.persistentDataPath, DefaultFileName));
         }
 
         public bool TryLoad(out GameSaveData saveData)
