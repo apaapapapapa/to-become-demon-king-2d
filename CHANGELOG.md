@@ -1,3 +1,9 @@
+## [1.14.1](https://github.com/apaapapapapa/to-become-demon-king-2d/compare/v1.14.0...v1.14.1) (2026-07-21)
+
+### Bug Fixes
+
+* handle value type world result ([a70df4b](https://github.com/apaapapapapa/to-become-demon-king-2d/commit/a70df4b4256f74aaa0d38d36d366b192534dd989))
+
 ## [1.14.0](https://github.com/apaapapapapa/to-become-demon-king-2d/compare/v1.13.0...v1.14.0) (2026-07-21)
 
 ### Features
