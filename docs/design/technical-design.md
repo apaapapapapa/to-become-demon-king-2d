@@ -27,9 +27,11 @@ Prototype.unity
      |- Progression Pickup definitions
      `- World / UI Asset references
   -> PrototypeApplicationInstaller
+     |- PrototypeSaveSession
      |- PrototypeWorldBuilder
      |- GamePauseController
-     `- PrototypeUiInstaller
+     |- PrototypeUiInstaller
+     `- PrototypeLocalSaveCoordinator
 ```
 
 `FieldBootstrap` は最小のエントリーポイントとします。`PrototypeProjectAssets` はPrototype全体のComposition Manifestです。Quest、状態別Dialogue、Enemy AI、Reward、Progression Grantのように同じ縦切りループで変更される参照は `TrainingScenarioDefinition` へ集約します。訓練シナリオ外のフィールド取得物は `PrototypeProgressionPickupDefinition` としてProjectAssetsへ保持します。
@@ -116,7 +118,13 @@ PrototypeProjectAssets
 - `ProgressionGrantInteractable`: Gameplay側の汎用一度きりInteraction。具体的なArt / Skill、配置、見た目を知らない
 - `ProgressionGrantDefinition`: 付与対象Art / Skillだけを保持し、取得条件や配置を持たない
 
-フィールド取得物のRuntime消費状態は現時点ではSave対象外です。Art / Skillそのものの取得状態は既存 `CharacterProgressionState` / Save DTO境界に従い、取得物の再配置制御はローカルSave実装フェーズで接続します。
+フィールド取得物のRuntime消費状態は `ProgressionGrantConsumptionState` をSource of Truthとし、Save Version 3の `WorldSaveData.consumedProgressionGrantIds` へStable Grant IDで保存します。ロード済みの消費状態を `PrototypeProgressionPickupInstaller` へ渡し、取得済みGrantは再配置しません。Art / Skillそのものの取得状態は既存 `CharacterProgressionState` / Save DTO境界で別途復元します。
+
+## Local Save
+
+PrototypeのローカルSaveは `JsonFileSaveService`、`PrototypeSaveSession`、各Save Mapper、`PrototypeLocalSaveCoordinator` をComposition Rootで接続します。`PrototypeSaveSession` が起動時にSave Version MigrationとRuntime State復元を行い、`PrototypeLocalSaveCoordinator` がProgression、Ability Loadout、Quest、World消費状態を `GameSaveData` へ集約して、Runtime構築完了直後・15秒ごと・Pause・Quit時に保存します。
+
+Gameplay Featureは具体的な保存先を参照しません。具体的な永続化対象と復元時の扱いは [セーブ仕様](../specifications/save.md) を参照してください。
 
 ## Combat / Interaction / AI
 
@@ -158,6 +166,7 @@ EditModeで検証する対象:
 - Content収集、共有参照の重複排除、Stable Content ID衝突、Ability LoadoutのSlot解決
 - Ability LoadoutのRuntime進捗初期化、取得済みArt / Skillの表示Projection
 - 追加Runtime ContentとProgression Pickup Definition / Grantの設定整合性
+- Save Migration、JSON File round trip、Ability Loadout / Quest / World Save Mapper
 - Quest TrackerのProjection / Selector / Notification Formatter
 - `LinearDialogueSequence`、`SpawnLifecycle<T>` の純粋ロジック
 - フレーム進行を必要としないScriptableObject Definition検証
