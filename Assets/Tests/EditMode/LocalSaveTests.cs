@@ -18,6 +18,40 @@ namespace DemonKing.Tests.EditMode
     public sealed class LocalSaveTests
     {
         [Test]
+        public void GameSaveData_Version1をCurrentVersionへ段階移行する()
+        {
+            var saveData = new GameSaveData
+            {
+                version = 1,
+                player = new PlayerSaveData
+                {
+                    characterDefinitionId = "character.player.slime",
+                    artProgress = new List<ArtProgressSaveData>
+                    {
+                        new ArtProgressSaveData
+                        {
+                            artId = "art.legacy.unsupported",
+                            masteryPoints = 99
+                        }
+                    },
+                    abilityLoadout = null
+                },
+                quests = null,
+                world = null
+            };
+
+            GameSaveData migrated = GameSaveDataMigrator.MigrateToCurrent(saveData);
+
+            Assert.That(migrated.version, Is.EqualTo(GameSaveData.CurrentVersion));
+            Assert.That(migrated.player.artProgress, Is.Not.Null.And.Empty);
+            Assert.That(migrated.player.abilityLoadout, Is.Not.Null);
+            Assert.That(migrated.player.abilityLoadout.slots, Is.Empty);
+            Assert.That(migrated.quests, Is.Not.Null.And.Empty);
+            Assert.That(migrated.world, Is.Not.Null);
+            Assert.That(migrated.world.consumedProgressionGrantIds, Is.Empty);
+        }
+
+        [Test]
         public void GameSaveData_Version2をVersion3へ移行する()
         {
             var saveData = new GameSaveData
