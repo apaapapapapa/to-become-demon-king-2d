@@ -426,13 +426,13 @@ namespace DemonKing.Tests.EditMode
             Assert.That(basicMelee.AbilityId, Is.EqualTo("ability.basic_melee"));
             Assert.That(basicMelee.DisplayName, Is.Not.Empty);
             Assert.That(basicMelee.CooldownSeconds, Is.GreaterThanOrEqualTo(0f));
-            Assert.That(projectAssets.PlayerCharacter.ArtDefinitions.Count, Is.EqualTo(1));
+            Assert.That(projectAssets.PlayerCharacter.ArtDefinitions.Count, Is.EqualTo(2));
             ArtDefinition fireMagic = projectAssets.PlayerCharacter.ArtDefinitions[0];
             Assert.That(fireMagic.IsConfigured, Is.True);
             Assert.That(fireMagic.ArtId, Is.EqualTo("art.magic.fire"));
             Assert.That(fireMagic.AbilityUnlocks[0].AbilityDefinition.AbilityId,
                 Is.EqualTo("ability.magic.fire_bolt"));
-            Assert.That(projectAssets.PlayerCharacter.SkillDefinitions.Count, Is.EqualTo(1));
+            Assert.That(projectAssets.PlayerCharacter.SkillDefinitions.Count, Is.EqualTo(2));
             SkillDefinition skillDefinition = projectAssets.PlayerCharacter.SkillDefinitions[0];
             Assert.That(skillDefinition, Is.Not.Null);
             Assert.That(skillDefinition.IsConfigured, Is.True);
