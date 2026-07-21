@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 90111111111111111111111111111101, type: 3}
+  m_Name: ManaFlowSkill
+  m_EditorClassIdentifier:
+  skillId: skill.magic.mana_flow
+  displayName: 魔力循環
+  description: 体内の魔力循環を整え、Abilityの再使用までの時間を短縮する受動Skill。
+  encyclopediaDescription: 魔力の流れを滞らせず次の術式へ素早く移行するための基礎Skill。特定Abilityへ限定せず、使用者が持つAbility全体のクールダウンを短縮する。
+  icon: {fileID: 0}
+  visibleInEncyclopedia: 1
+  category: magic
+  modifiers:
+  - target: 1
+    operation: 1
+    value: -0.15
+    targetContentId:

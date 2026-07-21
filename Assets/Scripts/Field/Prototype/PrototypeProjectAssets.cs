@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using DemonKing.Field.Prototype.Configuration;
 using DemonKing.Gameplay.AI.Configuration;
 using DemonKing.Gameplay.Characters.Configuration;
@@ -27,6 +28,10 @@ namespace DemonKing.Field.Prototype
         [Header("Scenarios")]
         [SerializeField] private TrainingScenarioDefinition trainingScenario;
 
+        [Header("Progression Pickups")]
+        [SerializeField] private PrototypeProgressionPickupDefinition[] progressionPickups =
+            Array.Empty<PrototypeProgressionPickupDefinition>();
+
         [Header("UI")]
         [SerializeField] private Font uiFont;
 
@@ -47,6 +52,8 @@ namespace DemonKing.Field.Prototype
         public PrototypeApplicationSettings ApplicationSettings => applicationSettings;
         public CharacterDefinition PlayerCharacter => playerCharacter;
         public TrainingScenarioDefinition TrainingScenario => trainingScenario;
+        public IReadOnlyList<PrototypeProgressionPickupDefinition> ProgressionPickups =>
+            progressionPickups ?? Array.Empty<PrototypeProgressionPickupDefinition>();
 
         // Scenario内部参照のSource of TruthはTrainingScenarioDefinitionです。
         // 既存利用側の段階移行用に読み取り専用の派生アクセサだけを公開します。
@@ -94,6 +101,7 @@ namespace DemonKing.Field.Prototype
             playerCharacter.IsConfigured &&
             trainingScenario != null &&
             trainingScenario.IsConfigured &&
+            HasValidProgressionPickups() &&
             cottagePrefab != null &&
             treePrefab != null &&
             lamppostPrefab != null &&
@@ -102,5 +110,26 @@ namespace DemonKing.Field.Prototype
             lamppostSprite != null &&
             grassTileSprite != null &&
             pathTileSprite != null;
+
+        private bool HasValidProgressionPickups()
+        {
+            if (progressionPickups == null || progressionPickups.Length == 0)
+            {
+                return false;
+            }
+
+            var grantIds = new HashSet<string>(StringComparer.Ordinal);
+            foreach (PrototypeProgressionPickupDefinition definition in progressionPickups)
+            {
+                if (definition == null ||
+                    !definition.IsConfigured ||
+                    !grantIds.Add(definition.GrantDefinition.GrantId))
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
     }
 }

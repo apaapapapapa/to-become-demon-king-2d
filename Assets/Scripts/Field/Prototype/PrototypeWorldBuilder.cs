@@ -64,6 +64,11 @@ namespace DemonKing.Field.Prototype
                     gameplayServices,
                     projectAssets.TrainingScenario,
                     dialogueLog);
+
+                new PrototypeProgressionPickupInstaller().Install(
+                    world,
+                    gameplayServices.ProgressionAcquisitionService,
+                    projectAssets.ProgressionPickups);
             }
 
             terrain.BuildForeground(world);

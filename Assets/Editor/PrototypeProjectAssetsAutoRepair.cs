@@ -27,7 +27,9 @@ namespace DemonKing.EditorTools
         private const string PlayerCharacterStatsPath = "Assets/Resources/Settings/Gameplay/PlayerCharacterStats.asset";
         private const string PlayerMeleeAttackPath = "Assets/Resources/Settings/Gameplay/PlayerMeleeAttack.asset";
         private const string FireMagicArtPath = "Assets/Resources/Settings/Gameplay/FireMagicArt.asset";
+        private const string ArcaneBoltArtPath = "Assets/Resources/Settings/Gameplay/ArcaneBoltArt.asset";
         private const string PredatoryInstinctSkillPath = "Assets/Resources/Settings/Gameplay/PredatoryInstinctSkill.asset";
+        private const string ManaFlowSkillPath = "Assets/Resources/Settings/Gameplay/ManaFlowSkill.asset";
         private const string PredatorSlimeEvolutionPath = "Assets/Resources/Settings/Gameplay/PredatorSlimeEvolution.asset";
         private const string ArcaneSlimeEvolutionPath = "Assets/Resources/Settings/Gameplay/ArcaneSlimeEvolution.asset";
         private const string ApexPredatorSlimeEvolutionPath = "Assets/Resources/Settings/Gameplay/ApexPredatorSlimeEvolution.asset";
@@ -175,11 +177,13 @@ namespace DemonKing.EditorTools
             changed |= AssignArrayIfDifferent(
                 serializedObject,
                 "artDefinitions",
-                Load<ArtDefinition>(FireMagicArtPath));
+                Load<ArtDefinition>(FireMagicArtPath),
+                Load<ArtDefinition>(ArcaneBoltArtPath));
             changed |= AssignArrayIfDifferent(
                 serializedObject,
                 "skillDefinitions",
-                Load<SkillDefinition>(PredatoryInstinctSkillPath));
+                Load<SkillDefinition>(PredatoryInstinctSkillPath),
+                Load<SkillDefinition>(ManaFlowSkillPath));
             changed |= AssignArrayIfDifferent(
                 serializedObject,
                 "evolutionDefinitions",
