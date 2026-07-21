@@ -15,6 +15,15 @@ MonoBehaviour:
   applicationSettings: {fileID: 11400000, guid: 2e6b9d1f4a8c43e7b0d5f2196c3a7e84, type: 2}
   playerCharacter: {fileID: 11400000, guid: 1a1a71944c52407c875514f165112f28, type: 2}
   trainingScenario: {fileID: 11400000, guid: 2bfa02a07bca4f75b5499205fdb0832d, type: 2}
+  progressionPickups:
+  - displayName: 古びた魔導書
+    grantDefinition: {fileID: 11400000, guid: 96afe5d32a0d4a4f98f6609bb8f48871, type: 2}
+    position: {x: 3.2, y: -1.8, z: 0}
+    color: {r: 0.48, g: 0.38, b: 0.92, a: 1}
+  - displayName: 魔力結晶
+    grantDefinition: {fileID: 11400000, guid: 7242854484f740a197eef20929be08e5, type: 2}
+    position: {x: -3, y: 1.4, z: 0}
+    color: {r: 0.3, g: 0.78, b: 1, a: 1}
   uiFont: {fileID: 12800000, guid: 0447c22bc17a1ab4888b6b3fa6f24fd3, type: 3}
   cottagePrefab: {fileID: 100000, guid: 68dcb65a10db454ba871daae7788796f, type: 3}
   treePrefab: {fileID: 100000, guid: 6177d65eef744c4fa7e36b1f71ad9598, type: 3}
