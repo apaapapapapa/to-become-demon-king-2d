@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using DemonKing.Domain.Progression;
+using DemonKing.Domain.Quests;
 using DemonKing.Domain.Save;
 using DemonKing.Gameplay.Content;
 using DemonKing.Gameplay.Dialogue;
@@ -74,7 +75,7 @@ namespace DemonKing.Field.Prototype
                     gameContentCatalog,
                     out gameplayServices))
             {
-                IReadOnlyList<Domain.Quests.QuestProgressState> restoredQuestStates =
+                IReadOnlyList<QuestProgressState> restoredQuestStates =
                     QuestProgressSaveMapper.FromSaveData(
                         projectAssets.QuestDefinitions,
                         questSaveData);
