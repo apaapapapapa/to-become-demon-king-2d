@@ -24,8 +24,10 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 40111111111111111111111111111102, type: 2}
   artDefinitions:
   - {fileID: 11400000, guid: bf40532d38964405895ec5747543f002, type: 2}
+  - {fileID: 11400000, guid: 7fddf4134bfd4882aacd2b62166edb65, type: 2}
   skillDefinitions:
   - {fileID: 11400000, guid: 90111111111111111111111111111107, type: 2}
+  - {fileID: 11400000, guid: 780597a2f60a4b99b405f40add197b5e, type: 2}
   evolutionDefinitions:
   - {fileID: 11400000, guid: a0211111111111111111111111111106, type: 2}
   - {fileID: 11400000, guid: a0211111111111111111111111111107, type: 2}
