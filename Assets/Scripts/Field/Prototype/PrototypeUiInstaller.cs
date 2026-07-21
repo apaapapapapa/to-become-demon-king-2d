@@ -42,8 +42,15 @@ namespace DemonKing.Field.Prototype
             DialogueLogView dialogueLogView = uiRoot.AddComponent<DialogueLogView>();
             dialogueLogView.Initialize(uiFont, dialogueLog);
 
+            QuestNotificationView questNotificationView =
+                uiRoot.AddComponent<QuestNotificationView>();
+            questNotificationView.Initialize(uiFont);
+
             QuestTrackerView questTrackerView = uiRoot.AddComponent<QuestTrackerView>();
-            questTrackerView.Initialize(uiFont, questProgressionService);
+            questTrackerView.Initialize(
+                uiFont,
+                questProgressionService,
+                questNotificationView);
 
             PauseMenuView pauseMenuView = uiRoot.AddComponent<PauseMenuView>();
             pauseMenuView.Initialize(uiFont, pauseController);
