@@ -28,7 +28,7 @@ DefeatContext
 
 そのため、同じX/Y位置に存在していても高さ方向で物理体積が重ならない対象には近接攻撃・Projectileは命中しません。飛行Actorや屋上Actorを含む高さ方向の戦闘も同じ物理ルールで扱います。
 
-具体的な軸規約とUnity Physics実装は [技術設計](../design/technical-design.md#3dフィールド座標) を参照してください。
+具体的な軸規約とUnity Physics実装は [技術設計](../design/technical-design.md) を参照してください。
 
 ## 戦闘演出
 
