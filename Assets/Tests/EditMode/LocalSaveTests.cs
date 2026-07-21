@@ -167,7 +167,7 @@ namespace DemonKing.Tests.EditMode
         }
 
         [Test]
-        public void QuestProgressSaveMapper_Quest状態とObjective進捗を復元できる()
+        public void QuestProgressSaveMapper_完了済みObjectiveをReadyToTurnInとして復元できる()
         {
             PrototypeProjectAssets projectAssets =
                 Resources.Load<PrototypeProjectAssets>("Settings/PrototypeProjectAssets");
@@ -197,7 +197,7 @@ namespace DemonKing.Tests.EditMode
             restoredService.Restore(restoredStates);
 
             Assert.That(restoredService.TryGetState(questId, out QuestProgressState restored), Is.True);
-            Assert.That(restored.Status, Is.EqualTo(sourceState.Status));
+            Assert.That(restored.Status, Is.EqualTo(QuestProgressStatus.ReadyToTurnIn));
             Assert.That(
                 restored.TryGetObjective(
                     sourceObjective.ObjectiveId,
