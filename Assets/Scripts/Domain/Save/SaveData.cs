@@ -10,14 +10,16 @@ namespace DemonKing.Domain.Save
     [Serializable]
     public sealed class GameSaveData
     {
-        public const int CurrentVersion = 2;
+        public const int CurrentVersion = 3;
 
         public int version = CurrentVersion;
         public PlayerSaveData player = new PlayerSaveData();
+        public List<QuestProgressSaveData> quests = new List<QuestProgressSaveData>();
+        public WorldSaveData world = new WorldSaveData();
     }
 
     /// <summary>
-    /// プレイヤー成長状態を永続化するDTOです。
+    /// プレイヤー成長状態と入力割当を永続化するDTOです。
     /// Unityアセット参照ではなく、変更されないDefinition IDだけを保存します。
     /// </summary>
     [Serializable]
@@ -29,6 +31,7 @@ namespace DemonKing.Domain.Save
         public List<ArtProgressSaveData> artProgress = new List<ArtProgressSaveData>();
         public List<string> unlockedSkillIds = new List<string>();
         public List<string> unlockedEvolutionNodeIds = new List<string>();
+        public AbilityLoadoutSaveData abilityLoadout = new AbilityLoadoutSaveData();
     }
 
     /// <summary>
@@ -40,5 +43,50 @@ namespace DemonKing.Domain.Save
     {
         public string artId = string.Empty;
         public long masteryPoints;
+    }
+
+    /// <summary>
+    /// プレイヤーが明示的に変更できるAbility Slot割当です。
+    /// SlotはCore Input enumへDomain Save DTOを依存させないため整数値で保持します。
+    /// </summary>
+    [Serializable]
+    public sealed class AbilityLoadoutSaveData
+    {
+        public List<AbilitySlotSaveData> slots = new List<AbilitySlotSaveData>();
+    }
+
+    [Serializable]
+    public sealed class AbilitySlotSaveData
+    {
+        public int slot;
+        public string abilityId = string.Empty;
+    }
+
+    /// <summary>
+    /// Quest単位の状態とObjective進捗です。
+    /// StatusはDomain Quest enumへのSave DTO依存を避けるため整数値で保持します。
+    /// </summary>
+    [Serializable]
+    public sealed class QuestProgressSaveData
+    {
+        public string questId = string.Empty;
+        public int status;
+        public List<ObjectiveProgressSaveData> objectives = new List<ObjectiveProgressSaveData>();
+    }
+
+    [Serializable]
+    public sealed class ObjectiveProgressSaveData
+    {
+        public string objectiveId = string.Empty;
+        public int currentCount;
+    }
+
+    /// <summary>
+    /// フィールド上の一度きり取得物など、キャラクター成長とは別のWorld状態です。
+    /// </summary>
+    [Serializable]
+    public sealed class WorldSaveData
+    {
+        public List<string> consumedProgressionGrantIds = new List<string>();
     }
 }
