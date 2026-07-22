@@ -18,7 +18,10 @@ namespace DemonKing.Gameplay.Abilities
             AbilitySlot.Action4
         };
 
-        public static IReadOnlyList<AbilitySlot> EditableSlots => EditableActionSlots;
+        private static readonly IReadOnlyList<AbilitySlot> EditableActionSlotsView =
+            Array.AsReadOnly(EditableActionSlots);
+
+        public static IReadOnlyList<AbilitySlot> EditableSlots => EditableActionSlotsView;
 
         public static bool IsEditableSlot(AbilitySlot slot)
         {
