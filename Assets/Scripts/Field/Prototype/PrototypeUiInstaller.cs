@@ -11,12 +11,15 @@ namespace DemonKing.Field.Prototype
 {
     /// <summary>
     /// プロトタイプシーンへCanvas（uGUI）ベースのUIルートを構築します。
-    /// UIはプレイヤーPrefabから独立したシーンライフサイクルで管理し、必要なRuntime Serviceを外側から注入します。
+    /// HUD系の補助UIはRuntime Compositionを維持し、主要Modal画面はPrefabから生成します。
     /// </summary>
     internal static class PrototypeUiInstaller
     {
         public static GameObject Create(
             Font uiFont,
+            GameObject pauseMenuPrefab,
+            GameObject evolutionMenuPrefab,
+            GameObject abilityLoadoutMenuPrefab,
             GamePauseController pauseController,
             DialogueLog dialogueLog,
             EvolutionSelectionController evolutionSelectionController,
@@ -32,7 +35,7 @@ namespace DemonKing.Field.Prototype
             CanvasScaler scaler = uiRoot.AddComponent<CanvasScaler>();
             scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
             scaler.referenceResolution = new Vector2(1920f, 1080f);
-            scaler.screenMatchMode = CanvasScaler.ScreenMatchMode.MatchWidthOrHeight;
+            scaler.screenMatchMode = CanvasScaler.ScaleMode.MatchWidthOrHeight;
             scaler.matchWidthOrHeight = 0.5f;
             scaler.referencePixelsPerUnit = 100f;
 
@@ -54,15 +57,55 @@ namespace DemonKing.Field.Prototype
                 questProgressionService,
                 questNotificationView);
 
+            PauseMenuLayout pauseLayout = InstantiateLayout<PauseMenuLayout>(
+                pauseMenuPrefab,
+                uiRoot.transform,
+                "Pause Menu");
+            EvolutionMenuLayout evolutionLayout = InstantiateLayout<EvolutionMenuLayout>(
+                evolutionMenuPrefab,
+                uiRoot.transform,
+                "Evolution Menu");
+            AbilityLoadoutMenuLayout loadoutLayout = InstantiateLayout<AbilityLoadoutMenuLayout>(
+                abilityLoadoutMenuPrefab,
+                uiRoot.transform,
+                "Ability Loadout Menu");
+
             PauseMenuView pauseMenuView = uiRoot.AddComponent<PauseMenuView>();
-            pauseMenuView.Initialize(uiFont, pauseController);
+            pauseMenuView.Initialize(uiFont, pauseController, pauseLayout);
 
             EvolutionMenuView evolutionMenuView = uiRoot.AddComponent<EvolutionMenuView>();
-            evolutionMenuView.Initialize(uiFont, evolutionSelectionController);
+            evolutionMenuView.Initialize(uiFont, evolutionSelectionController, evolutionLayout);
 
             AbilityLoadoutMenuView loadoutMenuView = uiRoot.AddComponent<AbilityLoadoutMenuView>();
-            loadoutMenuView.Initialize(uiFont, abilityLoadoutSelectionController);
+            loadoutMenuView.Initialize(
+                uiFont,
+                abilityLoadoutSelectionController,
+                loadoutLayout);
             return uiRoot;
+        }
+
+        private static TLayout InstantiateLayout<TLayout>(
+            GameObject prefab,
+            Transform parent,
+            string displayName)
+            where TLayout : Component
+        {
+            if (prefab == null)
+            {
+                Debug.LogError($"{displayName} Prefabが設定されていません。");
+                return null;
+            }
+
+            GameObject instance = Object.Instantiate(prefab, parent, false);
+            TLayout layout = instance.GetComponent<TLayout>();
+            if (layout == null)
+            {
+                Debug.LogError(
+                    $"{displayName} Prefabに{typeof(TLayout).Name}がありません。",
+                    instance);
+            }
+
+            return layout;
         }
     }
 }
