@@ -13,6 +13,7 @@ namespace DemonKing.Gameplay.Characters
     [RequireComponent(typeof(PlayerInputReader))]
     [RequireComponent(typeof(MoveInputReader))]
     [RequireComponent(typeof(CharacterPhysicsBody3D))]
+    [RequireComponent(typeof(CharacterPlanarMotor))]
     public class CharacterDodge : MonoBehaviour
     {
         private static readonly Vector2 DefaultDirection = Vector2.down;
@@ -37,11 +38,6 @@ namespace DemonKing.Gameplay.Characters
             playerInput = GetComponent<PlayerInputReader>();
             moveInput = GetComponent<MoveInputReader>();
             motor = GetComponent<CharacterPlanarMotor>();
-            if (motor == null)
-            {
-                motor = gameObject.AddComponent<CharacterPlanarMotor>();
-            }
-
             physicsBody = GetComponent<CharacterPhysicsBody3D>();
             physicsBody.EnsureConfigured();
         }
@@ -87,7 +83,6 @@ namespace DemonKing.Gameplay.Characters
 
             physicsBody.QueuePlanarDelta(
                 dodgeDirection * (dodgeDefinition.DodgeSpeed * Time.fixedDeltaTime));
-
             dodgeTimeRemaining -= Time.fixedDeltaTime;
             if (dodgeTimeRemaining <= 0f)
             {
@@ -100,10 +95,6 @@ namespace DemonKing.Gameplay.Characters
             dodgeDefinition = definition;
         }
 
-        /// <summary>
-        /// 指定したフィールド平面方向への回避開始を試みます。
-        /// PlayModeテストやAI制御からも利用できるよう、入力イベントとは分離しています。
-        /// </summary>
         public bool TryDodge(Vector2 direction)
         {
             if (dodgeDefinition == null || IsDodging || cooldownRemaining > 0f)
