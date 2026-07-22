@@ -1,3 +1,9 @@
+## [1.14.2](https://github.com/apaapapapapa/to-become-demon-king-2d/compare/v1.14.1...v1.14.2) (2026-07-22)
+
+### Bug Fixes
+
+* preserve canvas scaler screen match mode ([6333e2d](https://github.com/apaapapapapa/to-become-demon-king-2d/commit/6333e2dea9db89bae6f90fae813756cf4dc6b940))
+
 ## [1.14.1](https://github.com/apaapapapapa/to-become-demon-king-2d/compare/v1.14.0...v1.14.1) (2026-07-21)
 
 ### Bug Fixes
