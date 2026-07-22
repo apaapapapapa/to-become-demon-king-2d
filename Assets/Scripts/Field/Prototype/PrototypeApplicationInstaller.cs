@@ -110,6 +110,9 @@ namespace DemonKing.Field.Prototype
 
             PrototypeUiInstaller.Create(
                 projectAssets.UiFont,
+                projectAssets.PauseMenuPrefab,
+                projectAssets.EvolutionMenuPrefab,
+                projectAssets.AbilityLoadoutMenuPrefab,
                 pauseController,
                 dialogueLog,
                 evolutionSelectionController,
