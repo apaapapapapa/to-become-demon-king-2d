@@ -1,3 +1,4 @@
+using System.Linq;
 using DemonKing.Core.Input;
 using NUnit.Framework;
 using UnityEngine;
@@ -31,12 +32,12 @@ namespace DemonKing.Tests.EditMode
             InputAction primary = gameplay.FindAction(nameof(AbilitySlot.Primary), true);
             InputAction action1 = gameplay.FindAction(nameof(AbilitySlot.Action1), true);
 
-            Assert.That(primary.bindings, Has.Some.Property("path").EqualTo("<Keyboard>/j"));
-            Assert.That(primary.bindings, Has.Some.Property("path").EqualTo("<Gamepad>/buttonWest"));
-            Assert.That(action1.bindings, Has.Some.Property("path").EqualTo("<Keyboard>/k"));
-            Assert.That(action1.bindings, Has.Some.Property("path").EqualTo("<Keyboard>/1"));
-            Assert.That(action1.bindings, Has.Some.Property("path").EqualTo("<Gamepad>/buttonNorth"));
-            Assert.That(action1.bindings, Has.Some.Property("path").EqualTo("<Gamepad>/dpad/up"));
+            Assert.That(primary.bindings.Any(binding => binding.path == "<Keyboard>/j"), Is.True);
+            Assert.That(primary.bindings.Any(binding => binding.path == "<Gamepad>/buttonWest"), Is.True);
+            Assert.That(action1.bindings.Any(binding => binding.path == "<Keyboard>/k"), Is.True);
+            Assert.That(action1.bindings.Any(binding => binding.path == "<Keyboard>/1"), Is.True);
+            Assert.That(action1.bindings.Any(binding => binding.path == "<Gamepad>/buttonNorth"), Is.True);
+            Assert.That(action1.bindings.Any(binding => binding.path == "<Gamepad>/dpad/up"), Is.True);
         }
     }
 }
