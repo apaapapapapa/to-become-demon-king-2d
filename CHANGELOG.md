@@ -1,3 +1,18 @@
+## [1.15.0](https://github.com/apaapapapapa/to-become-demon-king-2d/compare/v1.14.2...v1.15.0) (2026-07-22)
+
+### Features
+
+* migrate save data to field location version ([6e086ad](https://github.com/apaapapapapa/to-become-demon-king-2d/commit/6e086adc570a9c2ae7baf759942ea62f36101722))
+* persist stable field location ([a220d54](https://github.com/apaapapapapa/to-become-demon-king-2d/commit/a220d54a9100df68f8ba9b4e6a9ebd3f26bfa206))
+
+### Bug Fixes
+
+* avoid dictionary try-add dependency ([eed6799](https://github.com/apaapapapapa/to-become-demon-king-2d/commit/eed67992dcf6a2103ad8589c8ebfd78b117b0183))
+* avoid optional runtime hash APIs ([2544898](https://github.com/apaapapapapa/to-become-demon-king-2d/commit/2544898a75351beb2b6e6ce3d25bdc45e812cf3b))
+* disambiguate field default entry point ([230dbd4](https://github.com/apaapapapapa/to-become-demon-king-2d/commit/230dbd4279735b57dedfa0fd7a4e3c5022090f7d))
+* qualify prototype field settings dependency ([89670d1](https://github.com/apaapapapapa/to-become-demon-king-2d/commit/89670d1a156c86915294ac309cc77fdea7a6b5d2))
+* use configured field entry point ([c9f5658](https://github.com/apaapapapapa/to-become-demon-king-2d/commit/c9f565847fb2d2883b181f5c60f5369444839636))
+
 ## [1.14.2](https://github.com/apaapapapapa/to-become-demon-king-2d/compare/v1.14.1...v1.14.2) (2026-07-22)
 
 ### Bug Fixes
