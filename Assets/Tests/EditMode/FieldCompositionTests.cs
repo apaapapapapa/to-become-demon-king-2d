@@ -39,17 +39,17 @@ namespace DemonKing.Tests.EditMode
                     projectAssets);
 
             FieldEntryPoint entryPoint =
-                definition.ResolveEntryPoint(definition.DefaultEntryPointId);
+                definition.ResolveEntryPoint(definition.ConfiguredDefaultEntryPointId);
 
             Assert.That(definition.FieldId, Is.Not.Empty);
             Assert.That(definition.SceneName, Is.Not.Empty);
             Assert.That(definition.TrainingScenario, Is.SameAs(projectAssets.TrainingScenario));
             Assert.That(definition.ProgressionPickups, Is.SameAs(projectAssets.ProgressionPickups));
-            Assert.That(entryPoint.EntryPointId, Is.EqualTo(definition.DefaultEntryPointId));
+            Assert.That(entryPoint.EntryPointId, Is.EqualTo(definition.ConfiguredDefaultEntryPointId));
             Assert.That(entryPoint.Position, Is.EqualTo(projectAssets.ApplicationSettings.PlayerSpawnPosition));
             Assert.That(
                 definition.DefaultLocation,
-                Is.EqualTo(new FieldLocation(definition.FieldId, definition.DefaultEntryPointId)));
+                Is.EqualTo(new FieldLocation(definition.FieldId, definition.ConfiguredDefaultEntryPointId)));
         }
 
         [Test]
@@ -68,7 +68,7 @@ namespace DemonKing.Tests.EditMode
 
             Assert.That(resolved, Is.True);
             Assert.That(definition, Is.SameAs(catalog.InitialField));
-            Assert.That(entryPoint.EntryPointId, Is.EqualTo(definition.DefaultEntryPointId));
+            Assert.That(entryPoint.EntryPointId, Is.EqualTo(definition.ConfiguredDefaultEntryPointId));
         }
 
         [Test]
