@@ -4,6 +4,7 @@ using DemonKing.Core.Application;
 using DemonKing.Core.Input;
 using DemonKing.Domain.Quests;
 using DemonKing.Domain.Save;
+using DemonKing.Field.Composition;
 using DemonKing.Field.Prototype;
 using DemonKing.Gameplay.Abilities;
 using DemonKing.Gameplay.Quests;
@@ -31,16 +32,21 @@ namespace DemonKing.Tests.EditMode
                     currentExperience = 42
                 }
             });
+            var defaultLocation = new FieldLocation(
+                PrototypeFieldDefinition.DefaultFieldId,
+                PrototypeFieldDefinition.DefaultEntryPointId);
 
             PrototypeSaveSession saveSession = PrototypeSaveSession.Load(
                 saveService,
-                projectAssets.PlayerCharacter.CharacterId);
+                projectAssets.PlayerCharacter.CharacterId,
+                defaultLocation);
 
             Assert.That(saveSession.WasLoaded, Is.True);
             Assert.That(saveSession.SavingEnabled, Is.True);
             Assert.That(saveSession.SaveData.version, Is.EqualTo(GameSaveData.CurrentVersion));
             Assert.That(saveSession.ProgressionState.Level, Is.EqualTo(3));
             Assert.That(saveSession.ProgressionState.CurrentExperience, Is.EqualTo(42));
+            Assert.That(saveSession.CurrentFieldLocation, Is.EqualTo(defaultLocation));
 
             GameObject player = new("Save Round Trip Player");
             GameObject application = new("Save Round Trip Application");
@@ -53,7 +59,8 @@ namespace DemonKing.Tests.EditMode
                     saveSession.ProgressionState,
                     loadout,
                     questService,
-                    saveSession.GrantConsumptionState);
+                    saveSession.GrantConsumptionState,
+                    saveSession.CurrentFieldLocation);
 
                 PrototypeLocalSaveCoordinator coordinator =
                     application.AddComponent<PrototypeLocalSaveCoordinator>();
@@ -67,12 +74,44 @@ namespace DemonKing.Tests.EditMode
                 Assert.That(saveService.LastSaved.player.abilityLoadout, Is.Not.Null);
                 Assert.That(saveService.LastSaved.quests, Is.Not.Null);
                 Assert.That(saveService.LastSaved.world, Is.Not.Null);
+                Assert.That(saveService.LastSaved.world.currentFieldId, Is.EqualTo(defaultLocation.FieldId));
+                Assert.That(saveService.LastSaved.world.entryPointId, Is.EqualTo(defaultLocation.EntryPointId));
             }
             finally
             {
                 Object.DestroyImmediate(application);
                 Object.DestroyImmediate(player);
             }
+        }
+
+        [Test]
+        public void SaveSession_Version4のFieldLocationをStableIdで復元する()
+        {
+            PrototypeProjectAssets projectAssets =
+                Resources.Load<PrototypeProjectAssets>("Settings/PrototypeProjectAssets");
+            var savedLocation = new FieldLocation(
+                PrototypeFieldDefinition.DefaultFieldId,
+                PrototypeFieldDefinition.DefaultEntryPointId);
+            var saveService = new MemorySaveService(new GameSaveData
+            {
+                version = GameSaveData.CurrentVersion,
+                player = new PlayerSaveData
+                {
+                    characterDefinitionId = projectAssets.PlayerCharacter.CharacterId
+                },
+                world = new WorldSaveData
+                {
+                    currentFieldId = savedLocation.FieldId,
+                    entryPointId = savedLocation.EntryPointId
+                }
+            });
+
+            PrototypeSaveSession saveSession = PrototypeSaveSession.Load(
+                saveService,
+                projectAssets.PlayerCharacter.CharacterId,
+                new FieldLocation("field.fallback", "entry.fallback"));
+
+            Assert.That(saveSession.CurrentFieldLocation, Is.EqualTo(savedLocation));
         }
 
         [Test]
@@ -183,7 +222,8 @@ namespace DemonKing.Tests.EditMode
                     saveSession.ProgressionState,
                     loadout,
                     new QuestProgressionService(projectAssets.QuestDefinitions),
-                    saveSession.GrantConsumptionState);
+                    saveSession.GrantConsumptionState,
+                    saveSession.CurrentFieldLocation);
                 PrototypeLocalSaveCoordinator coordinator =
                     application.AddComponent<PrototypeLocalSaveCoordinator>();
                 coordinator.Initialize(
