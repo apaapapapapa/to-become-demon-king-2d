@@ -10,7 +10,7 @@ namespace DemonKing.Domain.Save
     [Serializable]
     public sealed class GameSaveData
     {
-        public const int CurrentVersion = 3;
+        public const int CurrentVersion = 4;
 
         public int version = CurrentVersion;
         public PlayerSaveData player = new PlayerSaveData();
@@ -82,11 +82,14 @@ namespace DemonKing.Domain.Save
     }
 
     /// <summary>
-    /// フィールド上の一度きり取得物など、キャラクター成長とは別のWorld状態です。
+    /// Field位置と、フィールド上の一度きり取得物などCharacter成長とは別のWorld状態です。
+    /// Scene名やBuild IndexではなくStable Field / Entry Point IDを保存します。
     /// </summary>
     [Serializable]
     public sealed class WorldSaveData
     {
+        public string currentFieldId = string.Empty;
+        public string entryPointId = string.Empty;
         public List<string> consumedProgressionGrantIds = new List<string>();
     }
 }

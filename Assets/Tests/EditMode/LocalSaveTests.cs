@@ -48,11 +48,13 @@ namespace DemonKing.Tests.EditMode
             Assert.That(migrated.player.abilityLoadout.slots, Is.Empty);
             Assert.That(migrated.quests, Is.Not.Null.And.Empty);
             Assert.That(migrated.world, Is.Not.Null);
+            Assert.That(migrated.world.currentFieldId, Is.Empty);
+            Assert.That(migrated.world.entryPointId, Is.Empty);
             Assert.That(migrated.world.consumedProgressionGrantIds, Is.Empty);
         }
 
         [Test]
-        public void GameSaveData_Version2をVersion3へ移行する()
+        public void GameSaveData_Version2をCurrentVersionへ移行する()
         {
             var saveData = new GameSaveData
             {
@@ -73,7 +75,38 @@ namespace DemonKing.Tests.EditMode
             Assert.That(migrated.player.abilityLoadout.slots, Is.Empty);
             Assert.That(migrated.quests, Is.Not.Null.And.Empty);
             Assert.That(migrated.world, Is.Not.Null);
+            Assert.That(migrated.world.currentFieldId, Is.Empty);
+            Assert.That(migrated.world.entryPointId, Is.Empty);
             Assert.That(migrated.world.consumedProgressionGrantIds, Is.Empty);
+        }
+
+        [Test]
+        public void GameSaveData_Version3をVersion4へ移行してWorld状態を維持する()
+        {
+            var saveData = new GameSaveData
+            {
+                version = 3,
+                player = new PlayerSaveData
+                {
+                    characterDefinitionId = "character.player.slime"
+                },
+                world = new WorldSaveData
+                {
+                    consumedProgressionGrantIds = new List<string>
+                    {
+                        "grant.field.arcane_grimoire"
+                    }
+                }
+            };
+
+            GameSaveData migrated = GameSaveDataMigrator.MigrateToCurrent(saveData);
+
+            Assert.That(migrated.version, Is.EqualTo(4));
+            Assert.That(migrated.world.currentFieldId, Is.Empty);
+            Assert.That(migrated.world.entryPointId, Is.Empty);
+            Assert.That(
+                migrated.world.consumedProgressionGrantIds,
+                Is.EqualTo(new[] { "grant.field.arcane_grimoire" }));
         }
 
         [Test]
@@ -117,6 +150,8 @@ namespace DemonKing.Tests.EditMode
                     },
                     world = new WorldSaveData
                     {
+                        currentFieldId = PrototypeFieldDefinition.DefaultFieldId,
+                        entryPointId = PrototypeFieldDefinition.DefaultEntryPointId,
                         consumedProgressionGrantIds = new List<string>
                         {
                             "grant.field.arcane_grimoire"
@@ -133,6 +168,12 @@ namespace DemonKing.Tests.EditMode
                 Assert.That(restored.player.currentExperience, Is.EqualTo(42));
                 Assert.That(restored.player.abilityLoadout.slots.Count, Is.EqualTo(1));
                 Assert.That(restored.quests.Count, Is.EqualTo(1));
+                Assert.That(
+                    restored.world.currentFieldId,
+                    Is.EqualTo(PrototypeFieldDefinition.DefaultFieldId));
+                Assert.That(
+                    restored.world.entryPointId,
+                    Is.EqualTo(PrototypeFieldDefinition.DefaultEntryPointId));
                 Assert.That(
                     restored.world.consumedProgressionGrantIds,
                     Is.EqualTo(new[] { "grant.field.arcane_grimoire" }));

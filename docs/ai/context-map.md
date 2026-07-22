@@ -17,6 +17,17 @@ AIエージェントが変更対象に必要な仕様・コード・テストへ
 - **Tests:** `Assets/Tests/PlayMode/`
 - **Related:** Ability, Interaction, Pause, Dodge, Evolution
 
+## Field / World Composition
+
+- **Design:** `docs/design/technical-design.md#起動とcomposition`, `docs/design/technical-design.md#scene--tilemapと3d-physics`
+- **Core Boundary:** `Assets/Scripts/Field/Composition/FieldComposition.cs`
+- **Definition / Catalog:** `Assets/Scripts/Field/Prototype/PrototypeFieldDefinition.cs`, `Assets/Scripts/Field/Prototype/Configuration/PrototypeApplicationSettings.cs`
+- **Runtime Composition:** `Assets/Scripts/Field/Prototype/PrototypeFieldComposition.cs`, `Assets/Scripts/Field/Prototype/PrototypeWorldBuilder.cs`
+- **Scene Entry:** `Assets/Scripts/FieldBootstrap.cs`, `Assets/Scripts/Field/Prototype/PrototypeApplicationInstaller.cs`
+- **Session / Save:** `Assets/Scripts/Field/Prototype/PrototypeGameSession.cs`, `Assets/Scripts/Field/Prototype/PrototypeSaveSession.cs`, `Assets/Scripts/Domain/Save/SaveData.cs`
+- **Tests:** `Assets/Tests/EditMode/FieldCompositionTests.cs`, `Assets/Tests/EditMode/GameSessionSaveEditModeTests.cs`, `Assets/Tests/EditMode/LocalSaveTests.cs`
+- **Related:** Field Physics / Movement, Save, Content / Encyclopedia, Spawning, Quest
+
 ## Field Physics / Movement
 
 - **Spec:** `docs/specifications/movement.md`
@@ -118,8 +129,8 @@ AIエージェントが変更対象に必要な仕様・コード・テストへ
 - **Design:** `docs/design/technical-design.md#local-save`
 - **Code:** `Assets/Scripts/Domain/Save/`, `Assets/Scripts/Core/Application/SaveBoundary.cs`, `Assets/Scripts/Core/Application/JsonFileSaveService.cs`, `Assets/Scripts/Gameplay/Abilities/AbilityLoadoutSaveMapper.cs`, `Assets/Scripts/Gameplay/Quests/QuestProgressSaveMapper.cs`
 - **Integration:** `Assets/Scripts/Field/Prototype/PrototypeGameSession.cs`, `Assets/Scripts/Field/Prototype/PrototypeSaveSession.cs`, `Assets/Scripts/Field/Prototype/PrototypeLocalSaveCoordinator.cs`, `Assets/Scripts/Field/Prototype/PrototypeApplicationInstaller.cs`
-- **Tests:** `Assets/Tests/EditMode/LocalSaveTests.cs`, `Assets/Tests/EditMode/GameSessionSaveEditModeTests.cs`
-- **Related:** Progression, Art, Skill, Evolution, Quest, Ability, Content / Encyclopedia
+- **Tests:** `Assets/Tests/EditMode/LocalSaveTests.cs`, `Assets/Tests/EditMode/GameSessionSaveEditModeTests.cs`, `Assets/Tests/EditMode/FieldCompositionTests.cs`
+- **Related:** Field / World Composition, Progression, Art, Skill, Evolution, Quest, Ability, Content / Encyclopedia
 
 ## Modal UI / Pause
 
