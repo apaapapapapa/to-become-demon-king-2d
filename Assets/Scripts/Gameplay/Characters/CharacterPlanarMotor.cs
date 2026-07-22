@@ -8,10 +8,10 @@ namespace DemonKing.Gameplay.Characters
     /// <summary>
     /// 3D Physics上でX/Yフィールド平面の通常移動だけを担当します。
     /// ZはCharacterElevationMotorが担当し、最終的な3軸移動の合成はCharacterPhysicsBody3Dへ委譲します。
+    /// CharacterPhysicsBody3DはPlayer Runtime Compositionで注入可能なため、Configure時にも依存を再解決します。
     /// </summary>
     [DisallowMultipleComponent]
     [RequireComponent(typeof(MoveInputReader))]
-    [RequireComponent(typeof(CharacterPhysicsBody3D))]
     public sealed class CharacterPlanarMotor : MonoBehaviour
     {
         private const float DefaultMoveSpeed = 3.4f;
@@ -31,9 +31,7 @@ namespace DemonKing.Gameplay.Characters
 
         private void Awake()
         {
-            inputReader = GetComponent<MoveInputReader>();
-            physicsBody = GetComponent<CharacterPhysicsBody3D>();
-            physicsBody.EnsureConfigured();
+            ResolveDependencies();
         }
 
         private void Update()
@@ -64,6 +62,8 @@ namespace DemonKing.Gameplay.Characters
         public void Configure(CharacterStatsDefinition definition)
         {
             statsDefinition = definition;
+            ResolveDependencies();
+            physicsBody?.EnsureConfigured();
         }
 
         public void SetMovementLocked(bool locked)
@@ -80,6 +80,12 @@ namespace DemonKing.Gameplay.Characters
         public void DisableBounds()
         {
             clampToBounds = false;
+        }
+
+        private void ResolveDependencies()
+        {
+            inputReader = GetComponent<MoveInputReader>();
+            physicsBody = GetComponent<CharacterPhysicsBody3D>();
         }
     }
 }
