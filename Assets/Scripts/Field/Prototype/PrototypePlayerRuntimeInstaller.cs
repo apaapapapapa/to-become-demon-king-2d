@@ -21,8 +21,8 @@ namespace DemonKing.Field.Prototype
 
     /// <summary>
     /// Player Prefab生成後のFeature初期化を責務単位で調停します。
-    /// Prefabが所有すべきComponentは不足時に補完せず構成エラーとし、
-    /// Runtime Stateへ依存するControllerだけを明示的に追加します。
+    /// Prefabで調整値を持つAuthoring Componentは不足時に補完せず構成エラーとし、
+    /// Definition / Runtime Stateから構成できるStateful Componentだけを明示的に追加します。
     /// </summary>
     internal sealed class PrototypePlayerRuntimeInstaller
     {
@@ -106,7 +106,7 @@ namespace DemonKing.Field.Prototype
             CharacterProgressionState progressionState)
         {
             CharacterPhysicsBody3D physicsBody =
-                PlayerRuntimeComponentAccess.RequirePrefabComponent<CharacterPhysicsBody3D>(root);
+                PlayerRuntimeComponentAccess.GetOrAddRuntimeComponent<CharacterPhysicsBody3D>(root);
             physicsBody.EnsureConfigured();
 
             CharacterPlanarMotor motor =
@@ -114,8 +114,8 @@ namespace DemonKing.Field.Prototype
             motor.Configure(characterDefinition.StatsDefinition);
             motor.DisableBounds();
 
-            PlayerRuntimeComponentAccess.RequirePrefabComponent<CharacterElevationMotor>(root);
-            PlayerRuntimeComponentAccess.RequirePrefabComponent<PlayerElevationInput>(root);
+            PlayerRuntimeComponentAccess.GetOrAddRuntimeComponent<CharacterElevationMotor>(root);
+            PlayerRuntimeComponentAccess.GetOrAddRuntimeComponent<PlayerElevationInput>(root);
 
             CharacterDodge dodge =
                 PlayerRuntimeComponentAccess.GetOrAddRuntimeComponent<CharacterDodge>(root);
@@ -175,10 +175,10 @@ namespace DemonKing.Field.Prototype
         {
             PlayerInputReader inputReader =
                 PlayerRuntimeComponentAccess.RequirePrefabComponent<PlayerInputReader>(root);
-            AbilityLoadoutController loadoutController =
-                PlayerRuntimeComponentAccess.RequirePrefabComponent<AbilityLoadoutController>(root);
             PlayerRuntimeComponentAccess.RequirePrefabComponent<PlayerAbilityInput>(root);
 
+            AbilityLoadoutController loadoutController =
+                PlayerRuntimeComponentAccess.GetOrAddRuntimeComponent<AbilityLoadoutController>(root);
             loadoutController.Initialize(characterDefinition, progressionState);
 
             AbilityLoadoutSelectionController selectionController =
@@ -199,7 +199,7 @@ namespace DemonKing.Field.Prototype
             CharacterProgressionState progressionState)
         {
             PlayerRuntimeComponentAccess.RequirePrefabComponent<PrototypeSlimeSpriteAnimator>(root);
-            PlayerRuntimeComponentAccess.RequirePrefabComponent<CharacterElevationPresenter>(root);
+            PlayerRuntimeComponentAccess.GetOrAddRuntimeComponent<CharacterElevationPresenter>(root);
 
             EvolutionProgressionController evolutionController =
                 PlayerRuntimeComponentAccess.GetOrAddRuntimeComponent<EvolutionProgressionController>(root);
