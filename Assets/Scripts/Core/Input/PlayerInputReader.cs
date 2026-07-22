@@ -24,8 +24,8 @@ namespace DemonKing.Core.Input
         private InputActionMap uiActionMap;
 
         private InputAction moveAction;
-        private InputAction attackAction;
-        private InputAction artAction;
+        private InputAction primaryAction;
+        private InputAction action1Action;
         private InputAction action2Action;
         private InputAction action3Action;
         private InputAction action4Action;
@@ -46,13 +46,6 @@ namespace DemonKing.Core.Input
         private bool componentEnabled;
 
         public event Action<AbilitySlot> AbilitySlotPressed;
-
-        [Obsolete("Use AbilitySlotPressed instead.")]
-        public event Action AttackPressed;
-
-        [Obsolete("Use AbilitySlotPressed instead.")]
-        public event Action ArtPressed;
-
         public event Action LoadoutPressed;
         public event Action InteractPressed;
         public event Action DodgePressed;
@@ -168,7 +161,6 @@ namespace DemonKing.Core.Input
                 return;
             }
 
-            // アセット本体のEnable状態を他の利用者と共有しないよう、プレイヤー個体専用の複製を使用します。
             runtimeInputActions = Instantiate(source);
             gameplayActionMap = runtimeInputActions.FindActionMap(gameplayActionMapName, throwIfNotFound: false);
             uiActionMap = runtimeInputActions.FindActionMap(uiActionMapName, throwIfNotFound: false);
@@ -184,11 +176,11 @@ namespace DemonKing.Core.Input
             }
 
             moveAction = FindAction(gameplayActionMap, "Move");
-            attackAction = FindAction(gameplayActionMap, "Attack");
-            artAction = FindAction(gameplayActionMap, "Art");
-            action2Action = FindAction(gameplayActionMap, "Action2");
-            action3Action = FindAction(gameplayActionMap, "Action3");
-            action4Action = FindAction(gameplayActionMap, "Action4");
+            primaryAction = FindAction(gameplayActionMap, nameof(AbilitySlot.Primary));
+            action1Action = FindAction(gameplayActionMap, nameof(AbilitySlot.Action1));
+            action2Action = FindAction(gameplayActionMap, nameof(AbilitySlot.Action2));
+            action3Action = FindAction(gameplayActionMap, nameof(AbilitySlot.Action3));
+            action4Action = FindAction(gameplayActionMap, nameof(AbilitySlot.Action4));
             loadoutAction = FindAction(gameplayActionMap, "Loadout");
             interactAction = FindAction(gameplayActionMap, "Interact");
             dodgeAction = FindAction(gameplayActionMap, "Dodge");
@@ -255,8 +247,8 @@ namespace DemonKing.Core.Input
 
         private void SubscribeCallbacks()
         {
-            if (attackAction != null) attackAction.performed += OnAttackPerformed;
-            if (artAction != null) artAction.performed += OnArtPerformed;
+            if (primaryAction != null) primaryAction.performed += OnPrimaryPerformed;
+            if (action1Action != null) action1Action.performed += OnAction1Performed;
             if (action2Action != null) action2Action.performed += OnAction2Performed;
             if (action3Action != null) action3Action.performed += OnAction3Performed;
             if (action4Action != null) action4Action.performed += OnAction4Performed;
@@ -274,8 +266,8 @@ namespace DemonKing.Core.Input
 
         private void UnsubscribeCallbacks()
         {
-            if (attackAction != null) attackAction.performed -= OnAttackPerformed;
-            if (artAction != null) artAction.performed -= OnArtPerformed;
+            if (primaryAction != null) primaryAction.performed -= OnPrimaryPerformed;
+            if (action1Action != null) action1Action.performed -= OnAction1Performed;
             if (action2Action != null) action2Action.performed -= OnAction2Performed;
             if (action3Action != null) action3Action.performed -= OnAction3Performed;
             if (action4Action != null) action4Action.performed -= OnAction4Performed;
@@ -291,21 +283,11 @@ namespace DemonKing.Core.Input
             if (uiPauseAction != null) uiPauseAction.performed -= OnPausePerformed;
         }
 
-        private void OnAttackPerformed(InputAction.CallbackContext context)
-        {
+        private void OnPrimaryPerformed(InputAction.CallbackContext context) =>
             AbilitySlotPressed?.Invoke(AbilitySlot.Primary);
-#pragma warning disable CS0618
-            AttackPressed?.Invoke();
-#pragma warning restore CS0618
-        }
 
-        private void OnArtPerformed(InputAction.CallbackContext context)
-        {
+        private void OnAction1Performed(InputAction.CallbackContext context) =>
             AbilitySlotPressed?.Invoke(AbilitySlot.Action1);
-#pragma warning disable CS0618
-            ArtPressed?.Invoke();
-#pragma warning restore CS0618
-        }
 
         private void OnAction2Performed(InputAction.CallbackContext context) =>
             AbilitySlotPressed?.Invoke(AbilitySlot.Action2);
