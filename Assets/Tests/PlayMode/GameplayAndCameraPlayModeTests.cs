@@ -13,7 +13,6 @@ using DemonKing.Presentation.UI;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.TestTools;
-using UnityEngine.UI;
 using Object = UnityEngine.Object;
 
 namespace DemonKing.Tests.PlayMode
@@ -208,10 +207,7 @@ namespace DemonKing.Tests.PlayMode
             Assert.That(
                 selectionController.SelectedEntry.Value.Evaluation.Status,
                 Is.EqualTo(EvolutionEvaluationStatus.Available));
-            Transform menuRoot = uiRoot.transform.Find("Evolution Menu");
-            Assert.That(menuRoot, Is.Not.Null);
-            Text choices = menuRoot.Find("Evolution Panel/Choices").GetComponent<Text>();
-            Assert.That(choices.text, Does.Contain("捕食スライム"));
+            Assert.That(layout.ChoicesText.text, Does.Contain("捕食スライム"));
 
             Assert.That(selectionController.ConfirmSelection(), Is.True);
             Assert.That(Time.timeScale, Is.EqualTo(1f));
