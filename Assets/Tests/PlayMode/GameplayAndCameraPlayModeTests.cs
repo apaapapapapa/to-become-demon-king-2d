@@ -82,7 +82,6 @@ namespace DemonKing.Tests.PlayMode
             Assert.That(
                 spawnedEffect.GetComponentsInChildren<SpriteRenderer>().Length,
                 Is.GreaterThanOrEqualTo(13));
-
             yield return new WaitForSecondsRealtime(0.65f);
 
             Assert.That(spawnedEffect == null, Is.True);
@@ -190,11 +189,19 @@ namespace DemonKing.Tests.PlayMode
 
             GameObject uiRoot = new("Evolution UI Test");
             uiRoot.AddComponent<Canvas>();
+            GameObject layoutObject = Object.Instantiate(
+                projectAssets.EvolutionMenuPrefab,
+                uiRoot.transform,
+                false);
+            EvolutionMenuLayout layout = layoutObject.GetComponent<EvolutionMenuLayout>();
             EvolutionMenuView menuView = uiRoot.AddComponent<EvolutionMenuView>();
             menuView.Initialize(
                 Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf"),
-                selectionController);
+                selectionController,
+                layout);
 
+            Assert.That(layout, Is.Not.Null);
+            Assert.That(layout.IsConfigured, Is.True);
             Assert.That(selectionController.OpenMenu(), Is.True);
             Assert.That(Time.timeScale, Is.Zero);
             Assert.That(inputReader.CurrentContext, Is.EqualTo(PlayerInputContext.UI));
@@ -220,6 +227,29 @@ namespace DemonKing.Tests.PlayMode
             Object.Destroy(uiRoot);
             Object.Destroy(application);
             Object.Destroy(player);
+            yield return null;
+        }
+
+        [UnityTest]
+        public IEnumerator ModalUiPrefabs_主要画面がPrefabLayout参照を保持する()
+        {
+            PrototypeProjectAssets projectAssets =
+                Resources.Load<PrototypeProjectAssets>("Settings/PrototypeProjectAssets");
+            GameObject root = new("Modal Prefab Test", typeof(RectTransform), typeof(Canvas));
+
+            GameObject pause = Object.Instantiate(projectAssets.PauseMenuPrefab, root.transform, false);
+            GameObject evolution = Object.Instantiate(projectAssets.EvolutionMenuPrefab, root.transform, false);
+            GameObject loadout = Object.Instantiate(projectAssets.AbilityLoadoutMenuPrefab, root.transform, false);
+
+            Assert.That(pause.GetComponent<PauseMenuLayout>().IsConfigured, Is.True);
+            Assert.That(evolution.GetComponent<EvolutionMenuLayout>().IsConfigured, Is.True);
+            Assert.That(loadout.GetComponent<AbilityLoadoutMenuLayout>().IsConfigured, Is.True);
+
+            RectTransform pauseRect = pause.GetComponent<RectTransform>();
+            Assert.That(pauseRect.anchorMin, Is.EqualTo(Vector2.zero));
+            Assert.That(pauseRect.anchorMax, Is.EqualTo(Vector2.one));
+
+            Object.Destroy(root);
             yield return null;
         }
 
