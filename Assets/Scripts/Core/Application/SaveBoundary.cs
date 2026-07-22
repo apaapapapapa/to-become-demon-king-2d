@@ -134,6 +134,15 @@ namespace DemonKing.Core.Application
                 saveData.version = 3;
             }
 
+            if (saveData.version == 3)
+            {
+                // Version 3にはScene間で復元するStable Field / Entry Point IDが存在しません。
+                saveData.world ??= new WorldSaveData();
+                saveData.world.currentFieldId = string.Empty;
+                saveData.world.entryPointId = string.Empty;
+                saveData.version = 4;
+            }
+
             NormalizeCollections(saveData);
             return saveData;
         }
@@ -157,6 +166,8 @@ namespace DemonKing.Core.Application
             }
 
             saveData.world ??= new WorldSaveData();
+            saveData.world.currentFieldId ??= string.Empty;
+            saveData.world.entryPointId ??= string.Empty;
             saveData.world.consumedProgressionGrantIds ??= new List<string>();
         }
     }
