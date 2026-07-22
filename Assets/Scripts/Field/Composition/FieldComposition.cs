@@ -37,7 +37,11 @@ namespace DemonKing.Field.Composition
 
         public override int GetHashCode()
         {
-            return HashCode.Combine(EntryPointId, Position);
+            unchecked
+            {
+                return ((EntryPointId == null ? 0 : EntryPointId.GetHashCode()) * 397) ^
+                       Position.GetHashCode();
+            }
         }
     }
 
@@ -82,7 +86,11 @@ namespace DemonKing.Field.Composition
 
         public override int GetHashCode()
         {
-            return HashCode.Combine(FieldId, EntryPointId);
+            unchecked
+            {
+                return ((FieldId == null ? 0 : FieldId.GetHashCode()) * 397) ^
+                       (EntryPointId == null ? 0 : EntryPointId.GetHashCode());
+            }
         }
 
         public override string ToString()
@@ -129,7 +137,7 @@ namespace DemonKing.Field.Composition
 
         public void Install(TContext context)
         {
-            if (context is null)
+            if (ReferenceEquals(context, null))
             {
                 throw new ArgumentNullException(nameof(context));
             }
