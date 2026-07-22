@@ -1,4 +1,5 @@
 using System;
+using DemonKing.Field.Prototype;
 using UnityEngine;
 
 namespace DemonKing.Field.Prototype.Configuration
