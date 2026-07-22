@@ -66,12 +66,14 @@ namespace DemonKing.Field.Prototype
             this.entryPoints = new Dictionary<string, FieldEntryPoint>(StringComparer.Ordinal);
             foreach (FieldEntryPoint entryPoint in entryPoints)
             {
-                if (!this.entryPoints.TryAdd(entryPoint.EntryPointId, entryPoint))
+                if (this.entryPoints.ContainsKey(entryPoint.EntryPointId))
                 {
                     throw new ArgumentException(
                         $"Entry Point IDが重複しています: {entryPoint.EntryPointId}",
                         nameof(entryPoints));
                 }
+
+                this.entryPoints.Add(entryPoint.EntryPointId, entryPoint);
             }
 
             if (!this.entryPoints.ContainsKey(defaultEntryPointId))
@@ -179,12 +181,14 @@ namespace DemonKing.Field.Prototype
                     throw new ArgumentException("Field Definitionにnullを含めることはできません。", nameof(definitions));
                 }
 
-                if (!this.definitions.TryAdd(definition.FieldId, definition))
+                if (this.definitions.ContainsKey(definition.FieldId))
                 {
                     throw new ArgumentException(
                         $"Field IDが重複しています: {definition.FieldId}",
                         nameof(definitions));
                 }
+
+                this.definitions.Add(definition.FieldId, definition);
             }
 
             if (!this.definitions.TryGetValue(initialFieldId, out PrototypeFieldDefinition initialField))
