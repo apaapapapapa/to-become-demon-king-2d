@@ -51,7 +51,7 @@ namespace DemonKing.Field.Prototype
                 playerSpawnPosition,
                 playableTileRadius,
                 projectAssets);
-            entryPoint = fieldDefinition.ResolveEntryPoint(fieldDefinition.DefaultEntryPointId);
+            entryPoint = fieldDefinition.ResolveEntryPoint(fieldDefinition.ConfiguredDefaultEntryPointId);
             this.dialogueLog = dialogueLog ?? throw new ArgumentNullException(nameof(dialogueLog));
             this.progressionState = progressionState;
             this.grantConsumptionState = grantConsumptionState ??
