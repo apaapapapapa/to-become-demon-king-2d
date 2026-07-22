@@ -60,7 +60,7 @@ namespace DemonKing.Field.Prototype
             FieldId = fieldId;
             SceneName = sceneName;
             DisplayName = displayName;
-            DefaultEntryPointId = defaultEntryPointId;
+            ConfiguredDefaultEntryPointId = defaultEntryPointId;
             PlayableTileRadius = Mathf.Max(4, playableTileRadius);
 
             this.entryPoints = new Dictionary<string, FieldEntryPoint>(StringComparer.Ordinal);
@@ -87,20 +87,20 @@ namespace DemonKing.Field.Prototype
         public string FieldId { get; }
         public string SceneName { get; }
         public string DisplayName { get; }
-        public string DefaultEntryPointId { get; }
+        public string ConfiguredDefaultEntryPointId { get; }
         public int PlayableTileRadius { get; }
         public PrototypeProjectAssets ProjectAssets { get; }
         public TrainingScenarioDefinition TrainingScenario => ProjectAssets.TrainingScenario;
         public IReadOnlyList<PrototypeProgressionPickupDefinition> ProgressionPickups =>
             ProjectAssets.ProgressionPickups;
         public CharacterDefinition PlayerCharacter => ProjectAssets.PlayerCharacter;
-        public FieldLocation DefaultLocation => new(FieldId, DefaultEntryPointId);
+        public FieldLocation DefaultLocation => new(FieldId, ConfiguredDefaultEntryPointId);
         public IReadOnlyCollection<FieldEntryPoint> EntryPoints => entryPoints.Values;
 
         public bool TryResolveEntryPoint(string entryPointId, out FieldEntryPoint entryPoint)
         {
             string resolvedId = string.IsNullOrWhiteSpace(entryPointId)
-                ? DefaultEntryPointId
+                ? ConfiguredDefaultEntryPointId
                 : entryPointId;
             return entryPoints.TryGetValue(resolvedId, out entryPoint);
         }
