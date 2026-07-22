@@ -37,6 +37,10 @@ namespace DemonKing.EditorTools
         private const string PlayerDodgePath = "Assets/Resources/Settings/Gameplay/PlayerDodge.asset";
         private const string PlayerExperienceTablePath = "Assets/Resources/Settings/Gameplay/PlayerExperienceTable.asset";
 
+        private const string PauseMenuPrefabPath = "Assets/Resources/Prefabs/UI/PauseMenu.prefab";
+        private const string EvolutionMenuPrefabPath = "Assets/Resources/Prefabs/UI/EvolutionMenu.prefab";
+        private const string AbilityLoadoutMenuPrefabPath = "Assets/Resources/Prefabs/UI/AbilityLoadoutMenu.prefab";
+
         private const string CottagePrefabPath = "Assets/Resources/Prefabs/World/PrototypeCottage.prefab";
         private const string TreePrefabPath = "Assets/Resources/Prefabs/World/PrototypeTree.prefab";
         private const string LamppostPrefabPath = "Assets/Resources/Prefabs/World/PrototypeLamppost.prefab";
@@ -128,6 +132,18 @@ namespace DemonKing.EditorTools
                 serializedObject,
                 "uiFont",
                 Load<Font>(JapaneseUiFontInstaller.FontAssetPath, logIfMissing: forceLog));
+            changed |= AssignIfDifferent(
+                serializedObject,
+                "pauseMenuPrefab",
+                Load<GameObject>(PauseMenuPrefabPath));
+            changed |= AssignIfDifferent(
+                serializedObject,
+                "evolutionMenuPrefab",
+                Load<GameObject>(EvolutionMenuPrefabPath));
+            changed |= AssignIfDifferent(
+                serializedObject,
+                "abilityLoadoutMenuPrefab",
+                Load<GameObject>(AbilityLoadoutMenuPrefabPath));
             changed |= AssignIfDifferent(serializedObject, "cottagePrefab", Load<GameObject>(CottagePrefabPath));
             changed |= AssignIfDifferent(serializedObject, "treePrefab", Load<GameObject>(TreePrefabPath));
             changed |= AssignIfDifferent(serializedObject, "lamppostPrefab", Load<GameObject>(LamppostPrefabPath));
