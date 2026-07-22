@@ -6,11 +6,11 @@ namespace DemonKing.Gameplay.Abilities
     /// <summary>
     /// プレイヤーの論理Ability Slot入力をRuntime LoadoutでAbility IDへ解決し、AbilityControllerへ委譲します。
     /// 効果処理、クールダウン判定、個別Ability IDは保持しません。
+    /// AbilityLoadoutControllerはPlayer Runtime Compositionで注入されるため、利用時に依存を再解決します。
     /// </summary>
     [DisallowMultipleComponent]
     [RequireComponent(typeof(PlayerInputReader))]
     [RequireComponent(typeof(AbilityController))]
-    [RequireComponent(typeof(AbilityLoadoutController))]
     public sealed class PlayerAbilityInput : MonoBehaviour
     {
         private PlayerInputReader inputReader;
