@@ -47,8 +47,8 @@ namespace DemonKing.Gameplay.Abilities
     }
 
     /// <summary>
-    /// Character DefinitionとRuntime Progression StateからLoadout選択候補を構築します。
-    /// 取得済みArtの現在Rankで解放済みのAbilityと、取得済み受動Skillだけを公開します。
+    /// Eligibilityが返した現在割当可能なAbilityと取得済み受動Skillを、
+    /// Loadout画面向け表示要素へ変換します。
     /// </summary>
     public static class AbilityLoadoutMenuProjection
     {
@@ -64,16 +64,6 @@ namespace DemonKing.Gameplay.Abilities
             if (progressionState == null)
             {
                 throw new ArgumentNullException(nameof(progressionState));
-            }
-
-            if (!string.Equals(
-                    characterDefinition.CharacterId,
-                    progressionState.CharacterDefinitionId,
-                    StringComparison.Ordinal))
-            {
-                throw new ArgumentException(
-                    "CharacterDefinitionとProgression StateのCharacter IDが一致していません。",
-                    nameof(progressionState));
             }
 
             var entries = new List<AbilityLoadoutMenuEntry>();
@@ -126,35 +116,18 @@ namespace DemonKing.Gameplay.Abilities
             CharacterDefinition characterDefinition,
             CharacterProgressionState progressionState)
         {
-            foreach (ArtDefinition artDefinition in characterDefinition.ArtDefinitions)
+            foreach (AbilityLoadoutEligibility.Entry eligible in
+                     AbilityLoadoutEligibility.GetAssignableAbilities(
+                         characterDefinition,
+                         progressionState))
             {
-                if (artDefinition == null ||
-                    !progressionState.TryGetArtProgress(
-                        artDefinition.ArtId,
-                        out ArtProgressState progressState))
-                {
-                    continue;
-                }
-
-                int currentRank = artDefinition.CreateMasteryTable()
-                    .GetRankForTotalMasteryPoints(progressState.MasteryPoints);
-
-                foreach (ArtAbilityUnlockEntry unlock in artDefinition.AbilityUnlocks)
-                {
-                    AbilityDefinition abilityDefinition = unlock?.AbilityDefinition;
-                    if (abilityDefinition == null || unlock.RequiredRank > currentRank)
-                    {
-                        continue;
-                    }
-
-                    entries.Add(new AbilityLoadoutMenuEntry(
-                        AbilityLoadoutMenuEntryKind.ArtAbility,
-                        artDefinition.ArtId,
-                        artDefinition.DisplayName,
-                        abilityDefinition.DisplayName,
-                        abilityDefinition.Description,
-                        abilityDefinition.AbilityId));
-                }
+                entries.Add(new AbilityLoadoutMenuEntry(
+                    AbilityLoadoutMenuEntryKind.ArtAbility,
+                    eligible.SourceArt.ArtId,
+                    eligible.SourceArt.DisplayName,
+                    eligible.Ability.DisplayName,
+                    eligible.Ability.Description,
+                    eligible.Ability.AbilityId));
             }
         }
 

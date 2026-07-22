@@ -25,6 +25,9 @@ MonoBehaviour:
     position: {x: -3, y: 1.4, z: 0}
     color: {r: 0.3, g: 0.78, b: 1, a: 1}
   uiFont: {fileID: 12800000, guid: 0447c22bc17a1ab4888b6b3fa6f24fd3, type: 3}
+  pauseMenuPrefab: {fileID: 100000, guid: d10f85e124b94339b786222a95f2f397, type: 3}
+  evolutionMenuPrefab: {fileID: 100000, guid: e25acb58d1f44b4f88197aa18a428e0e, type: 3}
+  abilityLoadoutMenuPrefab: {fileID: 100000, guid: f36a13ab8843430c882c0013dc326923, type: 3}
   cottagePrefab: {fileID: 100000, guid: 68dcb65a10db454ba871daae7788796f, type: 3}
   treePrefab: {fileID: 100000, guid: 6177d65eef744c4fa7e36b1f71ad9598, type: 3}
   lamppostPrefab: {fileID: 100000, guid: ca02247008ee4b57b850ecf8b05d2034, type: 3}

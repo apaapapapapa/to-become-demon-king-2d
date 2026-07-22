@@ -34,6 +34,9 @@ namespace DemonKing.Field.Prototype
 
         [Header("UI")]
         [SerializeField] private Font uiFont;
+        [SerializeField] private GameObject pauseMenuPrefab;
+        [SerializeField] private GameObject evolutionMenuPrefab;
+        [SerializeField] private GameObject abilityLoadoutMenuPrefab;
 
         [Header("World Prefabs")]
         [SerializeField] private GameObject cottagePrefab;
@@ -55,8 +58,6 @@ namespace DemonKing.Field.Prototype
         public IReadOnlyList<PrototypeProgressionPickupDefinition> ProgressionPickups =>
             progressionPickups ?? Array.Empty<PrototypeProgressionPickupDefinition>();
 
-        // Scenario内部参照のSource of TruthはTrainingScenarioDefinitionです。
-        // 既存利用側の段階移行用に読み取り専用の派生アクセサだけを公開します。
         public QuestDefinition TrainingQuestDefinition => trainingScenario?.QuestDefinition;
         public QuestDefinition[] QuestDefinitions => trainingScenario?.QuestDefinition == null
             ? Array.Empty<QuestDefinition>()
@@ -71,6 +72,9 @@ namespace DemonKing.Field.Prototype
 
         public Font UiFont => uiFont;
         public bool HasUiFont => uiFont != null;
+        public GameObject PauseMenuPrefab => pauseMenuPrefab;
+        public GameObject EvolutionMenuPrefab => evolutionMenuPrefab;
+        public GameObject AbilityLoadoutMenuPrefab => abilityLoadoutMenuPrefab;
         public GameObject CottagePrefab => cottagePrefab;
         public GameObject TreePrefab => treePrefab;
         public GameObject LamppostPrefab => lamppostPrefab;
@@ -102,6 +106,9 @@ namespace DemonKing.Field.Prototype
             trainingScenario != null &&
             trainingScenario.IsConfigured &&
             HasValidProgressionPickups() &&
+            pauseMenuPrefab != null &&
+            evolutionMenuPrefab != null &&
+            abilityLoadoutMenuPrefab != null &&
             cottagePrefab != null &&
             treePrefab != null &&
             lamppostPrefab != null &&

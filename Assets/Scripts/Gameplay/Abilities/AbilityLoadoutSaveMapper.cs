@@ -9,18 +9,10 @@ namespace DemonKing.Gameplay.Abilities
 {
     /// <summary>
     /// Runtime Ability LoadoutとSave DTOを相互変換します。
-    /// PrimaryはDefinition由来の予約枠なので保存せず、ユーザー編集可能なAction1〜4だけを対象とします。
+    /// PrimaryはDefinition由来の予約枠なので保存せず、Policyが公開する編集可能Slotだけを対象とします。
     /// </summary>
     public static class AbilityLoadoutSaveMapper
     {
-        private static readonly AbilitySlot[] EditableSlots =
-        {
-            AbilitySlot.Action1,
-            AbilitySlot.Action2,
-            AbilitySlot.Action3,
-            AbilitySlot.Action4
-        };
-
         public static AbilityLoadoutSaveData ToSaveData(AbilityLoadout loadout)
         {
             if (loadout == null)
@@ -29,7 +21,7 @@ namespace DemonKing.Gameplay.Abilities
             }
 
             var saveData = new AbilityLoadoutSaveData();
-            foreach (AbilitySlot slot in EditableSlots)
+            foreach (AbilitySlot slot in AbilityLoadoutPolicy.EditableSlots)
             {
                 if (!loadout.TryResolve(slot, out string abilityId))
                 {
@@ -69,7 +61,7 @@ namespace DemonKing.Gameplay.Abilities
                 throw new ArgumentNullException(nameof(progressionState));
             }
 
-            foreach (AbilitySlot slot in EditableSlots)
+            foreach (AbilitySlot slot in AbilityLoadoutPolicy.EditableSlots)
             {
                 controller.Clear(slot);
             }
@@ -80,13 +72,12 @@ namespace DemonKing.Gameplay.Abilities
             }
 
             var assignableAbilityIds = new HashSet<string>(StringComparer.Ordinal);
-            foreach (AbilityLoadoutMenuEntry entry in
-                     AbilityLoadoutMenuProjection.Build(characterDefinition, progressionState))
+            foreach (AbilityLoadoutEligibility.Entry entry in
+                     AbilityLoadoutEligibility.GetAssignableAbilities(
+                         characterDefinition,
+                         progressionState))
             {
-                if (entry.CanAssign)
-                {
-                    assignableAbilityIds.Add(entry.AbilityId);
-                }
+                assignableAbilityIds.Add(entry.Ability.AbilityId);
             }
 
             var assignedAbilityIds = new HashSet<string>(StringComparer.Ordinal);
@@ -99,28 +90,16 @@ namespace DemonKing.Gameplay.Abilities
                 }
 
                 AbilitySlot slot = (AbilitySlot)savedSlot.slot;
-                if (!IsEditableSlot(slot) ||
-                    !assignableAbilityIds.Contains(savedSlot.abilityId ?? string.Empty) ||
-                    !assignedAbilityIds.Add(savedSlot.abilityId))
+                string abilityId = savedSlot.abilityId ?? string.Empty;
+                if (!AbilityLoadoutPolicy.IsEditableSlot(slot) ||
+                    !assignableAbilityIds.Contains(abilityId) ||
+                    !assignedAbilityIds.Add(abilityId))
                 {
                     continue;
                 }
 
-                controller.Assign(slot, savedSlot.abilityId);
+                controller.Assign(slot, abilityId);
             }
-        }
-
-        private static bool IsEditableSlot(AbilitySlot slot)
-        {
-            foreach (AbilitySlot editableSlot in EditableSlots)
-            {
-                if (editableSlot == slot)
-                {
-                    return true;
-                }
-            }
-
-            return false;
         }
     }
 }

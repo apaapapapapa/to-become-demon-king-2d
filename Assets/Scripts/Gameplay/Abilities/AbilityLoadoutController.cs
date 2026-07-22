@@ -4,7 +4,6 @@ using DemonKing.Core.Input;
 using DemonKing.Domain.Progression;
 using DemonKing.Gameplay.Abilities.Configuration;
 using DemonKing.Gameplay.Characters.Configuration;
-using DemonKing.Gameplay.Progression.Configuration;
 using UnityEngine;
 
 namespace DemonKing.Gameplay.Abilities
@@ -12,30 +11,37 @@ namespace DemonKing.Gameplay.Abilities
     /// <summary>
     /// プレイヤー個体のAbility Loadout Runtime Stateを保持します。
     /// 初期割当はCharacterDefinitionとRuntime Progression Stateから構築し、
-    /// その後はUI等がRuntime Loadoutだけを更新します。
+    /// その後はRuntime Loadoutだけを更新します。
     /// </summary>
     [DisallowMultipleComponent]
     public sealed class AbilityLoadoutController : MonoBehaviour
     {
-        private static readonly AbilitySlot[] EditableActionSlots =
-        {
-            AbilitySlot.Action1,
-            AbilitySlot.Action2,
-            AbilitySlot.Action3,
-            AbilitySlot.Action4
-        };
-
         public AbilityLoadout Loadout { get; private set; }
         public bool IsInitialized => Loadout != null;
 
         /// <summary>
-        /// 既存利用側との互換用初期化です。ArtのRuntime習得状態を持たないため、
-        /// CharacterDefinition上のランク1 Abilityまでを初期割当します。
+        /// 既存利用側との互換用初期化です。すべてのArtをランク1相当で習得済みとして扱い、
+        /// 共通Eligibilityを通して初期割当を構築します。
         /// 実ゲームプレイヤーはProgression Stateを受け取るoverloadを使用します。
         /// </summary>
         public void Initialize(CharacterDefinition characterDefinition)
         {
-            InitializeInternal(characterDefinition, progressionState: null);
+            if (characterDefinition == null)
+            {
+                throw new ArgumentNullException(nameof(characterDefinition));
+            }
+
+            CharacterProgressionState compatibilityState =
+                CharacterProgressionState.CreateInitial(characterDefinition.CharacterId);
+            foreach (var artDefinition in characterDefinition.ArtDefinitions)
+            {
+                if (artDefinition != null)
+                {
+                    compatibilityState.TryLearnArt(artDefinition.ArtId, out _);
+                }
+            }
+
+            Initialize(characterDefinition, compatibilityState);
         }
 
         public void Initialize(
@@ -92,11 +98,6 @@ namespace DemonKing.Gameplay.Abilities
             CharacterDefinition characterDefinition,
             CharacterProgressionState progressionState)
         {
-            if (characterDefinition == null)
-            {
-                throw new ArgumentNullException(nameof(characterDefinition));
-            }
-
             var loadout = new AbilityLoadout();
             var assignedAbilityIds = new HashSet<string>(StringComparer.Ordinal);
 
@@ -117,56 +118,19 @@ namespace DemonKing.Gameplay.Abilities
                     ref nextActionSlot);
             }
 
-            foreach (ArtDefinition artDefinition in characterDefinition.ArtDefinitions)
+            foreach (AbilityLoadoutEligibility.Entry eligible in
+                     AbilityLoadoutEligibility.GetAssignableAbilities(
+                         characterDefinition,
+                         progressionState))
             {
-                if (artDefinition == null)
-                {
-                    continue;
-                }
-
-                int currentRank = ResolveInitialArtRank(artDefinition, progressionState);
-                if (currentRank <= 0)
-                {
-                    continue;
-                }
-
-                foreach (ArtAbilityUnlockEntry unlockEntry in artDefinition.AbilityUnlocks)
-                {
-                    if (unlockEntry == null || unlockEntry.RequiredRank > currentRank)
-                    {
-                        continue;
-                    }
-
-                    TryAssignNextActionSlot(
-                        loadout,
-                        unlockEntry.AbilityDefinition,
-                        assignedAbilityIds,
-                        ref nextActionSlot);
-                }
+                TryAssignNextActionSlot(
+                    loadout,
+                    eligible.Ability,
+                    assignedAbilityIds,
+                    ref nextActionSlot);
             }
 
             Initialize(loadout);
-        }
-
-        private static int ResolveInitialArtRank(
-            ArtDefinition artDefinition,
-            CharacterProgressionState progressionState)
-        {
-            if (progressionState == null)
-            {
-                // 互換overloadでは従来どおりランク1解放分だけを扱います。
-                return 1;
-            }
-
-            if (!progressionState.TryGetArtProgress(
-                    artDefinition.ArtId,
-                    out ArtProgressState progressState))
-            {
-                return 0;
-            }
-
-            return artDefinition.CreateMasteryTable()
-                .GetRankForTotalMasteryPoints(progressState.MasteryPoints);
         }
 
         private static void TryAssignNextActionSlot(
@@ -176,13 +140,15 @@ namespace DemonKing.Gameplay.Abilities
             ref int nextActionSlot)
         {
             if (definition == null ||
-                nextActionSlot >= EditableActionSlots.Length ||
+                nextActionSlot >= AbilityLoadoutPolicy.EditableSlots.Count ||
                 !assignedAbilityIds.Add(definition.AbilityId))
             {
                 return;
             }
 
-            loadout.Assign(EditableActionSlots[nextActionSlot], definition.AbilityId);
+            loadout.Assign(
+                AbilityLoadoutPolicy.GetEditableSlot(nextActionSlot),
+                definition.AbilityId);
             nextActionSlot++;
         }
 
