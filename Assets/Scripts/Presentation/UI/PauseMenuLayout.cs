@@ -13,6 +13,26 @@ namespace DemonKing.Presentation.UI
         [SerializeField] private Text[] textElements = Array.Empty<Text>();
 
         public GameObject Root => gameObject;
+        public bool IsConfigured
+        {
+            get
+            {
+                if (textElements == null || textElements.Length == 0)
+                {
+                    return false;
+                }
+
+                foreach (Text text in textElements)
+                {
+                    if (text == null)
+                    {
+                        return false;
+                    }
+                }
+
+                return true;
+            }
+        }
 
         public void ApplyFont(Font font)
         {
