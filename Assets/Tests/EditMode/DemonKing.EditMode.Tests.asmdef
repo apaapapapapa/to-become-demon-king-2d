@@ -3,7 +3,8 @@
   "rootNamespace": "DemonKing.Tests.EditMode",
   "references": [
     "DemonKing.Domain",
-    "DemonKing.Runtime"
+    "DemonKing.Runtime",
+    "Unity.InputSystem"
   ],
   "includePlatforms": [
     "Editor"
