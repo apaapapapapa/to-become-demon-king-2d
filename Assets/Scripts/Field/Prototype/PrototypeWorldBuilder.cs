@@ -1,24 +1,44 @@
+using System;
 using DemonKing.Domain.Progression;
-using DemonKing.Gameplay.Content;
+using DemonKing.Field.Composition;
 using DemonKing.Gameplay.Dialogue;
 using UnityEngine;
 
 namespace DemonKing.Field.Prototype
 {
     /// <summary>
-    /// 試作フィールド全体の構築順序を管理する構成ルートです。
-    /// Tilemap、衝突、Prefab、演出、試作Gameplay Feature、プレイヤー、カメラを組み合わせます。
-    /// Save DTOからの復元適用はGame Session側のRestorerが担当します。
+    /// 既存呼び出し元とField Composition境界を接続する薄い互換アダプタです。
+    /// Terrain、Collision、Architecture、Nature、Atmosphere、Gameplay、Pickup、Cameraの詳細構築は
+    /// <see cref="PrototypeFieldComposer"/> とField Installer群が担当します。
     /// </summary>
     internal sealed class PrototypeWorldBuilder
     {
-        private readonly Vector3 playerSpawnPosition;
-        private readonly int playableTileRadius;
-        private readonly PrototypeProjectAssets projectAssets;
+        private readonly PrototypeFieldDefinition fieldDefinition;
+        private readonly FieldEntryPoint entryPoint;
         private readonly DialogueLog dialogueLog;
         private readonly CharacterProgressionState progressionState;
         private readonly ProgressionGrantConsumptionState grantConsumptionState;
 
+        public PrototypeWorldBuilder(
+            PrototypeFieldDefinition fieldDefinition,
+            FieldEntryPoint entryPoint,
+            DialogueLog dialogueLog,
+            CharacterProgressionState progressionState = null,
+            ProgressionGrantConsumptionState grantConsumptionState = null)
+        {
+            this.fieldDefinition = fieldDefinition ??
+                throw new ArgumentNullException(nameof(fieldDefinition));
+            this.entryPoint = entryPoint;
+            this.dialogueLog = dialogueLog ?? throw new ArgumentNullException(nameof(dialogueLog));
+            this.progressionState = progressionState;
+            this.grantConsumptionState = grantConsumptionState ??
+                ProgressionGrantConsumptionState.CreateInitial();
+        }
+
+        /// <summary>
+        /// 既存テスト・呼び出し元向けの互換Constructorです。
+        /// 新しいFieldは<see cref="PrototypeFieldDefinition"/>をCatalogへ登録して構築します。
+        /// </summary>
         public PrototypeWorldBuilder(
             Vector3 playerSpawnPosition,
             int playableTileRadius,
@@ -27,10 +47,12 @@ namespace DemonKing.Field.Prototype
             CharacterProgressionState progressionState = null,
             ProgressionGrantConsumptionState grantConsumptionState = null)
         {
-            this.playerSpawnPosition = playerSpawnPosition;
-            this.playableTileRadius = Mathf.Max(4, playableTileRadius);
-            this.projectAssets = projectAssets;
-            this.dialogueLog = dialogueLog;
+            fieldDefinition = PrototypeFieldDefinition.CreateLegacy(
+                playerSpawnPosition,
+                playableTileRadius,
+                projectAssets);
+            entryPoint = fieldDefinition.ResolveEntryPoint(fieldDefinition.DefaultEntryPointId);
+            this.dialogueLog = dialogueLog ?? throw new ArgumentNullException(nameof(dialogueLog));
             this.progressionState = progressionState;
             this.grantConsumptionState = grantConsumptionState ??
                 ProgressionGrantConsumptionState.CreateInitial();
@@ -38,59 +60,12 @@ namespace DemonKing.Field.Prototype
 
         public PrototypeWorldBuildResult Build()
         {
-            Transform world = new GameObject("夕映えの学園草原").transform;
-            AmbientEffectController ambientEffects = world.gameObject.AddComponent<AmbientEffectController>();
-
-            var shapes = new RuntimeShapeFactory();
-            PrototypeTilemapContext tilemaps = PrototypeTilemapContext.Resolve();
-            var tiles = new PrototypeRuntimeTileFactory(projectAssets.GrassTileSprite, projectAssets.PathTileSprite);
-            var prefabs = new PrototypeWorldPrefabFactory(projectAssets);
-            var terrain = new TerrainBuilder(shapes, tilemaps, tiles, playableTileRadius);
-            var architecture = new ArchitectureBuilder(shapes, prefabs);
-
-            terrain.BuildBase(world);
-            new CollisionMapBuilder(tilemaps, tiles, playableTileRadius).Build();
-            architecture.BuildStructures(world);
-            new NatureBuilder(shapes, ambientEffects, prefabs).Build(world);
-            architecture.BuildLandmarksAndLighting(world);
-            new AtmosphereBuilder(shapes, ambientEffects).Build(world);
-            GameObject player = new PrototypePlayerSpawner(
-                    playerSpawnPosition,
-                    projectAssets.PlayerCharacter,
-                    progressionState)
-                .Spawn(world);
-
-            GameContentCatalog gameContentCatalog = projectAssets.CreateGameContentCatalog();
-            PrototypeGameplayServices gameplayServices = null;
-            if (PrototypeGameplayServicesFactory.TryCreate(
-                    player,
-                    projectAssets.QuestDefinitions,
-                    gameContentCatalog,
-                    out gameplayServices))
-            {
-                new PrototypeGameplayFeatureInstaller().Install(
-                    world,
-                    player,
-                    gameplayServices,
-                    projectAssets.TrainingScenario,
-                    dialogueLog);
-
-                new PrototypeProgressionPickupInstaller().Install(
-                    world,
-                    gameplayServices.ProgressionAcquisitionService,
-                    grantConsumptionState,
-                    projectAssets.ProgressionPickups);
-            }
-
-            terrain.BuildForeground(world);
-
-            PrototypeCameraInstaller.Configure(Camera.main, player == null ? null : player.transform);
-            return new PrototypeWorldBuildResult(
-                world,
-                player,
-                gameplayServices?.RewardService,
-                gameplayServices?.GameContentCatalog,
-                gameplayServices?.QuestProgressionService);
+            return new PrototypeFieldComposer().Compose(
+                fieldDefinition,
+                entryPoint,
+                dialogueLog,
+                progressionState,
+                grantConsumptionState);
         }
     }
 }
