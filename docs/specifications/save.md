@@ -161,6 +161,6 @@ world
 
 `ISaveService`、`GameSaveData`、各Mapper、Runtime StateはSlot数に依存させません。GameplayへSlot IDや具体的なファイルパスを持ち込みません。
 
-現在のFieldBootstrap直起動では後方互換のためSlot 1を使用します。New Game / Continue / Load GameでのSlot選択と開始方法の制御はTitle/Application側で行い、選択後は解決済み `ISaveService` を `PrototypeApplicationInstaller` へ渡します。
+`FieldBootstrap` はGame Sessionを直接開始せずTitle Screenを起動します。New Game / Continue / Load GameでのSlot選択と開始方法の制御はTitle/Application側で行い、選択後は解決済み `ISaveService` を `PrototypeApplicationInstaller` へ渡します。New Gameだけは `FreshGameSaveService` を通し、既存SaveのRestoreを明示的に抑止します。詳細は [Title Screen仕様](./title-screen.md) を参照してください。
 
 現在の実装状況と開発優先度は [ロードマップ](../development/roadmap.md) を参照してください。
