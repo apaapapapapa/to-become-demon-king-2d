@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using DemonKing.Domain.Progression;
+using DemonKing.Domain.Story;
 using DemonKing.Field.Composition;
 using DemonKing.Gameplay.Content;
 using DemonKing.Gameplay.Dialogue;
@@ -20,6 +21,7 @@ namespace DemonKing.Field.Prototype
             ProgressionGrantConsumptionState grantConsumptionState,
             QuestProgressionService sharedQuestProgressionService = null,
             GameplayEventHub sharedGameplayEventHub = null,
+            StoryProgressionService sharedStoryProgressionService = null,
             IPrototypeFieldTransitionRequester transitionRequester = null)
         {
             Definition = definition ?? throw new ArgumentNullException(nameof(definition));
@@ -30,6 +32,7 @@ namespace DemonKing.Field.Prototype
                 ProgressionGrantConsumptionState.CreateInitial();
             SharedQuestProgressionService = sharedQuestProgressionService;
             SharedGameplayEventHub = sharedGameplayEventHub;
+            SharedStoryProgressionService = sharedStoryProgressionService;
             TransitionRequester = transitionRequester;
             WorldRoot = new GameObject(definition.DisplayName).transform;
             AmbientEffects = WorldRoot.gameObject.AddComponent<AmbientEffectController>();
@@ -43,6 +46,7 @@ namespace DemonKing.Field.Prototype
         public ProgressionGrantConsumptionState GrantConsumptionState { get; }
         public QuestProgressionService SharedQuestProgressionService { get; }
         public GameplayEventHub SharedGameplayEventHub { get; }
+        public StoryProgressionService SharedStoryProgressionService { get; }
         public IPrototypeFieldTransitionRequester TransitionRequester { get; }
         public Transform WorldRoot { get; }
         public AmbientEffectController AmbientEffects { get; }
@@ -117,6 +121,7 @@ namespace DemonKing.Field.Prototype
                 grantConsumptionState,
                 sharedQuestProgressionService: null,
                 sharedGameplayEventHub: null,
+                sharedStoryProgressionService: null,
                 transitionRequester: null);
         }
 
@@ -137,6 +142,7 @@ namespace DemonKing.Field.Prototype
                 grantConsumptionState,
                 sharedQuestProgressionService,
                 sharedGameplayEventHub: null,
+                sharedStoryProgressionService: null,
                 transitionRequester);
         }
 
@@ -150,6 +156,29 @@ namespace DemonKing.Field.Prototype
             GameplayEventHub sharedGameplayEventHub,
             IPrototypeFieldTransitionRequester transitionRequester)
         {
+            return Compose(
+                definition,
+                entryPoint,
+                dialogueLog,
+                progressionState,
+                grantConsumptionState,
+                sharedQuestProgressionService,
+                sharedGameplayEventHub,
+                sharedStoryProgressionService: null,
+                transitionRequester);
+        }
+
+        public PrototypeWorldBuildResult Compose(
+            PrototypeFieldDefinition definition,
+            FieldEntryPoint entryPoint,
+            DialogueLog dialogueLog,
+            CharacterProgressionState progressionState,
+            ProgressionGrantConsumptionState grantConsumptionState,
+            QuestProgressionService sharedQuestProgressionService,
+            GameplayEventHub sharedGameplayEventHub,
+            StoryProgressionService sharedStoryProgressionService,
+            IPrototypeFieldTransitionRequester transitionRequester)
+        {
             var context = new PrototypeFieldCompositionContext(
                 definition,
                 entryPoint,
@@ -158,6 +187,7 @@ namespace DemonKing.Field.Prototype
                 grantConsumptionState,
                 sharedQuestProgressionService,
                 sharedGameplayEventHub,
+                sharedStoryProgressionService,
                 transitionRequester);
             pipeline.Install(context);
             return context.CreateResult();
@@ -262,6 +292,7 @@ namespace DemonKing.Field.Prototype
                     gameContentCatalog,
                     context.SharedQuestProgressionService,
                     context.SharedGameplayEventHub,
+                    context.SharedStoryProgressionService,
                     out PrototypeGameplayServices gameplayServices))
             {
                 return;
