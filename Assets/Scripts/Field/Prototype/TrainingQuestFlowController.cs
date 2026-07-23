@@ -1,7 +1,9 @@
 using DemonKing.Domain.Events;
 using DemonKing.Domain.Quests;
+using DemonKing.Domain.Story;
 using DemonKing.Field.Prototype.Configuration;
 using DemonKing.Gameplay.Dialogue;
+using DemonKing.Gameplay.Dialogue.Configuration;
 using DemonKing.Gameplay.Events;
 using DemonKing.Gameplay.Progression;
 using DemonKing.Gameplay.Quests;
@@ -18,6 +20,7 @@ namespace DemonKing.Field.Prototype
         private DialogueLog dialogueLog;
         private GameplayEventHub gameplayEventHub;
         private QuestProgressionService questProgressionService;
+        private StoryProgressionService storyProgressionService;
         private TrainingScenarioDefinition scenario;
         private bool initialized;
 
@@ -28,7 +31,8 @@ namespace DemonKing.Field.Prototype
             DialogueLog dialogueLog,
             GameplayEventHub gameplayEventHub,
             QuestProgressionService questProgressionService,
-            TrainingScenarioDefinition scenario)
+            TrainingScenarioDefinition scenario,
+            StoryProgressionService storyProgressionService = null)
         {
             if (initialized)
             {
@@ -43,6 +47,7 @@ namespace DemonKing.Field.Prototype
             this.gameplayEventHub = gameplayEventHub;
             this.questProgressionService = questProgressionService;
             this.scenario = scenario;
+            this.storyProgressionService = storyProgressionService;
 
             npc.Interacted += HandleNpcInteracted;
             npc.ConversationStarted += HandleConversationStarted;
@@ -77,14 +82,35 @@ namespace DemonKing.Field.Prototype
                 return;
             }
 
-            npc.ConfigureDialogue(state.Status switch
+            DialogueDefinition questDialogue = state.Status switch
             {
                 QuestProgressStatus.Available => scenario.OfferDialogue,
                 QuestProgressStatus.Active => scenario.ActiveDialogue,
                 QuestProgressStatus.ReadyToTurnIn => scenario.TurnInDialogue,
                 QuestProgressStatus.Completed => scenario.CompletedDialogue,
                 _ => scenario.OfferDialogue,
-            });
+            };
+
+            if (storyProgressionService == null)
+            {
+                npc.ConfigureDialogue(questDialogue);
+                return;
+            }
+
+            // P0では既存Dialogue Assetを再利用し、Story/Quest条件による同一NPCの候補選択境界を検証します。
+            DialogueDefinition selectedDialogue = StoryDialogueSelector.Select(
+                questDialogue,
+                storyProgressionService.State,
+                new[]
+                {
+                    new StoryDialogueVariant<DialogueDefinition>(
+                        scenario.CompletedDialogue,
+                        requiredFlags: new[] { PrototypeStoryDefinitions.LeftForestFlagId },
+                        questId: scenario.QuestDefinition.QuestId,
+                        requiredQuestStatus: QuestProgressStatus.Available)
+                },
+                ResolveQuestStatus);
+            npc.ConfigureDialogue(selectedDialogue);
         }
 
         private void HandleDialogueCompleted(GameObject interactor)
@@ -116,6 +142,14 @@ namespace DemonKing.Field.Prototype
                 result.WasGranted
                     ? "火炎魔法を習得した！ Kキー／ゲームパッドYで火炎弾を放てる。"
                     : "火炎魔法はもう身についている。実戦で熟練を重ねよう。");
+        }
+
+        private QuestProgressStatus? ResolveQuestStatus(string questId)
+        {
+            return questProgressionService != null &&
+                   questProgressionService.TryGetState(questId, out QuestProgressState state)
+                ? state.Status
+                : null;
         }
 
         private bool TryGetQuestState(out QuestProgressState state)
