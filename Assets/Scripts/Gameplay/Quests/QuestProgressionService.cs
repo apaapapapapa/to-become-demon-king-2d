@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using DemonKing.Domain.Events;
 using DemonKing.Domain.Quests;
 using DemonKing.Gameplay.Quests.Configuration;
 
@@ -71,10 +72,6 @@ namespace DemonKing.Gameplay.Quests
             return states.TryGetValue(questId ?? string.Empty, out state);
         }
 
-        /// <summary>
-        /// Saveから復元したQuest Stateを現在のDefinitionへ適用します。
-        /// 未知のQuestは無視し、既知QuestのObjective構成不一致は設定エラーとして拒否します。
-        /// </summary>
         public void Restore(IEnumerable<QuestProgressState> restoredStates)
         {
             if (restoredStates == null)

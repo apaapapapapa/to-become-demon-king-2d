@@ -1,34 +1,23 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using DemonKing.Domain.Progression;
 using DemonKing.Domain.Save;
+using DemonKing.Domain.Story;
 
 namespace DemonKing.Core.Application
 {
-    /// <summary>
-    /// 保存先やシリアライズ方式をGameplayから分離する契約です。
-    /// ファイル保存、クラウド保存、プラットフォーム保存はこの契約の外側で実装します。
-    /// </summary>
     public interface ISaveService
     {
         bool TryLoad(out GameSaveData saveData);
-
         void Save(GameSaveData saveData);
     }
 
-    /// <summary>
-    /// Runtime State一式から保存時点のGameSaveDataを生成する境界です。
-    /// 保存タイミングを管理する側はFeatureごとのDTO組立を知りません。
-    /// </summary>
     public interface IGameSaveSnapshotProvider
     {
         GameSaveData CreateSnapshot();
     }
 
-    /// <summary>
-    /// Character / Playerの実行時成長状態とPlayerSaveDataの相互変換を一か所へ集約します。
-    /// Game全体のSave Snapshot生成は担当しません。
-    /// </summary>
     public static class CharacterProgressionSaveMapper
     {
         public static PlayerSaveData ToSaveData(CharacterProgressionState state)
@@ -96,8 +85,42 @@ namespace DemonKing.Core.Application
     }
 
     /// <summary>
-    /// Save DTOのVersion差分だけを扱い、Runtime Stateへの変換と分離します。
+    /// Story Runtime StateとSave DTOの変換だけを担当します。
+    /// Story Event条件評価やGameplay Event購読は行いません。
     /// </summary>
+    public static class StoryProgressionSaveMapper
+    {
+        public static StorySaveData ToSaveData(StoryProgressState state)
+        {
+            if (state == null)
+            {
+                throw new ArgumentNullException(nameof(state));
+            }
+
+            return new StorySaveData
+            {
+                currentChapterId = state.CurrentChapterId,
+                flags = state.Flags.OrderBy(value => value, StringComparer.Ordinal).ToList(),
+                executedEventIds = state.ExecutedEventIds
+                    .OrderBy(value => value, StringComparer.Ordinal)
+                    .ToList()
+            };
+        }
+
+        public static StoryProgressState FromSaveData(
+            StorySaveData saveData,
+            string defaultChapterId)
+        {
+            string chapterId = saveData == null || string.IsNullOrWhiteSpace(saveData.currentChapterId)
+                ? defaultChapterId
+                : saveData.currentChapterId;
+            return StoryProgressState.Restore(
+                chapterId,
+                saveData?.flags,
+                saveData?.executedEventIds);
+        }
+    }
+
     public static class GameSaveDataMigrator
     {
         private const int FirstSupportedVersion = 1;
@@ -120,14 +143,12 @@ namespace DemonKing.Core.Application
 
             if (saveData.version == 1)
             {
-                // Version 1にはArt進捗フィールドが存在しないため、混在値を引き継ぎません。
                 saveData.player.artProgress = new List<ArtProgressSaveData>();
                 saveData.version = 2;
             }
 
             if (saveData.version == 2)
             {
-                // Version 2にはLoadout / Quest / World状態が存在しません。
                 saveData.player.abilityLoadout = new AbilityLoadoutSaveData();
                 saveData.quests = new List<QuestProgressSaveData>();
                 saveData.world = new WorldSaveData();
@@ -136,11 +157,17 @@ namespace DemonKing.Core.Application
 
             if (saveData.version == 3)
             {
-                // Version 3にはScene間で復元するStable Field / Entry Point IDが存在しません。
                 saveData.world ??= new WorldSaveData();
                 saveData.world.currentFieldId = string.Empty;
                 saveData.world.entryPointId = string.Empty;
                 saveData.version = 4;
+            }
+
+            if (saveData.version == 4)
+            {
+                // Version 4にはQuestと独立したStory Runtime Stateが存在しません。
+                saveData.story = new StorySaveData();
+                saveData.version = 5;
             }
 
             NormalizeCollections(saveData);
@@ -169,6 +196,11 @@ namespace DemonKing.Core.Application
             saveData.world.currentFieldId ??= string.Empty;
             saveData.world.entryPointId ??= string.Empty;
             saveData.world.consumedProgressionGrantIds ??= new List<string>();
+
+            saveData.story ??= new StorySaveData();
+            saveData.story.currentChapterId ??= string.Empty;
+            saveData.story.flags ??= new List<string>();
+            saveData.story.executedEventIds ??= new List<string>();
         }
     }
 }

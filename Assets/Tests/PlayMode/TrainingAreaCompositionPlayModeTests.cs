@@ -88,7 +88,8 @@ namespace DemonKing.Tests.PlayMode
                 dialogueLog,
                 eventHub,
                 questService,
-                scenario);
+                scenario,
+                null);
 
             GameObject interactor = new("Training Quest Interactor");
             for (int index = 0; index < 12; index++)

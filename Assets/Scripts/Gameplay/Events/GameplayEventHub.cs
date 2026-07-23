@@ -1,5 +1,5 @@
 using System;
-using DemonKing.Domain.Quests;
+using DemonKing.Domain.Events;
 
 namespace DemonKing.Gameplay.Events
 {
@@ -21,5 +21,8 @@ namespace DemonKing.Gameplay.Events
     {
         public const string EnemyDefeated = "gameplay.enemy_defeated";
         public const string DialogueCompleted = "gameplay.dialogue_completed";
+        public const string InteractionCompleted = "gameplay.interaction_completed";
+        public const string FieldEntered = "gameplay.field_entered";
+        public const string QuestCompleted = "gameplay.quest_completed";
     }
 }

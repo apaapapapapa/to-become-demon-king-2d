@@ -37,7 +37,8 @@ namespace DemonKing.Tests.EditMode
                     abilityLoadout = null
                 },
                 quests = null,
-                world = null
+                world = null,
+                story = null
             };
 
             GameSaveData migrated = GameSaveDataMigrator.MigrateToCurrent(saveData);
@@ -51,6 +52,10 @@ namespace DemonKing.Tests.EditMode
             Assert.That(migrated.world.currentFieldId, Is.Empty);
             Assert.That(migrated.world.entryPointId, Is.Empty);
             Assert.That(migrated.world.consumedProgressionGrantIds, Is.Empty);
+            Assert.That(migrated.story, Is.Not.Null);
+            Assert.That(migrated.story.currentChapterId, Is.Empty);
+            Assert.That(migrated.story.flags, Is.Empty);
+            Assert.That(migrated.story.executedEventIds, Is.Empty);
         }
 
         [Test]
@@ -65,7 +70,8 @@ namespace DemonKing.Tests.EditMode
                     abilityLoadout = null
                 },
                 quests = null,
-                world = null
+                world = null,
+                story = null
             };
 
             GameSaveData migrated = GameSaveDataMigrator.MigrateToCurrent(saveData);
@@ -78,10 +84,13 @@ namespace DemonKing.Tests.EditMode
             Assert.That(migrated.world.currentFieldId, Is.Empty);
             Assert.That(migrated.world.entryPointId, Is.Empty);
             Assert.That(migrated.world.consumedProgressionGrantIds, Is.Empty);
+            Assert.That(migrated.story, Is.Not.Null);
+            Assert.That(migrated.story.flags, Is.Empty);
+            Assert.That(migrated.story.executedEventIds, Is.Empty);
         }
 
         [Test]
-        public void GameSaveData_Version3をVersion4へ移行してWorld状態を維持する()
+        public void GameSaveData_Version3をCurrentVersionへ移行してWorld状態を維持する()
         {
             var saveData = new GameSaveData
             {
@@ -96,17 +105,21 @@ namespace DemonKing.Tests.EditMode
                     {
                         "grant.field.arcane_grimoire"
                     }
-                }
+                },
+                story = null
             };
 
             GameSaveData migrated = GameSaveDataMigrator.MigrateToCurrent(saveData);
 
-            Assert.That(migrated.version, Is.EqualTo(4));
+            Assert.That(migrated.version, Is.EqualTo(GameSaveData.CurrentVersion));
             Assert.That(migrated.world.currentFieldId, Is.Empty);
             Assert.That(migrated.world.entryPointId, Is.Empty);
             Assert.That(
                 migrated.world.consumedProgressionGrantIds,
                 Is.EqualTo(new[] { "grant.field.arcane_grimoire" }));
+            Assert.That(migrated.story, Is.Not.Null);
+            Assert.That(migrated.story.flags, Is.Empty);
+            Assert.That(migrated.story.executedEventIds, Is.Empty);
         }
 
         [Test]
@@ -156,6 +169,12 @@ namespace DemonKing.Tests.EditMode
                         {
                             "grant.field.arcane_grimoire"
                         }
+                    },
+                    story = new StorySaveData
+                    {
+                        currentChapterId = "story.chapter.prologue",
+                        flags = new List<string> { "prologue.met_human" },
+                        executedEventIds = new List<string> { "story.event.met_first_human" }
                     }
                 };
 
@@ -177,6 +196,11 @@ namespace DemonKing.Tests.EditMode
                 Assert.That(
                     restored.world.consumedProgressionGrantIds,
                     Is.EqualTo(new[] { "grant.field.arcane_grimoire" }));
+                Assert.That(restored.story.currentChapterId, Is.EqualTo("story.chapter.prologue"));
+                Assert.That(restored.story.flags, Is.EqualTo(new[] { "prologue.met_human" }));
+                Assert.That(
+                    restored.story.executedEventIds,
+                    Is.EqualTo(new[] { "story.event.met_first_human" }));
             }
             finally
             {

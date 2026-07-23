@@ -2,23 +2,22 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using DemonKing.Core.Application;
+using DemonKing.Domain.Events;
 using DemonKing.Domain.Progression;
 using DemonKing.Domain.Quests;
 using DemonKing.Domain.Save;
+using DemonKing.Domain.Story;
 using DemonKing.Field.Composition;
 using DemonKing.Field.Prototype.Configuration;
 using DemonKing.Gameplay.Abilities;
 using DemonKing.Gameplay.Dialogue;
+using DemonKing.Gameplay.Events;
 using DemonKing.Gameplay.Quests;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
 namespace DemonKing.Field.Prototype
 {
-    /// <summary>
-    /// Save読込からField構築、Runtime復元、保存開始までのGame Session寿命を管理します。
-    /// Character Progression / Quest / Grant StateはField Sceneより長く保持し、Field切替時はScene依存Runtimeだけを再構築します。
-    /// </summary>
     internal sealed class PrototypeGameSession
     {
         private readonly PrototypeProjectAssets projectAssets;
@@ -30,7 +29,9 @@ namespace DemonKing.Field.Prototype
 
         private IPrototypeFieldTransitionRequester transitionRequester;
         private PrototypeSaveSession saveSession;
+        private GameplayEventHub gameplayEventHub;
         private QuestProgressionService questProgressionService;
+        private StoryProgressionService storyProgressionService;
         private PrototypeGameSaveSnapshotProvider snapshotProvider;
         private PrototypeLocalSaveCoordinator saveCoordinator;
         private AbilityLoadoutSaveData preservedLoadout;
@@ -60,6 +61,8 @@ namespace DemonKing.Field.Prototype
         public PrototypeWorldBuildResult CurrentWorldResult => currentWorldResult;
         public CharacterProgressionState ProgressionState => saveSession?.ProgressionState;
         public QuestProgressionService QuestProgressionService => questProgressionService;
+        public StoryProgressionService StoryProgressionService => storyProgressionService;
+        public GameplayEventHub GameplayEventHub => gameplayEventHub;
         public FieldLocation CurrentFieldLocation => currentWorldResult.FieldLocation;
 
         public void SetTransitionRequester(IPrototypeFieldTransitionRequester requester)
@@ -89,6 +92,13 @@ namespace DemonKing.Field.Prototype
                 projectAssets.PlayerCharacter.CharacterId,
                 fieldCatalog.InitialField.DefaultLocation);
             questProgressionService = new QuestProgressionService(projectAssets.QuestDefinitions);
+            storyProgressionService = new StoryProgressionService(
+                saveSession.StoryState,
+                PrototypeStoryDefinitions.Create(projectAssets));
+            gameplayEventHub = new GameplayEventHub();
+            gameplayEventHub.Published += questProgressionService.Handle;
+            gameplayEventHub.Published += HandleStoryGameplayEvent;
+            questProgressionService.QuestCompleted += HandleQuestCompleted;
 
             ResolveFieldLocation(
                 saveSession.CurrentFieldLocation,
@@ -101,6 +111,7 @@ namespace DemonKing.Field.Prototype
             currentWorldResult = BuildField(fieldDefinition, entryPoint);
             saveRestorer.Restore(saveSession, currentWorldResult);
             preservedLoadout = CaptureLoadout(currentWorldResult.Player);
+            PublishFieldEntered(currentWorldResult.FieldLocation);
             StartSaving(applicationRoot);
             PrototypeFieldSceneRuntime.UnloadPrevious(previousScene, activeFieldScene);
 
@@ -108,10 +119,6 @@ namespace DemonKing.Field.Prototype
             return CreateResult();
         }
 
-        /// <summary>
-        /// Scene破棄前にScene依存LoadoutをSave DTOへ退避し、現在Fieldを即時保存します。
-        /// Progression / Quest / Grant StateはGame Session所有のためコピーしません。
-        /// </summary>
         public void PrepareForFieldTransition()
         {
             EnsureStarted();
@@ -119,9 +126,6 @@ namespace DemonKing.Field.Prototype
             saveCoordinator?.SaveNow();
         }
 
-        /// <summary>
-        /// Active Scene切替後に指定Fieldを構築し、Session共有状態を新しいPlayer / Worldへ再接続します。
-        /// </summary>
         public PrototypeGameSessionResult EnterField(FieldLocation location)
         {
             EnsureStarted();
@@ -134,6 +138,7 @@ namespace DemonKing.Field.Prototype
             RestorePreservedLoadout(currentWorldResult.Player);
             snapshotProvider.BindWorld(currentWorldResult.Player, currentWorldResult.FieldLocation);
             preservedLoadout = CaptureLoadout(currentWorldResult.Player);
+            PublishFieldEntered(currentWorldResult.FieldLocation);
             saveCoordinator?.SaveNow();
             return CreateResult();
         }
@@ -162,6 +167,8 @@ namespace DemonKing.Field.Prototype
                     saveSession.ProgressionState,
                     saveSession.GrantConsumptionState,
                     questProgressionService,
+                    gameplayEventHub,
+                    storyProgressionService,
                     transitionRequester)
                 .Build();
         }
@@ -193,7 +200,7 @@ namespace DemonKing.Field.Prototype
         private void StartSaving(GameObject applicationRoot)
         {
             AbilityLoadoutController loadoutController = ResolveLoadoutController(currentWorldResult.Player);
-            if (loadoutController == null || questProgressionService == null)
+            if (loadoutController == null || questProgressionService == null || storyProgressionService == null)
             {
                 Debug.LogError(
                     "Save Snapshotを構築するためのRuntime Stateが揃っていないため、保存を開始できません。");
@@ -205,6 +212,7 @@ namespace DemonKing.Field.Prototype
                 loadoutController,
                 questProgressionService,
                 saveSession.GrantConsumptionState,
+                storyProgressionService.State,
                 currentWorldResult.FieldLocation);
 
             saveCoordinator = applicationRoot.AddComponent<PrototypeLocalSaveCoordinator>();
@@ -213,6 +221,25 @@ namespace DemonKing.Field.Prototype
                 snapshotProvider,
                 saveSession.SavingEnabled);
             saveCoordinator.SaveNow();
+        }
+
+        private void PublishFieldEntered(FieldLocation location)
+        {
+            gameplayEventHub.Publish(new GameplayEvent(
+                GameplayEventIds.FieldEntered,
+                location.FieldId));
+        }
+
+        private void HandleQuestCompleted(QuestProgressState questState)
+        {
+            gameplayEventHub.Publish(new GameplayEvent(
+                GameplayEventIds.QuestCompleted,
+                questState.QuestId));
+        }
+
+        private void HandleStoryGameplayEvent(GameplayEvent gameplayEvent)
+        {
+            storyProgressionService.Handle(gameplayEvent);
         }
 
         private void RestorePreservedLoadout(GameObject player)
@@ -285,10 +312,6 @@ namespace DemonKing.Field.Prototype
         public FieldLocation CurrentFieldLocation { get; }
     }
 
-    /// <summary>
-    /// Migration済みSave DTOを、構築済みRuntime Featureへ適用します。
-    /// Field ComposerはSave DTOを知らず、Runtime構築だけを担当します。
-    /// </summary>
     internal sealed class PrototypeGameSaveRestorer
     {
         private readonly PrototypeProjectAssets projectAssets;
@@ -360,15 +383,12 @@ namespace DemonKing.Field.Prototype
         }
     }
 
-    /// <summary>
-    /// Runtime State一式から現在VersionのGameSaveData Snapshotを生成します。
-    /// Field Scene切替中はLoadoutの最後のSnapshotを保持し、Scene依存Componentを参照し続けません。
-    /// </summary>
     internal sealed class PrototypeGameSaveSnapshotProvider : IGameSaveSnapshotProvider
     {
         private readonly CharacterProgressionState progressionState;
         private readonly QuestProgressionService questProgressionService;
         private readonly ProgressionGrantConsumptionState grantConsumptionState;
+        private readonly StoryProgressState storyProgressState;
         private AbilityLoadoutController loadoutController;
         private AbilityLoadoutSaveData cachedLoadout;
         private FieldLocation fieldLocation;
@@ -383,6 +403,7 @@ namespace DemonKing.Field.Prototype
                 loadoutController,
                 questProgressionService,
                 grantConsumptionState,
+                StoryProgressState.CreateInitial(PrototypeStoryDefinitions.PrologueChapterId),
                 new FieldLocation(
                     PrototypeFieldDefinition.DefaultFieldId,
                     PrototypeFieldDefinition.DefaultEntryPointId))
@@ -395,6 +416,23 @@ namespace DemonKing.Field.Prototype
             QuestProgressionService questProgressionService,
             ProgressionGrantConsumptionState grantConsumptionState,
             FieldLocation fieldLocation)
+            : this(
+                progressionState,
+                loadoutController,
+                questProgressionService,
+                grantConsumptionState,
+                StoryProgressState.CreateInitial(PrototypeStoryDefinitions.PrologueChapterId),
+                fieldLocation)
+        {
+        }
+
+        public PrototypeGameSaveSnapshotProvider(
+            CharacterProgressionState progressionState,
+            AbilityLoadoutController loadoutController,
+            QuestProgressionService questProgressionService,
+            ProgressionGrantConsumptionState grantConsumptionState,
+            StoryProgressState storyProgressState,
+            FieldLocation fieldLocation)
         {
             this.progressionState = progressionState ??
                 throw new ArgumentNullException(nameof(progressionState));
@@ -402,6 +440,8 @@ namespace DemonKing.Field.Prototype
                 throw new ArgumentNullException(nameof(questProgressionService));
             this.grantConsumptionState = grantConsumptionState ??
                 throw new ArgumentNullException(nameof(grantConsumptionState));
+            this.storyProgressState = storyProgressState ??
+                throw new ArgumentNullException(nameof(storyProgressState));
             BindWorld(loadoutController, fieldLocation);
         }
 
@@ -456,7 +496,8 @@ namespace DemonKing.Field.Prototype
                     consumedProgressionGrantIds = grantConsumptionState.ConsumedGrantIds
                         .OrderBy(grantId => grantId, StringComparer.Ordinal)
                         .ToList()
-                }
+                },
+                story = StoryProgressionSaveMapper.ToSaveData(storyProgressState)
             };
         }
 

@@ -1,18 +1,16 @@
 using System;
 using System.Collections.Generic;
 using DemonKing.Domain.Progression;
+using DemonKing.Domain.Story;
 using DemonKing.Field.Composition;
 using DemonKing.Gameplay.Content;
 using DemonKing.Gameplay.Dialogue;
+using DemonKing.Gameplay.Events;
 using DemonKing.Gameplay.Quests;
 using UnityEngine;
 
 namespace DemonKing.Field.Prototype
 {
-    /// <summary>
-    /// 一回のField構築中だけ共有するRuntime Composition Contextです。
-    /// Game Session StateやSave DTOを所有せず、Installer間の構築済み参照だけを受け渡します。
-    /// </summary>
     internal sealed class PrototypeFieldCompositionContext
     {
         public PrototypeFieldCompositionContext(
@@ -22,6 +20,8 @@ namespace DemonKing.Field.Prototype
             CharacterProgressionState progressionState,
             ProgressionGrantConsumptionState grantConsumptionState,
             QuestProgressionService sharedQuestProgressionService = null,
+            GameplayEventHub sharedGameplayEventHub = null,
+            StoryProgressionService sharedStoryProgressionService = null,
             IPrototypeFieldTransitionRequester transitionRequester = null)
         {
             Definition = definition ?? throw new ArgumentNullException(nameof(definition));
@@ -31,6 +31,8 @@ namespace DemonKing.Field.Prototype
             GrantConsumptionState = grantConsumptionState ??
                 ProgressionGrantConsumptionState.CreateInitial();
             SharedQuestProgressionService = sharedQuestProgressionService;
+            SharedGameplayEventHub = sharedGameplayEventHub;
+            SharedStoryProgressionService = sharedStoryProgressionService;
             TransitionRequester = transitionRequester;
             WorldRoot = new GameObject(definition.DisplayName).transform;
             AmbientEffects = WorldRoot.gameObject.AddComponent<AmbientEffectController>();
@@ -43,6 +45,8 @@ namespace DemonKing.Field.Prototype
         public CharacterProgressionState ProgressionState { get; }
         public ProgressionGrantConsumptionState GrantConsumptionState { get; }
         public QuestProgressionService SharedQuestProgressionService { get; }
+        public GameplayEventHub SharedGameplayEventHub { get; }
+        public StoryProgressionService SharedStoryProgressionService { get; }
         public IPrototypeFieldTransitionRequester TransitionRequester { get; }
         public Transform WorldRoot { get; }
         public AmbientEffectController AmbientEffects { get; }
@@ -72,15 +76,8 @@ namespace DemonKing.Field.Prototype
             Architecture = architecture ?? throw new ArgumentNullException(nameof(architecture));
         }
 
-        public void SetPlayer(GameObject player)
-        {
-            Player = player;
-        }
-
-        public void SetGameplayServices(PrototypeGameplayServices gameplayServices)
-        {
-            GameplayServices = gameplayServices;
-        }
+        public void SetPlayer(GameObject player) => Player = player;
+        public void SetGameplayServices(PrototypeGameplayServices gameplayServices) => GameplayServices = gameplayServices;
 
         public PrototypeWorldBuildResult CreateResult()
         {
@@ -94,10 +91,6 @@ namespace DemonKing.Field.Prototype
         }
     }
 
-    /// <summary>
-    /// Prototype FieldをField DefinitionとInstaller列から構築します。
-    /// 2つ目以降のFieldはBuilderを複製せず、DefinitionとInstaller構成を差し替えます。
-    /// </summary>
     internal sealed class PrototypeFieldComposer
     {
         private readonly FieldCompositionPipeline<PrototypeFieldCompositionContext> pipeline;
@@ -127,6 +120,8 @@ namespace DemonKing.Field.Prototype
                 progressionState,
                 grantConsumptionState,
                 sharedQuestProgressionService: null,
+                sharedGameplayEventHub: null,
+                sharedStoryProgressionService: null,
                 transitionRequester: null);
         }
 
@@ -139,6 +134,51 @@ namespace DemonKing.Field.Prototype
             QuestProgressionService sharedQuestProgressionService,
             IPrototypeFieldTransitionRequester transitionRequester)
         {
+            return Compose(
+                definition,
+                entryPoint,
+                dialogueLog,
+                progressionState,
+                grantConsumptionState,
+                sharedQuestProgressionService,
+                sharedGameplayEventHub: null,
+                sharedStoryProgressionService: null,
+                transitionRequester);
+        }
+
+        public PrototypeWorldBuildResult Compose(
+            PrototypeFieldDefinition definition,
+            FieldEntryPoint entryPoint,
+            DialogueLog dialogueLog,
+            CharacterProgressionState progressionState,
+            ProgressionGrantConsumptionState grantConsumptionState,
+            QuestProgressionService sharedQuestProgressionService,
+            GameplayEventHub sharedGameplayEventHub,
+            IPrototypeFieldTransitionRequester transitionRequester)
+        {
+            return Compose(
+                definition,
+                entryPoint,
+                dialogueLog,
+                progressionState,
+                grantConsumptionState,
+                sharedQuestProgressionService,
+                sharedGameplayEventHub,
+                sharedStoryProgressionService: null,
+                transitionRequester);
+        }
+
+        public PrototypeWorldBuildResult Compose(
+            PrototypeFieldDefinition definition,
+            FieldEntryPoint entryPoint,
+            DialogueLog dialogueLog,
+            CharacterProgressionState progressionState,
+            ProgressionGrantConsumptionState grantConsumptionState,
+            QuestProgressionService sharedQuestProgressionService,
+            GameplayEventHub sharedGameplayEventHub,
+            StoryProgressionService sharedStoryProgressionService,
+            IPrototypeFieldTransitionRequester transitionRequester)
+        {
             var context = new PrototypeFieldCompositionContext(
                 definition,
                 entryPoint,
@@ -146,13 +186,14 @@ namespace DemonKing.Field.Prototype
                 progressionState,
                 grantConsumptionState,
                 sharedQuestProgressionService,
+                sharedGameplayEventHub,
+                sharedStoryProgressionService,
                 transitionRequester);
             pipeline.Install(context);
             return context.CreateResult();
         }
 
-        internal static IReadOnlyList<IFieldInstaller<PrototypeFieldCompositionContext>>
-            CreateDefaultInstallers()
+        internal static IReadOnlyList<IFieldInstaller<PrototypeFieldCompositionContext>> CreateDefaultInstallers()
         {
             return new IFieldInstaller<PrototypeFieldCompositionContext>[]
             {
@@ -173,100 +214,61 @@ namespace DemonKing.Field.Prototype
         }
     }
 
-    internal sealed class PrototypeWorldInfrastructureInstaller :
-        IFieldInstaller<PrototypeFieldCompositionContext>
+    internal sealed class PrototypeWorldInfrastructureInstaller : IFieldInstaller<PrototypeFieldCompositionContext>
     {
         public void Install(PrototypeFieldCompositionContext context)
         {
             PrototypeProjectAssets assets = context.Definition.ProjectAssets;
             var shapes = new RuntimeShapeFactory();
             PrototypeTilemapContext tilemaps = PrototypeTilemapContext.Resolve();
-            var tiles = new PrototypeRuntimeTileFactory(
-                assets.GrassTileSprite,
-                assets.PathTileSprite);
+            var tiles = new PrototypeRuntimeTileFactory(assets.GrassTileSprite, assets.PathTileSprite);
             var prefabs = new PrototypeWorldPrefabFactory(assets);
-            var terrain = new TerrainBuilder(
-                shapes,
-                tilemaps,
-                tiles,
-                context.Definition.PlayableTileRadius);
+            var terrain = new TerrainBuilder(shapes, tilemaps, tiles, context.Definition.PlayableTileRadius);
             var architecture = new ArchitectureBuilder(shapes, prefabs);
-
-            context.SetWorldInfrastructure(
-                shapes,
-                tilemaps,
-                tiles,
-                prefabs,
-                terrain,
-                architecture);
+            context.SetWorldInfrastructure(shapes, tilemaps, tiles, prefabs, terrain, architecture);
         }
     }
 
-    internal sealed class PrototypeTerrainBaseInstaller :
-        IFieldInstaller<PrototypeFieldCompositionContext>
+    internal sealed class PrototypeTerrainBaseInstaller : IFieldInstaller<PrototypeFieldCompositionContext>
+    {
+        public void Install(PrototypeFieldCompositionContext context) => context.Terrain.BuildBase(context.WorldRoot);
+    }
+
+    internal sealed class PrototypeCollisionInstaller : IFieldInstaller<PrototypeFieldCompositionContext>
     {
         public void Install(PrototypeFieldCompositionContext context)
         {
-            context.Terrain.BuildBase(context.WorldRoot);
+            new CollisionMapBuilder(context.Tilemaps, context.Tiles, context.Definition.PlayableTileRadius).Build();
         }
     }
 
-    internal sealed class PrototypeCollisionInstaller :
-        IFieldInstaller<PrototypeFieldCompositionContext>
+    internal sealed class PrototypeArchitectureStructuresInstaller : IFieldInstaller<PrototypeFieldCompositionContext>
+    {
+        public void Install(PrototypeFieldCompositionContext context) => context.Architecture.BuildStructures(context.WorldRoot);
+    }
+
+    internal sealed class PrototypeNatureInstaller : IFieldInstaller<PrototypeFieldCompositionContext>
     {
         public void Install(PrototypeFieldCompositionContext context)
         {
-            new CollisionMapBuilder(
-                    context.Tilemaps,
-                    context.Tiles,
-                    context.Definition.PlayableTileRadius)
-                .Build();
+            new NatureBuilder(context.Shapes, context.AmbientEffects, context.Prefabs).Build(context.WorldRoot);
         }
     }
 
-    internal sealed class PrototypeArchitectureStructuresInstaller :
-        IFieldInstaller<PrototypeFieldCompositionContext>
+    internal sealed class PrototypeArchitectureLandmarksInstaller : IFieldInstaller<PrototypeFieldCompositionContext>
+    {
+        public void Install(PrototypeFieldCompositionContext context) => context.Architecture.BuildLandmarksAndLighting(context.WorldRoot);
+    }
+
+    internal sealed class PrototypeAtmosphereInstaller : IFieldInstaller<PrototypeFieldCompositionContext>
     {
         public void Install(PrototypeFieldCompositionContext context)
         {
-            context.Architecture.BuildStructures(context.WorldRoot);
+            new AtmosphereBuilder(context.Shapes, context.AmbientEffects).Build(context.WorldRoot);
         }
     }
 
-    internal sealed class PrototypeNatureInstaller :
-        IFieldInstaller<PrototypeFieldCompositionContext>
-    {
-        public void Install(PrototypeFieldCompositionContext context)
-        {
-            new NatureBuilder(
-                    context.Shapes,
-                    context.AmbientEffects,
-                    context.Prefabs)
-                .Build(context.WorldRoot);
-        }
-    }
-
-    internal sealed class PrototypeArchitectureLandmarksInstaller :
-        IFieldInstaller<PrototypeFieldCompositionContext>
-    {
-        public void Install(PrototypeFieldCompositionContext context)
-        {
-            context.Architecture.BuildLandmarksAndLighting(context.WorldRoot);
-        }
-    }
-
-    internal sealed class PrototypeAtmosphereInstaller :
-        IFieldInstaller<PrototypeFieldCompositionContext>
-    {
-        public void Install(PrototypeFieldCompositionContext context)
-        {
-            new AtmosphereBuilder(context.Shapes, context.AmbientEffects)
-                .Build(context.WorldRoot);
-        }
-    }
-
-    internal sealed class PrototypePlayerFieldInstaller :
-        IFieldInstaller<PrototypeFieldCompositionContext>
+    internal sealed class PrototypePlayerFieldInstaller : IFieldInstaller<PrototypeFieldCompositionContext>
     {
         public void Install(PrototypeFieldCompositionContext context)
         {
@@ -279,18 +281,18 @@ namespace DemonKing.Field.Prototype
         }
     }
 
-    internal sealed class PrototypeGameplayScenarioInstaller :
-        IFieldInstaller<PrototypeFieldCompositionContext>
+    internal sealed class PrototypeGameplayScenarioInstaller : IFieldInstaller<PrototypeFieldCompositionContext>
     {
         public void Install(PrototypeFieldCompositionContext context)
         {
-            GameContentCatalog gameContentCatalog =
-                context.Definition.ProjectAssets.CreateGameContentCatalog();
+            GameContentCatalog gameContentCatalog = context.Definition.ProjectAssets.CreateGameContentCatalog();
             if (!PrototypeGameplayServicesFactory.TryCreate(
                     context.Player,
                     context.Definition.ProjectAssets.QuestDefinitions,
                     gameContentCatalog,
                     context.SharedQuestProgressionService,
+                    context.SharedGameplayEventHub,
+                    context.SharedStoryProgressionService,
                     out PrototypeGameplayServices gameplayServices))
             {
                 return;
@@ -311,8 +313,7 @@ namespace DemonKing.Field.Prototype
         }
     }
 
-    internal sealed class PrototypeProgressionPickupFieldInstaller :
-        IFieldInstaller<PrototypeFieldCompositionContext>
+    internal sealed class PrototypeProgressionPickupFieldInstaller : IFieldInstaller<PrototypeFieldCompositionContext>
     {
         public void Install(PrototypeFieldCompositionContext context)
         {
@@ -329,8 +330,7 @@ namespace DemonKing.Field.Prototype
         }
     }
 
-    internal sealed class PrototypeFieldTransitionInstaller :
-        IFieldInstaller<PrototypeFieldCompositionContext>
+    internal sealed class PrototypeFieldTransitionInstaller : IFieldInstaller<PrototypeFieldCompositionContext>
     {
         public void Install(PrototypeFieldCompositionContext context)
         {
@@ -349,27 +349,18 @@ namespace DemonKing.Field.Prototype
                     PrototypeWorldMath.SortOrder(transition.Position.y),
                     context.WorldRoot);
                 exit.transform.localPosition = transition.Position;
-                PrototypeFieldTransitionInteractable interactable =
-                    exit.AddComponent<PrototypeFieldTransitionInteractable>();
-                interactable.Initialize(
-                    transition.DisplayName,
-                    transition.Destination,
-                    context.TransitionRequester);
+                PrototypeFieldTransitionInteractable interactable = exit.AddComponent<PrototypeFieldTransitionInteractable>();
+                interactable.Initialize(transition.DisplayName, transition.Destination, context.TransitionRequester);
             }
         }
     }
 
-    internal sealed class PrototypeTerrainForegroundInstaller :
-        IFieldInstaller<PrototypeFieldCompositionContext>
+    internal sealed class PrototypeTerrainForegroundInstaller : IFieldInstaller<PrototypeFieldCompositionContext>
     {
-        public void Install(PrototypeFieldCompositionContext context)
-        {
-            context.Terrain.BuildForeground(context.WorldRoot);
-        }
+        public void Install(PrototypeFieldCompositionContext context) => context.Terrain.BuildForeground(context.WorldRoot);
     }
 
-    internal sealed class PrototypeCameraFieldInstaller :
-        IFieldInstaller<PrototypeFieldCompositionContext>
+    internal sealed class PrototypeCameraFieldInstaller : IFieldInstaller<PrototypeFieldCompositionContext>
     {
         public void Install(PrototypeFieldCompositionContext context)
         {

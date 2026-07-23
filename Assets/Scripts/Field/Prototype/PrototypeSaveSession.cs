@@ -2,21 +2,19 @@ using System;
 using DemonKing.Core.Application;
 using DemonKing.Domain.Progression;
 using DemonKing.Domain.Save;
+using DemonKing.Domain.Story;
 using DemonKing.Field.Composition;
 using UnityEngine;
 
 namespace DemonKing.Field.Prototype
 {
-    /// <summary>
-    /// 起動時のSave読込結果をGame Session Runtime Stateへ変換して保持します。
-    /// 不正・未対応Saveは上書きせず、新規状態で起動しつつ保存を無効化します。
-    /// </summary>
     internal sealed class PrototypeSaveSession
     {
         private PrototypeSaveSession(
             GameSaveData saveData,
             CharacterProgressionState progressionState,
             ProgressionGrantConsumptionState grantConsumptionState,
+            StoryProgressState storyState,
             FieldLocation currentFieldLocation,
             bool wasLoaded,
             bool hasSavedLoadout,
@@ -25,6 +23,7 @@ namespace DemonKing.Field.Prototype
             SaveData = saveData;
             ProgressionState = progressionState;
             GrantConsumptionState = grantConsumptionState;
+            StoryState = storyState;
             CurrentFieldLocation = currentFieldLocation;
             WasLoaded = wasLoaded;
             HasSavedLoadout = hasSavedLoadout;
@@ -34,6 +33,7 @@ namespace DemonKing.Field.Prototype
         public GameSaveData SaveData { get; }
         public CharacterProgressionState ProgressionState { get; }
         public ProgressionGrantConsumptionState GrantConsumptionState { get; }
+        public StoryProgressState StoryState { get; }
         public FieldLocation CurrentFieldLocation { get; }
         public bool WasLoaded { get; }
         public bool HasSavedLoadout { get; }
@@ -96,6 +96,9 @@ namespace DemonKing.Field.Prototype
                 ProgressionGrantConsumptionState consumptionState =
                     ProgressionGrantConsumptionState.Restore(
                         saveData.world.consumedProgressionGrantIds);
+                StoryProgressState storyState = StoryProgressionSaveMapper.FromSaveData(
+                    saveData.story,
+                    PrototypeStoryDefinitions.PrologueChapterId);
                 FieldLocation fieldLocation = ResolveFieldLocation(
                     saveData.world,
                     defaultFieldLocation);
@@ -104,6 +107,7 @@ namespace DemonKing.Field.Prototype
                     saveData,
                     progressionState,
                     consumptionState,
+                    storyState,
                     fieldLocation,
                     wasLoaded: true,
                     hasSavedLoadout: sourceVersion >= 3,
@@ -145,6 +149,7 @@ namespace DemonKing.Field.Prototype
                 saveData: null,
                 CharacterProgressionState.CreateInitial(characterId),
                 ProgressionGrantConsumptionState.CreateInitial(),
+                StoryProgressState.CreateInitial(PrototypeStoryDefinitions.PrologueChapterId),
                 defaultFieldLocation,
                 wasLoaded: false,
                 hasSavedLoadout: false,

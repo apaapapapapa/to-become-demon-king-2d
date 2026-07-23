@@ -47,6 +47,9 @@ namespace DemonKing.Tests.EditMode
             Assert.That(saveSession.ProgressionState.Level, Is.EqualTo(3));
             Assert.That(saveSession.ProgressionState.CurrentExperience, Is.EqualTo(42));
             Assert.That(saveSession.CurrentFieldLocation, Is.EqualTo(defaultLocation));
+            Assert.That(
+                saveSession.StoryState.CurrentChapterId,
+                Is.EqualTo(PrototypeStoryDefinitions.PrologueChapterId));
 
             GameObject player = new("Save Round Trip Player");
             GameObject application = new("Save Round Trip Application");
@@ -60,6 +63,7 @@ namespace DemonKing.Tests.EditMode
                     loadout,
                     questService,
                     saveSession.GrantConsumptionState,
+                    saveSession.StoryState,
                     saveSession.CurrentFieldLocation);
 
                 PrototypeLocalSaveCoordinator coordinator =
@@ -76,6 +80,9 @@ namespace DemonKing.Tests.EditMode
                 Assert.That(saveService.LastSaved.world, Is.Not.Null);
                 Assert.That(saveService.LastSaved.world.currentFieldId, Is.EqualTo(defaultLocation.FieldId));
                 Assert.That(saveService.LastSaved.world.entryPointId, Is.EqualTo(defaultLocation.EntryPointId));
+                Assert.That(
+                    saveService.LastSaved.story.currentChapterId,
+                    Is.EqualTo(PrototypeStoryDefinitions.PrologueChapterId));
             }
             finally
             {
@@ -85,7 +92,7 @@ namespace DemonKing.Tests.EditMode
         }
 
         [Test]
-        public void SaveSession_Version4のFieldLocationをStableIdで復元する()
+        public void SaveSession_CurrentVersionのFieldLocationをStableIdで復元する()
         {
             PrototypeProjectAssets projectAssets =
                 Resources.Load<PrototypeProjectAssets>("Settings/PrototypeProjectAssets");
@@ -112,6 +119,91 @@ namespace DemonKing.Tests.EditMode
                 new FieldLocation("field.fallback", "entry.fallback"));
 
             Assert.That(saveSession.CurrentFieldLocation, Is.EqualTo(savedLocation));
+        }
+
+        [Test]
+        public void SaveSession_StoryFlagと実行済みEventを復元して次Snapshotへ維持する()
+        {
+            PrototypeProjectAssets projectAssets =
+                Resources.Load<PrototypeProjectAssets>("Settings/PrototypeProjectAssets");
+            var location = new FieldLocation(
+                PrototypeFieldDefinition.SecondaryFieldId,
+                PrototypeFieldDefinition.SecondaryEntryPointId);
+            var saveService = new MemorySaveService(new GameSaveData
+            {
+                version = GameSaveData.CurrentVersion,
+                player = new PlayerSaveData
+                {
+                    characterDefinitionId = projectAssets.PlayerCharacter.CharacterId
+                },
+                world = new WorldSaveData
+                {
+                    currentFieldId = location.FieldId,
+                    entryPointId = location.EntryPointId
+                },
+                story = new StorySaveData
+                {
+                    currentChapterId = PrototypeStoryDefinitions.JourneyChapterId,
+                    flags = new List<string>
+                    {
+                        PrototypeStoryDefinitions.MetHumanFlagId,
+                        PrototypeStoryDefinitions.LeftForestFlagId
+                    },
+                    executedEventIds = new List<string>
+                    {
+                        "story.event.met_first_human",
+                        "story.event.left_forest"
+                    }
+                }
+            });
+
+            PrototypeSaveSession saveSession = PrototypeSaveSession.Load(
+                saveService,
+                projectAssets.PlayerCharacter.CharacterId,
+                location);
+
+            Assert.That(
+                saveSession.StoryState.CurrentChapterId,
+                Is.EqualTo(PrototypeStoryDefinitions.JourneyChapterId));
+            Assert.That(
+                saveSession.StoryState.HasFlag(PrototypeStoryDefinitions.MetHumanFlagId),
+                Is.True);
+            Assert.That(
+                saveSession.StoryState.HasFlag(PrototypeStoryDefinitions.LeftForestFlagId),
+                Is.True);
+            Assert.That(
+                saveSession.StoryState.WasEventExecuted("story.event.left_forest"),
+                Is.True);
+
+            GameObject player = new("Story Save Session Player");
+            try
+            {
+                AbilityLoadoutController loadout = player.AddComponent<AbilityLoadoutController>();
+                loadout.Initialize(projectAssets.PlayerCharacter, saveSession.ProgressionState);
+                var snapshot = new PrototypeGameSaveSnapshotProvider(
+                        saveSession.ProgressionState,
+                        loadout,
+                        new QuestProgressionService(projectAssets.QuestDefinitions),
+                        saveSession.GrantConsumptionState,
+                        saveSession.StoryState,
+                        saveSession.CurrentFieldLocation)
+                    .CreateSnapshot();
+
+                Assert.That(
+                    snapshot.story.currentChapterId,
+                    Is.EqualTo(PrototypeStoryDefinitions.JourneyChapterId));
+                Assert.That(
+                    snapshot.story.flags,
+                    Does.Contain(PrototypeStoryDefinitions.LeftForestFlagId));
+                Assert.That(
+                    snapshot.story.executedEventIds,
+                    Does.Contain("story.event.left_forest"));
+                Assert.That(snapshot.world.currentFieldId, Is.EqualTo(location.FieldId));
+            }
+            finally
+            {
+                Object.DestroyImmediate(player);
+            }
         }
 
         [Test]
@@ -223,6 +315,7 @@ namespace DemonKing.Tests.EditMode
                     loadout,
                     new QuestProgressionService(projectAssets.QuestDefinitions),
                     saveSession.GrantConsumptionState,
+                    saveSession.StoryState,
                     saveSession.CurrentFieldLocation);
                 PrototypeLocalSaveCoordinator coordinator =
                     application.AddComponent<PrototypeLocalSaveCoordinator>();

@@ -1,17 +1,14 @@
 using System;
 using DemonKing.Domain.Progression;
+using DemonKing.Domain.Story;
 using DemonKing.Field.Composition;
 using DemonKing.Gameplay.Dialogue;
+using DemonKing.Gameplay.Events;
 using DemonKing.Gameplay.Quests;
 using UnityEngine;
 
 namespace DemonKing.Field.Prototype
 {
-    /// <summary>
-    /// 既存呼び出し元とField Composition境界を接続する薄い互換アダプタです。
-    /// Terrain、Collision、Architecture、Nature、Atmosphere、Gameplay、Pickup、Cameraの詳細構築は
-    /// <see cref="PrototypeFieldComposer"/> とField Installer群が担当します。
-    /// </summary>
     internal sealed class PrototypeWorldBuilder
     {
         private readonly PrototypeFieldDefinition fieldDefinition;
@@ -20,6 +17,8 @@ namespace DemonKing.Field.Prototype
         private readonly CharacterProgressionState progressionState;
         private readonly ProgressionGrantConsumptionState grantConsumptionState;
         private readonly QuestProgressionService sharedQuestProgressionService;
+        private readonly GameplayEventHub sharedGameplayEventHub;
+        private readonly StoryProgressionService sharedStoryProgressionService;
         private readonly IPrototypeFieldTransitionRequester transitionRequester;
 
         public PrototypeWorldBuilder(
@@ -35,6 +34,8 @@ namespace DemonKing.Field.Prototype
                 progressionState,
                 grantConsumptionState,
                 sharedQuestProgressionService: null,
+                sharedGameplayEventHub: null,
+                sharedStoryProgressionService: null,
                 transitionRequester: null)
         {
         }
@@ -47,6 +48,51 @@ namespace DemonKing.Field.Prototype
             ProgressionGrantConsumptionState grantConsumptionState,
             QuestProgressionService sharedQuestProgressionService,
             IPrototypeFieldTransitionRequester transitionRequester)
+            : this(
+                fieldDefinition,
+                entryPoint,
+                dialogueLog,
+                progressionState,
+                grantConsumptionState,
+                sharedQuestProgressionService,
+                sharedGameplayEventHub: null,
+                sharedStoryProgressionService: null,
+                transitionRequester)
+        {
+        }
+
+        public PrototypeWorldBuilder(
+            PrototypeFieldDefinition fieldDefinition,
+            FieldEntryPoint entryPoint,
+            DialogueLog dialogueLog,
+            CharacterProgressionState progressionState,
+            ProgressionGrantConsumptionState grantConsumptionState,
+            QuestProgressionService sharedQuestProgressionService,
+            GameplayEventHub sharedGameplayEventHub,
+            IPrototypeFieldTransitionRequester transitionRequester)
+            : this(
+                fieldDefinition,
+                entryPoint,
+                dialogueLog,
+                progressionState,
+                grantConsumptionState,
+                sharedQuestProgressionService,
+                sharedGameplayEventHub,
+                sharedStoryProgressionService: null,
+                transitionRequester)
+        {
+        }
+
+        public PrototypeWorldBuilder(
+            PrototypeFieldDefinition fieldDefinition,
+            FieldEntryPoint entryPoint,
+            DialogueLog dialogueLog,
+            CharacterProgressionState progressionState,
+            ProgressionGrantConsumptionState grantConsumptionState,
+            QuestProgressionService sharedQuestProgressionService,
+            GameplayEventHub sharedGameplayEventHub,
+            StoryProgressionService sharedStoryProgressionService,
+            IPrototypeFieldTransitionRequester transitionRequester)
         {
             this.fieldDefinition = fieldDefinition ??
                 throw new ArgumentNullException(nameof(fieldDefinition));
@@ -56,13 +102,11 @@ namespace DemonKing.Field.Prototype
             this.grantConsumptionState = grantConsumptionState ??
                 ProgressionGrantConsumptionState.CreateInitial();
             this.sharedQuestProgressionService = sharedQuestProgressionService;
+            this.sharedGameplayEventHub = sharedGameplayEventHub;
+            this.sharedStoryProgressionService = sharedStoryProgressionService;
             this.transitionRequester = transitionRequester;
         }
 
-        /// <summary>
-        /// 既存テスト・呼び出し元向けの互換Constructorです。
-        /// 新しいFieldは<see cref="PrototypeFieldDefinition"/>をCatalogへ登録して構築します。
-        /// </summary>
         public PrototypeWorldBuilder(
             Vector3 playerSpawnPosition,
             int playableTileRadius,
@@ -81,6 +125,8 @@ namespace DemonKing.Field.Prototype
             this.grantConsumptionState = grantConsumptionState ??
                 ProgressionGrantConsumptionState.CreateInitial();
             sharedQuestProgressionService = null;
+            sharedGameplayEventHub = null;
+            sharedStoryProgressionService = null;
             transitionRequester = null;
         }
 
@@ -93,6 +139,8 @@ namespace DemonKing.Field.Prototype
                 progressionState,
                 grantConsumptionState,
                 sharedQuestProgressionService,
+                sharedGameplayEventHub,
+                sharedStoryProgressionService,
                 transitionRequester);
         }
     }
