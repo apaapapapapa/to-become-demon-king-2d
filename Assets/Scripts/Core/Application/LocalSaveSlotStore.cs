@@ -4,6 +4,7 @@ using System.IO;
 using System.Text;
 using DemonKing.Domain.Save;
 using UnityEngine;
+using Math = System.Math;
 
 namespace DemonKing.Core.Application
 {
