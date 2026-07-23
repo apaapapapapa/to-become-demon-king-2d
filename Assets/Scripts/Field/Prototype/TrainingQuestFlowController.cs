@@ -1,3 +1,4 @@
+using DemonKing.Domain.Events;
 using DemonKing.Domain.Quests;
 using DemonKing.Field.Prototype.Configuration;
 using DemonKing.Gameplay.Dialogue;
@@ -67,6 +68,9 @@ namespace DemonKing.Field.Prototype
 
         private void HandleNpcInteracted()
         {
+            gameplayEventHub.Publish(new GameplayEvent(
+                GameplayEventIds.InteractionCompleted,
+                npc.ActorId));
             dummyLifecycle.SpawnOrRestore();
         }
 
