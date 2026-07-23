@@ -52,6 +52,11 @@ namespace DemonKing.Field.Prototype
     /// </summary>
     internal sealed class PrototypeFieldDefinition
     {
+        public const string PrologueFieldId = "field.prologue.deep_forest";
+        public const string PrologueSceneName = "Prototype";
+        public const string PrologueEntryPointId = "entry.prologue.birth";
+        public const string PrologueDisplayName = "深森のねぐら";
+
         public const string DefaultFieldId = "field.prototype.training_ground";
         public const string DefaultSceneName = "Prototype";
         public const string DefaultEntryPointId = "entry.default";
@@ -216,6 +221,26 @@ namespace DemonKing.Field.Prototype
                 $"Field '{FieldId}' にEntry Point '{entryPointId}' は定義されていません。");
         }
 
+        public static PrototypeFieldDefinition CreatePrologue(PrototypeProjectAssets projectAssets)
+        {
+            return new PrototypeFieldDefinition(
+                PrologueFieldId,
+                PrologueSceneName,
+                PrologueDisplayName,
+                PrologueEntryPointId,
+                new[]
+                {
+                    new FieldEntryPoint(
+                        PrologueEntryPointId,
+                        new Vector3(-2.2f, -1.4f, -1f))
+                },
+                12,
+                projectAssets,
+                Array.Empty<PrototypeFieldTransitionDefinition>(),
+                includesTrainingScenario: false,
+                includesProgressionPickups: false);
+        }
+
         public static PrototypeFieldDefinition CreateInitial(
             PrototypeApplicationSettings settings,
             PrototypeProjectAssets projectAssets)
@@ -318,7 +343,9 @@ namespace DemonKing.Field.Prototype
             {
                 if (definition == null)
                 {
-                    throw new ArgumentException("Field Definitionにnullを含めることはできません。", nameof(definitions));
+                    throw new ArgumentException(
+                        "Field Definitionにnullを含めることはできません。",
+                        nameof(definitions));
                 }
 
                 if (this.definitions.ContainsKey(definition.FieldId))
@@ -369,13 +396,16 @@ namespace DemonKing.Field.Prototype
             PrototypeApplicationSettings settings,
             PrototypeProjectAssets projectAssets)
         {
-            PrototypeFieldDefinition initialField =
+            PrototypeFieldDefinition prologueField =
+                PrototypeFieldDefinition.CreatePrologue(projectAssets);
+            PrototypeFieldDefinition trainingField =
                 PrototypeFieldDefinition.CreateInitial(settings, projectAssets);
             PrototypeFieldDefinition secondaryField =
                 PrototypeFieldDefinition.CreateSecondary(projectAssets);
+
             return new PrototypeFieldCatalog(
-                new[] { initialField, secondaryField },
-                initialField.FieldId);
+                new[] { prologueField, trainingField, secondaryField },
+                prologueField.FieldId);
         }
     }
 }
