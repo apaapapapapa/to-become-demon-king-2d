@@ -1,3 +1,9 @@
+## [1.18.0](https://github.com/apaapapapapa/to-become-demon-king-2d/compare/v1.17.0...v1.18.0) (2026-07-23)
+
+### Features
+
+* add second field and field transition ([#82](https://github.com/apaapapapapa/to-become-demon-king-2d/issues/82)) ([0103f61](https://github.com/apaapapapapa/to-become-demon-king-2d/commit/0103f612243531aeabb17c5eb236d6fb718ce38a))
+
 ## [1.17.0](https://github.com/apaapapapapa/to-become-demon-king-2d/compare/v1.16.0...v1.17.0) (2026-07-23)
 
 ### Features
