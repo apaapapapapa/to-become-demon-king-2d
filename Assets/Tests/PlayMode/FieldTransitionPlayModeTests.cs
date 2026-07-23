@@ -29,6 +29,8 @@ namespace DemonKing.Tests.PlayMode
                     PrototypeFieldDefinition.DefaultFieldId,
                     PrototypeFieldDefinition.DefaultEntryPointId));
             var saveService = new MemorySaveService(initialSave);
+            Scene testRunnerScene = SceneManager.GetActiveScene();
+            Scene bootstrapScene = CreateBootstrapScene();
             GameObject applicationRoot = null;
 
             try
@@ -75,7 +77,7 @@ namespace DemonKing.Tests.PlayMode
                 }
             }
 
-            yield return CleanupFieldScenes();
+            yield return CleanupFieldScenes(testRunnerScene, bootstrapScene);
         }
 
         [UnityTest]
@@ -87,6 +89,8 @@ namespace DemonKing.Tests.PlayMode
                 PrototypeFieldDefinition.SecondaryEntryPointId);
             var saveService = new MemorySaveService(
                 CreateProgressedSave(projectAssets, secondaryLocation));
+            Scene testRunnerScene = SceneManager.GetActiveScene();
+            Scene bootstrapScene = CreateBootstrapScene();
             GameObject applicationRoot = null;
 
             try
@@ -121,7 +125,15 @@ namespace DemonKing.Tests.PlayMode
                 }
             }
 
-            yield return CleanupFieldScenes();
+            yield return CleanupFieldScenes(testRunnerScene, bootstrapScene);
+        }
+
+        private static Scene CreateBootstrapScene()
+        {
+            Scene bootstrapScene = SceneManager.CreateScene(
+                "FieldTransitionBootstrap-" + Guid.NewGuid().ToString("N"));
+            Assert.That(SceneManager.SetActiveScene(bootstrapScene), Is.True);
+            return bootstrapScene;
         }
 
         private static PrototypeProjectAssets LoadProjectAssets()
@@ -234,21 +246,32 @@ namespace DemonKing.Tests.PlayMode
             Assert.That(abilityId, Is.EqualTo(expectedAbilityId));
         }
 
-        private static IEnumerator CleanupFieldScenes()
+        private static IEnumerator CleanupFieldScenes(Scene testRunnerScene, Scene bootstrapScene)
         {
             yield return null;
-            Scene cleanupScene = SceneManager.CreateScene(
-                "FieldTransitionCleanup-" + Guid.NewGuid().ToString("N"));
-            SceneManager.SetActiveScene(cleanupScene);
 
-            yield return UnloadIfLoaded(PrototypeFieldDefinition.DefaultSceneName, cleanupScene);
-            yield return UnloadIfLoaded(PrototypeFieldDefinition.SecondarySceneName, cleanupScene);
+            if (testRunnerScene.IsValid() && testRunnerScene.isLoaded)
+            {
+                SceneManager.SetActiveScene(testRunnerScene);
+            }
+
+            yield return UnloadIfLoaded(PrototypeFieldDefinition.DefaultSceneName, testRunnerScene);
+            yield return UnloadIfLoaded(PrototypeFieldDefinition.SecondarySceneName, testRunnerScene);
+
+            if (bootstrapScene.IsValid() && bootstrapScene.isLoaded)
+            {
+                AsyncOperation bootstrapUnload = SceneManager.UnloadSceneAsync(bootstrapScene);
+                if (bootstrapUnload != null)
+                {
+                    yield return bootstrapUnload;
+                }
+            }
         }
 
-        private static IEnumerator UnloadIfLoaded(string sceneName, Scene cleanupScene)
+        private static IEnumerator UnloadIfLoaded(string sceneName, Scene preservedScene)
         {
             Scene scene = SceneManager.GetSceneByName(sceneName);
-            if (!scene.IsValid() || !scene.isLoaded || scene.handle == cleanupScene.handle)
+            if (!scene.IsValid() || !scene.isLoaded || scene.handle == preservedScene.handle)
             {
                 yield break;
             }
