@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using DemonKing.Domain.Story;
 using DemonKing.Gameplay.Characters;
 using DemonKing.Gameplay.Content;
 using DemonKing.Gameplay.Events;
@@ -18,11 +19,29 @@ namespace DemonKing.Field.Prototype
             GameplayEventHub gameplayEventHub,
             QuestProgressionService questProgressionService,
             GameContentCatalog gameContentCatalog)
+            : this(
+                progressionAcquisitionService,
+                rewardService,
+                gameplayEventHub,
+                questProgressionService,
+                storyProgressionService: null,
+                gameContentCatalog)
+        {
+        }
+
+        public PrototypeGameplayServices(
+            ProgressionAcquisitionService progressionAcquisitionService,
+            RewardService rewardService,
+            GameplayEventHub gameplayEventHub,
+            QuestProgressionService questProgressionService,
+            StoryProgressionService storyProgressionService,
+            GameContentCatalog gameContentCatalog)
         {
             ProgressionAcquisitionService = progressionAcquisitionService;
             RewardService = rewardService;
             GameplayEventHub = gameplayEventHub;
             QuestProgressionService = questProgressionService;
+            StoryProgressionService = storyProgressionService;
             GameContentCatalog = gameContentCatalog;
         }
 
@@ -30,6 +49,7 @@ namespace DemonKing.Field.Prototype
         public RewardService RewardService { get; }
         public GameplayEventHub GameplayEventHub { get; }
         public QuestProgressionService QuestProgressionService { get; }
+        public StoryProgressionService StoryProgressionService { get; }
         public GameContentCatalog GameContentCatalog { get; }
     }
 
@@ -47,6 +67,7 @@ namespace DemonKing.Field.Prototype
                 gameContentCatalog,
                 sharedQuestProgressionService: null,
                 sharedGameplayEventHub: null,
+                sharedStoryProgressionService: null,
                 out services);
         }
 
@@ -63,12 +84,31 @@ namespace DemonKing.Field.Prototype
                 gameContentCatalog,
                 sharedQuestProgressionService,
                 sharedGameplayEventHub: null,
+                sharedStoryProgressionService: null,
+                out services);
+        }
+
+        public static bool TryCreate(
+            GameObject player,
+            IEnumerable<QuestDefinition> questDefinitions,
+            GameContentCatalog gameContentCatalog,
+            QuestProgressionService sharedQuestProgressionService,
+            GameplayEventHub sharedGameplayEventHub,
+            out PrototypeGameplayServices services)
+        {
+            return TryCreate(
+                player,
+                questDefinitions,
+                gameContentCatalog,
+                sharedQuestProgressionService,
+                sharedGameplayEventHub,
+                sharedStoryProgressionService: null,
                 out services);
         }
 
         /// <summary>
-        /// Game Session所有のQuest Service / Gameplay Event HubをField Runtimeへ再接続できます。
-        /// Hubを共有する場合、Quest / Story等の購読はSession側で一度だけ行います。
+        /// Game Session所有のQuest / Story / Gameplay Event HubをField Runtimeへ再接続します。
+        /// Player依存のAcquisition / RewardだけをFieldごとに再構築します。
         /// </summary>
         public static bool TryCreate(
             GameObject player,
@@ -76,6 +116,7 @@ namespace DemonKing.Field.Prototype
             GameContentCatalog gameContentCatalog,
             QuestProgressionService sharedQuestProgressionService,
             GameplayEventHub sharedGameplayEventHub,
+            StoryProgressionService sharedStoryProgressionService,
             out PrototypeGameplayServices services)
         {
             services = null;
@@ -124,6 +165,7 @@ namespace DemonKing.Field.Prototype
                 rewardService,
                 gameplayEventHub,
                 questProgressionService,
+                sharedStoryProgressionService,
                 gameContentCatalog);
             return true;
         }
