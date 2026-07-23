@@ -1,6 +1,6 @@
 # ロードマップ
 
-この文書を、プロジェクト全体の実装状況と開発優先度のSource of Truthとします。設計書・仕様書・READMEには将来タスク一覧を重複記載せず、実装済みの正式な境界は [技術設計](../design/technical-design.md) と [AI Context Map](../ai/context-map.md) を参照してください。
+この文書を、プロジェクト全体の実装状況と開発優先度のSource of Truthとします。設計書・仕様書・READMEには将来タスク一覧を重複記載せず、実装済みの正式なアーキテクチャ境界は [技術設計](../design/technical-design.md) を参照してください。関連する仕様・コード・テストへのナビゲーションには [AI Context Map](../ai/context-map.md) を利用します。
 
 ## 開発方針
 
