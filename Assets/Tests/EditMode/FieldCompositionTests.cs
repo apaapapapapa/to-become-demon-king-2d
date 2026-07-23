@@ -54,6 +54,24 @@ namespace DemonKing.Tests.EditMode
         }
 
         [Test]
+        public void FieldCatalog_NewGameのInitialFieldをPrologueForestにする()
+        {
+            PrototypeProjectAssets projectAssets =
+                Resources.Load<PrototypeProjectAssets>("Settings/PrototypeProjectAssets");
+            PrototypeFieldCatalog catalog = PrototypeFieldCatalog.CreateInitial(
+                projectAssets.ApplicationSettings,
+                projectAssets);
+
+            Assert.That(catalog.InitialField.FieldId, Is.EqualTo(PrototypeFieldDefinition.PrologueFieldId));
+            Assert.That(
+                catalog.InitialField.ConfiguredDefaultEntryPointId,
+                Is.EqualTo(PrototypeFieldDefinition.PrologueEntryPointId));
+            Assert.That(catalog.InitialField.TrainingScenario, Is.Null);
+            Assert.That(catalog.InitialField.ProgressionPickups, Is.Empty);
+            Assert.That(catalog.InitialField.Transitions, Is.Empty);
+        }
+
+        [Test]
         public void FieldCatalog_StableFieldIdとEntryPointIdでDefinitionを解決する()
         {
             PrototypeProjectAssets projectAssets =
@@ -73,7 +91,7 @@ namespace DemonKing.Tests.EditMode
         }
 
         [Test]
-        public void FieldCatalog_2つ目のFieldとEntryPointをStableIdで解決する()
+        public void FieldCatalog_既存FieldもStableIdで解決する()
         {
             PrototypeProjectAssets projectAssets =
                 Resources.Load<PrototypeProjectAssets>("Settings/PrototypeProjectAssets");
@@ -89,32 +107,43 @@ namespace DemonKing.Tests.EditMode
                 out PrototypeFieldDefinition definition,
                 out FieldEntryPoint entryPoint);
 
-            Assert.That(catalog.Definitions.Count, Is.EqualTo(2));
+            Assert.That(catalog.Definitions.Count, Is.EqualTo(3));
             Assert.That(resolved, Is.True);
             Assert.That(definition.FieldId, Is.EqualTo(PrototypeFieldDefinition.SecondaryFieldId));
             Assert.That(definition.SceneName, Is.EqualTo(PrototypeFieldDefinition.SecondarySceneName));
             Assert.That(entryPoint.EntryPointId, Is.EqualTo(PrototypeFieldDefinition.SecondaryEntryPointId));
             Assert.That(definition.TrainingScenario, Is.Null);
             Assert.That(definition.ProgressionPickups, Is.Empty);
+            Assert.That(
+                catalog.TryGetDefinition(
+                    PrototypeFieldDefinition.DefaultFieldId,
+                    out PrototypeFieldDefinition training),
+                Is.True);
+            Assert.That(training.TrainingScenario, Is.SameAs(projectAssets.TrainingScenario));
         }
 
         [Test]
-        public void FieldCatalog_FieldAとFieldBの出口が相互のEntryPointを指す()
+        public void FieldCatalog_訓練場とForestGateの出口が相互のEntryPointを指す()
         {
             PrototypeProjectAssets projectAssets =
                 Resources.Load<PrototypeProjectAssets>("Settings/PrototypeProjectAssets");
             PrototypeFieldCatalog catalog = PrototypeFieldCatalog.CreateInitial(
                 projectAssets.ApplicationSettings,
                 projectAssets);
-            PrototypeFieldDefinition initial = catalog.InitialField;
+
+            Assert.That(
+                catalog.TryGetDefinition(
+                    PrototypeFieldDefinition.DefaultFieldId,
+                    out PrototypeFieldDefinition training),
+                Is.True);
             Assert.That(
                 catalog.TryGetDefinition(
                     PrototypeFieldDefinition.SecondaryFieldId,
                     out PrototypeFieldDefinition secondary),
                 Is.True);
 
-            PrototypeFieldTransitionDefinition toSecondary = initial.Transitions.Single();
-            PrototypeFieldTransitionDefinition toInitial = secondary.Transitions.Single();
+            PrototypeFieldTransitionDefinition toSecondary = training.Transitions.Single();
+            PrototypeFieldTransitionDefinition toTraining = secondary.Transitions.Single();
 
             Assert.That(
                 toSecondary.Destination,
@@ -122,12 +151,12 @@ namespace DemonKing.Tests.EditMode
                     PrototypeFieldDefinition.SecondaryFieldId,
                     PrototypeFieldDefinition.SecondaryEntryPointId)));
             Assert.That(
-                toInitial.Destination,
+                toTraining.Destination,
                 Is.EqualTo(new FieldLocation(
-                    initial.FieldId,
+                    training.FieldId,
                     PrototypeFieldDefinition.ReturnFromSecondaryEntryPointId)));
             Assert.That(
-                initial.TryResolveEntryPoint(
+                training.TryResolveEntryPoint(
                     PrototypeFieldDefinition.ReturnFromSecondaryEntryPointId,
                     out _),
                 Is.True);
