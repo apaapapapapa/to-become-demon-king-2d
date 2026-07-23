@@ -168,6 +168,7 @@ namespace DemonKing.Field.Prototype
                     saveSession.GrantConsumptionState,
                     questProgressionService,
                     gameplayEventHub,
+                    storyProgressionService,
                     transitionRequester)
                 .Build();
         }
