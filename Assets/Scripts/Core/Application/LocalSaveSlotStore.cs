@@ -4,7 +4,6 @@ using System.IO;
 using System.Text;
 using DemonKing.Domain.Save;
 using UnityEngine;
-using Math = System.Math;
 
 namespace DemonKing.Core.Application
 {
@@ -84,8 +83,8 @@ namespace DemonKing.Core.Application
             SlotId = slotId;
             Status = status;
             LastSavedUtc = lastSavedUtc;
-            PlayTimeSeconds = Math.Max(0d, playTimeSeconds);
-            Level = Math.Max(0, level);
+            PlayTimeSeconds = System.Math.Max(0d, playTimeSeconds);
+            Level = System.Math.Max(0, level);
             CurrentFieldId = currentFieldId ?? string.Empty;
             SaveVersion = saveVersion;
         }
@@ -203,7 +202,7 @@ namespace DemonKing.Core.Application
                     fallbackSavedAtUtc);
                 double playTimeSeconds = metadataFileData == null
                     ? 0d
-                    : Math.Max(0d, metadataFileData.playTimeSeconds);
+                    : System.Math.Max(0d, metadataFileData.playTimeSeconds);
 
                 return new SaveSlotMetadata(
                     slotId,
@@ -340,7 +339,7 @@ namespace DemonKing.Core.Application
             }
 
             this.metadataFilePath = Path.GetFullPath(metadataFilePath);
-            this.previousPlayTimeSeconds = Math.Max(0d, previousPlayTimeSeconds);
+            this.previousPlayTimeSeconds = System.Math.Max(0d, previousPlayTimeSeconds);
             this.realtimeSecondsProvider = realtimeSecondsProvider ??
                 throw new ArgumentNullException(nameof(realtimeSecondsProvider));
             this.utcNowProvider = utcNowProvider ?? throw new ArgumentNullException(nameof(utcNowProvider));
@@ -365,7 +364,7 @@ namespace DemonKing.Core.Application
 
         private void WriteMetadata(GameSaveData saveData)
         {
-            double elapsedSeconds = Math.Max(
+            double elapsedSeconds = System.Math.Max(
                 0d,
                 realtimeSecondsProvider() - sessionStartRealtimeSeconds);
             DateTime savedAtUtc = utcNowProvider().ToUniversalTime();
