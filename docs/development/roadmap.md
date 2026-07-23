@@ -141,6 +141,54 @@ P0では、New Gameから最初のBoss討伐・帰還までを一続きで遊べ
 | 9 | #73 | Shop / Quest Board | #71, #72 |
 | 10 | #74 | 最初のDungeon / Boss | #67, #73 |
 
+## P0実装に伴う限定リファクタリング順序
+
+P0では大規模な再設計を先行させず、各Issueを実装して初めて必要になる境界だけを、そのIssueの直前または同時期に独立して整理します。目的はFramework追加ではなく、複数Field・Story・本編NPC・Inventory追加による変更集中を防ぐことです。
+
+| タイミング | 対応 | 目的 |
+| --- | --- | --- |
+| #65 | Save Slot境界だけを追加し、大規模なGame Session再編は行わない | Slotごとの保存先解決を既存 `ISaveService` / Save DTOから分離する |
+| #66〜#67前 | Application / Game Sessionの寿命とField Sceneの寿命を分離する | Progression / Loadout / Quest / Autosave / Application UIをScene遷移で再生成せず保持できるようにする |
+| #67 | Field固有データを `PrototypeProjectAssets` の全体設定から分離し、複数FieldをCatalog登録できる形にする | Forest / Town / Dungeon追加時にTraining Scenarioや巨大ProjectAssetsへField固有情報を蓄積しない |
+| #67 | `PrototypeFieldComposer` の固定Training Scenario依存を外し、Field Definitionに応じたCompositionを選択できるようにする | 2つ目以降のField追加でWorld Builderや巨大な `fieldId` 分岐をコピーしない |
+| #68前 | `GameplayEvent` をQuest固有namespaceから汎用Event境界へ移す | QuestとStoryが同じGameplay Event Hubを対等に購読できるようにする |
+| #69前 | `PrototypeNpcInteractable` から本編用Dialogue Interaction境界を切り出し、NPC Presentationと会話進行を分離する | 育ての親、Guild受付、Shop NPC、一般NPCを同じInteraction / Dialogue基盤で扱う |
+| #68〜#72 | Save Snapshot / Restoreの変更集中を監視し、Story / Inventory / Currency追加で肥大化が確認された場合だけ分割する | 先回りしたSave Plugin Frameworkを作らず、実際の変更理由に応じて責務を分離する |
+| #72 | Inventory / Currencyの更新境界を追加し、既存 `RewardService` をShopや所持品操作の総合Serviceにしない | Quest Reward / Enemy Drop / Shopから共通Stateを安全に更新する |
+
+### ライフサイクル境界
+
+#67以降は、次の寿命を明確に分離します。
+
+```text
+Application / Game Session lifetime
+  |- Character Progression
+  |- Ability Loadout
+  |- Quest Runtime
+  |- Story Runtime        #68
+  |- Inventory / Currency #72
+  |- World persistent state
+  |- Current Field Location
+  |- Save Coordinator
+  `- Gameplay Event Hub
+
+Field Scene lifetime
+  |- Terrain / Collision / Architecture
+  |- Field NPC / Enemy / Pickup
+  |- Field-specific Scenario / Presentation
+  `- Player scene binding / Camera
+```
+
+Field遷移時に永続Runtime StateをSave DTO経由で受け渡すことを標準にはせず、Game Sessionが保持するRuntime Stateを次のField Compositionへ接続します。Save DTOは終了・Autosave・Continue等の永続化境界として維持します。
+
+### 制約
+
+- 上記リファクタリング自体を新しい大規模Frameworkへ発展させない
+- ECS、独自DI Framework、Addressables、Scene Streamingをこの対応の前提にしない
+- 機能変更と独立可能な構造変更は原則として別PRにする
+- Story Engine、Dialogue Engine、Save Plugin Framework、NPC Frameworkを先回りして作らない
+- 2つ目の実利用箇所で共通化の必要性が確認できるまでは、現在の単純な契約を優先する
+
 機能変更と大規模構造変更は原則として同一PRへ混在させず、各Issueを独立PRで完了させます。
 
 ## P0-1: Game Start / Save UX
