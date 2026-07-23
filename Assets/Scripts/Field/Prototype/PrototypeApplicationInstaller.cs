@@ -1,3 +1,4 @@
+using System;
 using DemonKing.Core.Application;
 using DemonKing.Core.Input;
 using DemonKing.Field.Prototype.Configuration;
@@ -15,10 +16,21 @@ namespace DemonKing.Field.Prototype
     internal sealed class PrototypeApplicationInstaller
     {
         private readonly PrototypeProjectAssets projectAssets;
+        private readonly ISaveService saveService;
 
         public PrototypeApplicationInstaller(PrototypeProjectAssets projectAssets)
+            : this(
+                projectAssets,
+                LocalSaveSlotStore.CreateDefault().CreateSaveService(SaveSlotId.Slot1))
+        {
+        }
+
+        public PrototypeApplicationInstaller(
+            PrototypeProjectAssets projectAssets,
+            ISaveService saveService)
         {
             this.projectAssets = projectAssets;
+            this.saveService = saveService ?? throw new ArgumentNullException(nameof(saveService));
         }
 
         public GameObject Install()
@@ -35,7 +47,6 @@ namespace DemonKing.Field.Prototype
 
             GameObject applicationRoot = new("Application Runtime");
             var dialogueLog = new DialogueLog();
-            JsonFileSaveService saveService = JsonFileSaveService.CreateDefault();
             PrototypeGameSessionResult sessionResult = new PrototypeGameSession(
                     projectAssets,
                     settings,
