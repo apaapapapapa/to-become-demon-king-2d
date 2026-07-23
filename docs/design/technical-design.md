@@ -27,6 +27,7 @@ Prototype.unity
      |- Progression Pickup definitions
      `- World / UI Asset references
   -> PrototypeApplicationInstaller
+     |- LocalSaveSlotStore -> selected ISaveService
      |- PrototypeGameSession
      |  |- PrototypeSaveSession
      |  |- PrototypeWorldBuilder
@@ -42,7 +43,7 @@ Prototype.unity
 
 `FieldBootstrap` は最小のエントリーポイントとします。`PrototypeProjectAssets` はPrototype全体のComposition Manifestです。Quest、状態別Dialogue、Enemy AI、Reward、Progression Grantのように同じ縦切りループで変更される参照は `TrainingScenarioDefinition` へ集約します。訓練シナリオ外のフィールド取得物は `PrototypeProgressionPickupDefinition` としてProjectAssetsへ保持します。
 
-`PrototypeApplicationInstaller` はApplication全体の構築順序だけを調停します。Save読込からRuntime構築・復元・保存開始までの順序は `PrototypeGameSession` に委譲し、Feature固有のSave復元ロジックをInstallerへ追加しません。
+`PrototypeApplicationInstaller` はApplication全体の構築順序だけを調停します。Save読込からRuntime構築・復元・保存開始までの順序は `PrototypeGameSession` に委譲し、Feature固有のSave復元ロジックをInstallerへ追加しません。Save SlotはApplication側の `LocalSaveSlotStore` で具体的な `ISaveService` へ解決してからGame Sessionへ渡します。
 
 Player生成では `PrototypePlayerSpawner` をPrefab Instantiate、Spawn位置、`CharacterRuntimeContextHost` へのRuntime Context注入開始へ限定します。Gameplay Featureの詳細構築は `PrototypePlayerRuntimeInstaller` が次の単位へ分配します。
 
@@ -150,18 +151,21 @@ PrototypeProjectAssets
 PrototypeのローカルSaveは次の順序で構成します。
 
 ```text
-ISaveService
+LocalSaveSlotStore
+  -> SaveSlotId -> ISaveService
   -> PrototypeSaveSession: Load / Migration / Player・World基礎Runtime State復元
   -> PrototypeWorldBuilder: World / Player Runtime構築
   -> PrototypeGameSaveRestorer: Ability Loadout / Questを構築済みRuntimeへ適用
   -> PrototypeGameSaveSnapshotProvider: Runtime State一式 -> GameSaveData
   -> PrototypeLocalSaveCoordinator: 保存タイミング
-  -> ISaveService
+  -> selected ISaveService
 ```
+
+`LocalSaveSlotStore` は3つの固定Slotから具体的なローカルファイルを解決します。Slot 1は既存 `save.json` を維持し、Slot 2 / 3は独立ファイルを使用します。表示用MetadataはGame Saveとは別sidecarへ保存し、最終Save日時、累積Play Time、Level、Current Fieldと `Empty` / `Ready` / `Corrupted` / `UnsupportedVersion` 状態をTitle / Load Game側へ提供します。MetadataはRuntime復元元にはしません。
 
 `PrototypeWorldBuilder` はSave DTOを参照せず、Quest復元も行いません。`CharacterProgressionSaveMapper` は `CharacterProgressionState` と `PlayerSaveData` の変換だけを担当します。`PrototypeGameSaveSnapshotProvider` がProgression、Ability Loadout、Quest、World消費状態を現在Versionの `GameSaveData` へ集約します。`PrototypeLocalSaveCoordinator` はRuntime構築完了直後・15秒ごと・Application Pause・Quit時の保存だけを管理します。
 
-Save Slot / New Game / Continueを追加する場合は、Slotや開始方法に応じた `ISaveService` の解決をApplication / Platform側へ追加します。Runtime State、Save Mapper、`GameSaveData` はSlot数に依存させません。Gameplay Featureは具体的な保存先を参照しません。具体的な永続化対象と復元時の扱いは [セーブ仕様](../specifications/save.md) を参照してください。
+Slotや開始方法に応じた `ISaveService` の解決はApplication / Platform側で行います。Runtime State、Save Mapper、`GameSaveData` はSlot数に依存させません。Gameplay Featureは具体的な保存先を参照しません。現在のFieldBootstrap直起動はSlot 1を既定値とし、Title Screen追加後は選択済み `ISaveService` を `PrototypeApplicationInstaller` へ注入します。具体的な永続化対象と復元時の扱いは [セーブ仕様](../specifications/save.md) を参照してください。
 
 ## Combat / Interaction / AI
 
@@ -208,7 +212,7 @@ EditModeで検証する対象:
 - Ability Loadout Policy / Eligibility、Runtime進捗初期化、取得済みArt / Skillの表示Projection
 - Input Actionの論理Slot名とKeyboard / Gamepad Binding
 - 追加Runtime ContentとProgression Pickup Definition / Grantの設定整合性
-- Save Migration、JSON File round trip、Ability Loadout / Quest / World Save Mapper
+- Save Migration、JSON File round trip、Save Slot解決 / Metadata、Ability Loadout / Quest / World Save Mapper
 - Game SessionのLoad → Migration → Runtime復元 → Snapshot → Save境界
 - Quest TrackerのProjection / Selector / Notification Formatter
 - `LinearDialogueSequence`、`SpawnLifecycle<T>` の純粋ロジック
@@ -225,7 +229,7 @@ PlayModeで検証する対象:
 - Progression Grant InteractionからArt / Skill Runtime Stateまでの取得統合
 - Training Quest Flow、Dummy Defeat Event Bridge、Spawn / Interaction / Combatをまたぐ縦切り統合
 
-Quest UIのPlayModeテストは、uGUI階層生成、Questイベント購読、`QuestNotificationView` の通知寿命といったRuntime統合へ集中させ、状態文言・表示対象選択などの純粋な表示ポリシーはEditModeで検証します。Ability Loadoutも候補生成と割当可否はEditMode、Prefab uGUIとInput Context統合はPlayMode側の責務とします。CIでは引き続きEditMode / PlayModeの両方を実行します。
+Quest UIのPlayModeテストは、uGUI階層生成、Questイベント購読、`QuestNotificationView` の通知寿命といったRuntime統合へ集中させ、状態文言・表示対象選択などの純粋な表示ポリシーはEditModeで検証します。Ability Loadoutも候補生成と割当可否はEditMode、Prefab uGUIとInput Context統合はPlayMode側の責任とします。CIでは引き続きEditMode / PlayModeの両方を実行します。
 
 ## Platform実装
 
