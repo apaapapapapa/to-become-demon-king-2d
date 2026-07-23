@@ -1,3 +1,9 @@
+## [1.19.0](https://github.com/apaapapapapa/to-become-demon-king-2d/compare/v1.18.0...v1.19.0) (2026-07-23)
+
+### Features
+
+* add story progression runtime ([#83](https://github.com/apaapapapapa/to-become-demon-king-2d/issues/83)) ([371fa71](https://github.com/apaapapapapa/to-become-demon-king-2d/commit/371fa717e235f9f590e109875c519d44bd603825))
+
 ## [1.18.0](https://github.com/apaapapapapa/to-become-demon-king-2d/compare/v1.17.0...v1.18.0) (2026-07-23)
 
 ### Features
