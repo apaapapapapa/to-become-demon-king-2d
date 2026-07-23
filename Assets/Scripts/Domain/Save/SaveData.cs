@@ -10,12 +10,13 @@ namespace DemonKing.Domain.Save
     [Serializable]
     public sealed class GameSaveData
     {
-        public const int CurrentVersion = 4;
+        public const int CurrentVersion = 5;
 
         public int version = CurrentVersion;
         public PlayerSaveData player = new PlayerSaveData();
         public List<QuestProgressSaveData> quests = new List<QuestProgressSaveData>();
         public WorldSaveData world = new WorldSaveData();
+        public StorySaveData story = new StorySaveData();
     }
 
     /// <summary>
@@ -34,10 +35,6 @@ namespace DemonKing.Domain.Save
         public AbilityLoadoutSaveData abilityLoadout = new AbilityLoadoutSaveData();
     }
 
-    /// <summary>
-    /// Artの習得状態と累積熟練ポイントだけを永続化するDTOです。
-    /// ランクと解放AbilityはDefinitionから再計算します。
-    /// </summary>
     [Serializable]
     public sealed class ArtProgressSaveData
     {
@@ -45,10 +42,6 @@ namespace DemonKing.Domain.Save
         public long masteryPoints;
     }
 
-    /// <summary>
-    /// プレイヤーが明示的に変更できるAbility Slot割当です。
-    /// SlotはCore Input enumへDomain Save DTOを依存させないため整数値で保持します。
-    /// </summary>
     [Serializable]
     public sealed class AbilityLoadoutSaveData
     {
@@ -62,10 +55,6 @@ namespace DemonKing.Domain.Save
         public string abilityId = string.Empty;
     }
 
-    /// <summary>
-    /// Quest単位の状態とObjective進捗です。
-    /// StatusはDomain Quest enumへのSave DTO依存を避けるため整数値で保持します。
-    /// </summary>
     [Serializable]
     public sealed class QuestProgressSaveData
     {
@@ -91,5 +80,17 @@ namespace DemonKing.Domain.Save
         public string currentFieldId = string.Empty;
         public string entryPointId = string.Empty;
         public List<string> consumedProgressionGrantIds = new List<string>();
+    }
+
+    /// <summary>
+    /// Questとは独立した本編Storyの永続状態です。
+    /// 判定結果やDefinition参照は保存せず、Stable Chapter / Flag / Story Event IDだけを保持します。
+    /// </summary>
+    [Serializable]
+    public sealed class StorySaveData
+    {
+        public string currentChapterId = string.Empty;
+        public List<string> flags = new List<string>();
+        public List<string> executedEventIds = new List<string>();
     }
 }

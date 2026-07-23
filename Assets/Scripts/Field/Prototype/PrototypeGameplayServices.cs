@@ -10,10 +10,6 @@ using UnityEngine;
 
 namespace DemonKing.Field.Prototype
 {
-    /// <summary>
-    /// PrototypeのGameplay Featureが共有するRuntime Service群です。
-    /// World構築側が個別Controllerを探索し続けないよう、Composition Rootで一度だけ生成します。
-    /// </summary>
     internal sealed class PrototypeGameplayServices
     {
         public PrototypeGameplayServices(
@@ -50,18 +46,36 @@ namespace DemonKing.Field.Prototype
                 questDefinitions,
                 gameContentCatalog,
                 sharedQuestProgressionService: null,
+                sharedGameplayEventHub: null,
+                out services);
+        }
+
+        public static bool TryCreate(
+            GameObject player,
+            IEnumerable<QuestDefinition> questDefinitions,
+            GameContentCatalog gameContentCatalog,
+            QuestProgressionService sharedQuestProgressionService,
+            out PrototypeGameplayServices services)
+        {
+            return TryCreate(
+                player,
+                questDefinitions,
+                gameContentCatalog,
+                sharedQuestProgressionService,
+                sharedGameplayEventHub: null,
                 out services);
         }
 
         /// <summary>
-        /// Fieldを跨いでQuest進捗を保持する場合はGame Session所有のQuestProgressionServiceを注入します。
-        /// Player依存のAcquisition / Reward / Event HubはFieldごとに再構築します。
+        /// Game Session所有のQuest Service / Gameplay Event HubをField Runtimeへ再接続できます。
+        /// Hubを共有する場合、Quest / Story等の購読はSession側で一度だけ行います。
         /// </summary>
         public static bool TryCreate(
             GameObject player,
             IEnumerable<QuestDefinition> questDefinitions,
             GameContentCatalog gameContentCatalog,
             QuestProgressionService sharedQuestProgressionService,
+            GameplayEventHub sharedGameplayEventHub,
             out PrototypeGameplayServices services)
         {
             services = null;
@@ -95,12 +109,15 @@ namespace DemonKing.Field.Prototype
 
             var acquisitionService = new ProgressionAcquisitionService(artController, skillController);
             var rewardService = new RewardService(contextHost.Context, acquisitionService);
-            var gameplayEventHub = new GameplayEventHub();
             QuestProgressionService questProgressionService =
                 sharedQuestProgressionService ?? new QuestProgressionService(questDefinitions);
+            GameplayEventHub gameplayEventHub =
+                sharedGameplayEventHub ?? new GameplayEventHub();
 
-            // Event HubはField単位で再生成しますが、Quest Runtime StateはGame Session所有Serviceへ接続できます。
-            gameplayEventHub.Published += questProgressionService.Handle;
+            if (sharedGameplayEventHub == null)
+            {
+                gameplayEventHub.Published += questProgressionService.Handle;
+            }
 
             services = new PrototypeGameplayServices(
                 acquisitionService,

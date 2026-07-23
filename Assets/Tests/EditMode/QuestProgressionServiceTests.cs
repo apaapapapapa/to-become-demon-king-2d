@@ -1,3 +1,4 @@
+using DemonKing.Domain.Events;
 using DemonKing.Domain.Quests;
 using DemonKing.Gameplay.Events;
 using DemonKing.Gameplay.Quests;
