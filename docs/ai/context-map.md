@@ -15,7 +15,16 @@ AIエージェントが変更対象に必要な仕様・コード・テストへ
 - **Code:** `Assets/Scripts/Core/Input/`
 - **Integration:** `Assets/Scripts/Gameplay/Abilities/`, `Assets/Scripts/Field/Prototype/`
 - **Tests:** `Assets/Tests/PlayMode/`
-- **Related:** Ability, Interaction, Pause, Dodge, Evolution
+- **Related:** Ability, Interaction, Pause, Dodge, Evolution, Title Screen
+
+## Title Screen / Game Start
+
+- **Spec:** `docs/specifications/title-screen.md`, `docs/specifications/save.md#save-slot--new-game--continue境界`
+- **Code:** `Assets/Scripts/Field/Prototype/PrototypeTitleScreenController.cs`, `Assets/Scripts/Core/Application/GameStartSaveService.cs`
+- **Presentation:** `Assets/Scripts/Presentation/UI/PrototypeTitleScreenView.cs`
+- **Integration:** `Assets/Scripts/FieldBootstrap.cs`, `Assets/Scripts/Field/Prototype/PrototypeApplicationInstaller.cs`, `Assets/Scripts/Core/Application/LocalSaveSlotStore.cs`, `Assets/Scripts/Core/Input/PlayerInputReader.cs`
+- **Tests:** `Assets/Tests/EditMode/GameStartSaveServiceTests.cs`, `Assets/Tests/PlayMode/TitleScreenPlayModeTests.cs`
+- **Related:** Save, Input, Field / World Composition
 
 ## Field / World Composition
 
@@ -26,7 +35,7 @@ AIエージェントが変更対象に必要な仕様・コード・テストへ
 - **Scene Entry:** `Assets/Scripts/FieldBootstrap.cs`, `Assets/Scripts/Field/Prototype/PrototypeApplicationInstaller.cs`
 - **Session / Save:** `Assets/Scripts/Field/Prototype/PrototypeGameSession.cs`, `Assets/Scripts/Field/Prototype/PrototypeSaveSession.cs`, `Assets/Scripts/Domain/Save/SaveData.cs`
 - **Tests:** `Assets/Tests/EditMode/FieldCompositionTests.cs`, `Assets/Tests/EditMode/GameSessionSaveEditModeTests.cs`, `Assets/Tests/EditMode/LocalSaveTests.cs`
-- **Related:** Field Physics / Movement, Save, Content / Encyclopedia, Spawning, Quest
+- **Related:** Field Physics / Movement, Save, Title Screen, Content / Encyclopedia, Spawning, Quest
 
 ## Field Physics / Movement
 
@@ -128,9 +137,9 @@ AIエージェントが変更対象に必要な仕様・コード・テストへ
 - **Spec:** `docs/specifications/save.md`
 - **Design:** `docs/design/technical-design.md#local-save`
 - **Code:** `Assets/Scripts/Domain/Save/`, `Assets/Scripts/Core/Application/SaveBoundary.cs`, `Assets/Scripts/Core/Application/JsonFileSaveService.cs`, `Assets/Scripts/Core/Application/LocalSaveSlotStore.cs`, `Assets/Scripts/Gameplay/Abilities/AbilityLoadoutSaveMapper.cs`, `Assets/Scripts/Gameplay/Quests/QuestProgressSaveMapper.cs`
-- **Integration:** `Assets/Scripts/Field/Prototype/PrototypeGameSession.cs`, `Assets/Scripts/Field/Prototype/PrototypeSaveSession.cs`, `Assets/Scripts/Field/Prototype/PrototypeLocalSaveCoordinator.cs`, `Assets/Scripts/Field/Prototype/PrototypeApplicationInstaller.cs`
-- **Tests:** `Assets/Tests/EditMode/LocalSaveTests.cs`, `Assets/Tests/EditMode/SaveSlotTests.cs`, `Assets/Tests/EditMode/GameSessionSaveEditModeTests.cs`, `Assets/Tests/EditMode/FieldCompositionTests.cs`
-- **Related:** Field / World Composition, Progression, Art, Skill, Evolution, Quest, Ability, Content / Encyclopedia
+- **Integration:** `Assets/Scripts/Field/Prototype/PrototypeGameSession.cs`, `Assets/Scripts/Field/Prototype/PrototypeSaveSession.cs`, `Assets/Scripts/Field/Prototype/PrototypeLocalSaveCoordinator.cs`, `Assets/Scripts/Field/Prototype/PrototypeApplicationInstaller.cs`, `Assets/Scripts/Field/Prototype/PrototypeTitleScreenController.cs`
+- **Tests:** `Assets/Tests/EditMode/LocalSaveTests.cs`, `Assets/Tests/EditMode/SaveSlotTests.cs`, `Assets/Tests/EditMode/GameStartSaveServiceTests.cs`, `Assets/Tests/EditMode/GameSessionSaveEditModeTests.cs`, `Assets/Tests/EditMode/FieldCompositionTests.cs`, `Assets/Tests/PlayMode/TitleScreenPlayModeTests.cs`
+- **Related:** Title Screen, Field / World Composition, Progression, Art, Skill, Evolution, Quest, Ability, Content / Encyclopedia
 
 ## Modal UI / Pause
 
