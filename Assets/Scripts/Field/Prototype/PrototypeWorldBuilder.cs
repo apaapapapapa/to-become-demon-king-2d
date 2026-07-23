@@ -1,5 +1,6 @@
 using System;
 using DemonKing.Domain.Progression;
+using DemonKing.Domain.Story;
 using DemonKing.Field.Composition;
 using DemonKing.Gameplay.Dialogue;
 using DemonKing.Gameplay.Events;
@@ -17,6 +18,7 @@ namespace DemonKing.Field.Prototype
         private readonly ProgressionGrantConsumptionState grantConsumptionState;
         private readonly QuestProgressionService sharedQuestProgressionService;
         private readonly GameplayEventHub sharedGameplayEventHub;
+        private readonly StoryProgressionService sharedStoryProgressionService;
         private readonly IPrototypeFieldTransitionRequester transitionRequester;
 
         public PrototypeWorldBuilder(
@@ -33,6 +35,7 @@ namespace DemonKing.Field.Prototype
                 grantConsumptionState,
                 sharedQuestProgressionService: null,
                 sharedGameplayEventHub: null,
+                sharedStoryProgressionService: null,
                 transitionRequester: null)
         {
         }
@@ -53,6 +56,7 @@ namespace DemonKing.Field.Prototype
                 grantConsumptionState,
                 sharedQuestProgressionService,
                 sharedGameplayEventHub: null,
+                sharedStoryProgressionService: null,
                 transitionRequester)
         {
         }
@@ -66,6 +70,29 @@ namespace DemonKing.Field.Prototype
             QuestProgressionService sharedQuestProgressionService,
             GameplayEventHub sharedGameplayEventHub,
             IPrototypeFieldTransitionRequester transitionRequester)
+            : this(
+                fieldDefinition,
+                entryPoint,
+                dialogueLog,
+                progressionState,
+                grantConsumptionState,
+                sharedQuestProgressionService,
+                sharedGameplayEventHub,
+                sharedStoryProgressionService: null,
+                transitionRequester)
+        {
+        }
+
+        public PrototypeWorldBuilder(
+            PrototypeFieldDefinition fieldDefinition,
+            FieldEntryPoint entryPoint,
+            DialogueLog dialogueLog,
+            CharacterProgressionState progressionState,
+            ProgressionGrantConsumptionState grantConsumptionState,
+            QuestProgressionService sharedQuestProgressionService,
+            GameplayEventHub sharedGameplayEventHub,
+            StoryProgressionService sharedStoryProgressionService,
+            IPrototypeFieldTransitionRequester transitionRequester)
         {
             this.fieldDefinition = fieldDefinition ??
                 throw new ArgumentNullException(nameof(fieldDefinition));
@@ -76,6 +103,7 @@ namespace DemonKing.Field.Prototype
                 ProgressionGrantConsumptionState.CreateInitial();
             this.sharedQuestProgressionService = sharedQuestProgressionService;
             this.sharedGameplayEventHub = sharedGameplayEventHub;
+            this.sharedStoryProgressionService = sharedStoryProgressionService;
             this.transitionRequester = transitionRequester;
         }
 
@@ -98,6 +126,7 @@ namespace DemonKing.Field.Prototype
                 ProgressionGrantConsumptionState.CreateInitial();
             sharedQuestProgressionService = null;
             sharedGameplayEventHub = null;
+            sharedStoryProgressionService = null;
             transitionRequester = null;
         }
 
@@ -111,6 +140,7 @@ namespace DemonKing.Field.Prototype
                 grantConsumptionState,
                 sharedQuestProgressionService,
                 sharedGameplayEventHub,
+                sharedStoryProgressionService,
                 transitionRequester);
         }
     }
