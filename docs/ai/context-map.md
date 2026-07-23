@@ -127,9 +127,9 @@ AIエージェントが変更対象に必要な仕様・コード・テストへ
 
 - **Spec:** `docs/specifications/save.md`
 - **Design:** `docs/design/technical-design.md#local-save`
-- **Code:** `Assets/Scripts/Domain/Save/`, `Assets/Scripts/Core/Application/SaveBoundary.cs`, `Assets/Scripts/Core/Application/JsonFileSaveService.cs`, `Assets/Scripts/Gameplay/Abilities/AbilityLoadoutSaveMapper.cs`, `Assets/Scripts/Gameplay/Quests/QuestProgressSaveMapper.cs`
+- **Code:** `Assets/Scripts/Domain/Save/`, `Assets/Scripts/Core/Application/SaveBoundary.cs`, `Assets/Scripts/Core/Application/JsonFileSaveService.cs`, `Assets/Scripts/Core/Application/LocalSaveSlotStore.cs`, `Assets/Scripts/Gameplay/Abilities/AbilityLoadoutSaveMapper.cs`, `Assets/Scripts/Gameplay/Quests/QuestProgressSaveMapper.cs`
 - **Integration:** `Assets/Scripts/Field/Prototype/PrototypeGameSession.cs`, `Assets/Scripts/Field/Prototype/PrototypeSaveSession.cs`, `Assets/Scripts/Field/Prototype/PrototypeLocalSaveCoordinator.cs`, `Assets/Scripts/Field/Prototype/PrototypeApplicationInstaller.cs`
-- **Tests:** `Assets/Tests/EditMode/LocalSaveTests.cs`, `Assets/Tests/EditMode/GameSessionSaveEditModeTests.cs`, `Assets/Tests/EditMode/FieldCompositionTests.cs`
+- **Tests:** `Assets/Tests/EditMode/LocalSaveTests.cs`, `Assets/Tests/EditMode/SaveSlotTests.cs`, `Assets/Tests/EditMode/GameSessionSaveEditModeTests.cs`, `Assets/Tests/EditMode/FieldCompositionTests.cs`
 - **Related:** Field / World Composition, Progression, Art, Skill, Evolution, Quest, Ability, Content / Encyclopedia
 
 ## Modal UI / Pause
