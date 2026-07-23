@@ -5,7 +5,7 @@ namespace DemonKing.Field
 {
     /// <summary>
     /// プロトタイプ起動時の最小エントリーポイントです。
-    /// 具体的な設定値や初期化順序は保持せず、ProjectAssetsを解決してApplicationInstallerへ委譲します。
+    /// ProjectAssetsを解決し、Game Sessionを直接開始せずTitle Screenへ起動制御を委譲します。
     /// </summary>
     public sealed class FieldBootstrap : MonoBehaviour
     {
@@ -22,7 +22,7 @@ namespace DemonKing.Field
                 return;
             }
 
-            new PrototypeApplicationInstaller(projectAssets).Install();
+            PrototypeTitleScreenInstaller.Install(projectAssets);
         }
     }
 }
