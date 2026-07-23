@@ -8,6 +8,45 @@ using UnityEngine;
 namespace DemonKing.Field.Prototype
 {
     /// <summary>
+    /// Field内に配置する出口の静的定義です。
+    /// 遷移先はScene名ではなくStable Field / Entry Point IDで保持します。
+    /// </summary>
+    internal readonly struct PrototypeFieldTransitionDefinition
+    {
+        public PrototypeFieldTransitionDefinition(
+            string transitionId,
+            string displayName,
+            Vector3 position,
+            FieldLocation destination)
+        {
+            if (string.IsNullOrWhiteSpace(transitionId))
+            {
+                throw new ArgumentException("Transition IDは必須です。", nameof(transitionId));
+            }
+
+            if (string.IsNullOrWhiteSpace(displayName))
+            {
+                throw new ArgumentException("Transition表示名は必須です。", nameof(displayName));
+            }
+
+            if (!destination.IsValid)
+            {
+                throw new ArgumentException("遷移先Field Locationが不正です。", nameof(destination));
+            }
+
+            TransitionId = transitionId;
+            DisplayName = displayName;
+            Position = position;
+            Destination = destination;
+        }
+
+        public string TransitionId { get; }
+        public string DisplayName { get; }
+        public Vector3 Position { get; }
+        public FieldLocation Destination { get; }
+    }
+
+    /// <summary>
     /// Prototype Fieldの静的定義です。
     /// Field ID、Scene、Entry Point、Scenario / Content、World Asset参照をRuntime Compositionから分離します。
     /// </summary>
@@ -18,7 +57,16 @@ namespace DemonKing.Field.Prototype
         public const string DefaultEntryPointId = "entry.default";
         public const string DefaultDisplayName = "夕映えの学園草原";
 
+        public const string SecondaryFieldId = "field.prototype.forest_gate";
+        public const string SecondarySceneName = "PrototypeForestGate";
+        public const string SecondaryEntryPointId = "entry.from_training_ground";
+        public const string SecondaryDisplayName = "薄明の森門";
+        public const string ReturnFromSecondaryEntryPointId = "entry.from_forest_gate";
+
         private readonly Dictionary<string, FieldEntryPoint> entryPoints;
+        private readonly PrototypeFieldTransitionDefinition[] transitions;
+        private readonly bool includesTrainingScenario;
+        private readonly bool includesProgressionPickups;
 
         public PrototypeFieldDefinition(
             string fieldId,
@@ -28,6 +76,31 @@ namespace DemonKing.Field.Prototype
             IEnumerable<FieldEntryPoint> entryPoints,
             int playableTileRadius,
             PrototypeProjectAssets projectAssets)
+            : this(
+                fieldId,
+                sceneName,
+                displayName,
+                defaultEntryPointId,
+                entryPoints,
+                playableTileRadius,
+                projectAssets,
+                Array.Empty<PrototypeFieldTransitionDefinition>(),
+                includesTrainingScenario: true,
+                includesProgressionPickups: true)
+        {
+        }
+
+        public PrototypeFieldDefinition(
+            string fieldId,
+            string sceneName,
+            string displayName,
+            string defaultEntryPointId,
+            IEnumerable<FieldEntryPoint> entryPoints,
+            int playableTileRadius,
+            PrototypeProjectAssets projectAssets,
+            IEnumerable<PrototypeFieldTransitionDefinition> fieldTransitions,
+            bool includesTrainingScenario,
+            bool includesProgressionPickups)
         {
             if (string.IsNullOrWhiteSpace(fieldId))
             {
@@ -54,6 +127,11 @@ namespace DemonKing.Field.Prototype
                 throw new ArgumentNullException(nameof(entryPoints));
             }
 
+            if (fieldTransitions == null)
+            {
+                throw new ArgumentNullException(nameof(fieldTransitions));
+            }
+
             ProjectAssets = projectAssets != null
                 ? projectAssets
                 : throw new ArgumentNullException(nameof(projectAssets));
@@ -62,6 +140,8 @@ namespace DemonKing.Field.Prototype
             DisplayName = displayName;
             ConfiguredDefaultEntryPointId = defaultEntryPointId;
             PlayableTileRadius = Mathf.Max(4, playableTileRadius);
+            this.includesTrainingScenario = includesTrainingScenario;
+            this.includesProgressionPickups = includesProgressionPickups;
 
             this.entryPoints = new Dictionary<string, FieldEntryPoint>(StringComparer.Ordinal);
             foreach (FieldEntryPoint entryPoint in entryPoints)
@@ -82,6 +162,22 @@ namespace DemonKing.Field.Prototype
                     $"Default Entry Pointが定義されていません: {defaultEntryPointId}",
                     nameof(defaultEntryPointId));
             }
+
+            var transitionList = new List<PrototypeFieldTransitionDefinition>();
+            var transitionIds = new HashSet<string>(StringComparer.Ordinal);
+            foreach (PrototypeFieldTransitionDefinition transition in fieldTransitions)
+            {
+                if (!transitionIds.Add(transition.TransitionId))
+                {
+                    throw new ArgumentException(
+                        $"Transition IDが重複しています: {transition.TransitionId}",
+                        nameof(fieldTransitions));
+                }
+
+                transitionList.Add(transition);
+            }
+
+            transitions = transitionList.ToArray();
         }
 
         public string FieldId { get; }
@@ -90,12 +186,16 @@ namespace DemonKing.Field.Prototype
         public string ConfiguredDefaultEntryPointId { get; }
         public int PlayableTileRadius { get; }
         public PrototypeProjectAssets ProjectAssets { get; }
-        public TrainingScenarioDefinition TrainingScenario => ProjectAssets.TrainingScenario;
+        public TrainingScenarioDefinition TrainingScenario =>
+            includesTrainingScenario ? ProjectAssets.TrainingScenario : null;
         public IReadOnlyList<PrototypeProgressionPickupDefinition> ProgressionPickups =>
-            ProjectAssets.ProgressionPickups;
+            includesProgressionPickups
+                ? ProjectAssets.ProgressionPickups
+                : Array.Empty<PrototypeProgressionPickupDefinition>();
         public CharacterDefinition PlayerCharacter => ProjectAssets.PlayerCharacter;
         public FieldLocation DefaultLocation => new(FieldId, ConfiguredDefaultEntryPointId);
         public IReadOnlyCollection<FieldEntryPoint> EntryPoints => entryPoints.Values;
+        public IReadOnlyList<PrototypeFieldTransitionDefinition> Transitions => transitions;
 
         public bool TryResolveEntryPoint(string entryPointId, out FieldEntryPoint entryPoint)
         {
@@ -134,10 +234,50 @@ namespace DemonKing.Field.Prototype
                 {
                     new FieldEntryPoint(
                         settings.DefaultEntryPointId,
-                        settings.PlayerSpawnPosition)
+                        settings.PlayerSpawnPosition),
+                    new FieldEntryPoint(
+                        ReturnFromSecondaryEntryPointId,
+                        new Vector3(-5.25f, 3.15f, -1f))
                 },
                 settings.PlayableTileRadius,
-                projectAssets);
+                projectAssets,
+                new[]
+                {
+                    new PrototypeFieldTransitionDefinition(
+                        "transition.training_to_forest_gate",
+                        "森門へ",
+                        new Vector3(5.25f, 3.15f, -1f),
+                        new FieldLocation(SecondaryFieldId, SecondaryEntryPointId))
+                },
+                includesTrainingScenario: true,
+                includesProgressionPickups: true);
+        }
+
+        public static PrototypeFieldDefinition CreateSecondary(PrototypeProjectAssets projectAssets)
+        {
+            return new PrototypeFieldDefinition(
+                SecondaryFieldId,
+                SecondarySceneName,
+                SecondaryDisplayName,
+                SecondaryEntryPointId,
+                new[]
+                {
+                    new FieldEntryPoint(
+                        SecondaryEntryPointId,
+                        new Vector3(-4.5f, -1.5f, -1f))
+                },
+                12,
+                projectAssets,
+                new[]
+                {
+                    new PrototypeFieldTransitionDefinition(
+                        "transition.forest_gate_to_training",
+                        "訓練場へ戻る",
+                        new Vector3(4.5f, 2.5f, -1f),
+                        new FieldLocation(DefaultFieldId, ReturnFromSecondaryEntryPointId))
+                },
+                includesTrainingScenario: false,
+                includesProgressionPickups: false);
         }
 
         public static PrototypeFieldDefinition CreateLegacy(
@@ -220,13 +360,22 @@ namespace DemonKing.Field.Prototype
             return definition.TryResolveEntryPoint(location.EntryPointId, out entryPoint);
         }
 
+        public bool TryGetDefinition(string fieldId, out PrototypeFieldDefinition definition)
+        {
+            return definitions.TryGetValue(fieldId ?? string.Empty, out definition);
+        }
+
         public static PrototypeFieldCatalog CreateInitial(
             PrototypeApplicationSettings settings,
             PrototypeProjectAssets projectAssets)
         {
             PrototypeFieldDefinition initialField =
                 PrototypeFieldDefinition.CreateInitial(settings, projectAssets);
-            return new PrototypeFieldCatalog(new[] { initialField }, initialField.FieldId);
+            PrototypeFieldDefinition secondaryField =
+                PrototypeFieldDefinition.CreateSecondary(projectAssets);
+            return new PrototypeFieldCatalog(
+                new[] { initialField, secondaryField },
+                initialField.FieldId);
         }
     }
 }

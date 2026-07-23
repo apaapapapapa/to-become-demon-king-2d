@@ -10,8 +10,8 @@ using UnityEngine;
 namespace DemonKing.Field.Prototype
 {
     /// <summary>
-    /// プロトタイプ起動時のアプリケーション構成を組み立てます。
-    /// Application全体の構築順序を調停し、Feature固有のSave復元処理はGame Sessionへ委譲します。
+    /// プロトタイプ起動時のApplication寿命を構築します。
+    /// Application RootはField Sceneより長く保持し、FieldごとのPlayer / UI参照はBinderへ委譲します。
     /// </summary>
     internal sealed class PrototypeApplicationInstaller
     {
@@ -29,7 +29,9 @@ namespace DemonKing.Field.Prototype
             PrototypeProjectAssets projectAssets,
             ISaveService saveService)
         {
-            this.projectAssets = projectAssets;
+            this.projectAssets = projectAssets != null
+                ? projectAssets
+                : throw new ArgumentNullException(nameof(projectAssets));
             this.saveService = saveService ?? throw new ArgumentNullException(nameof(saveService));
         }
 
@@ -42,84 +44,144 @@ namespace DemonKing.Field.Prototype
                 return null;
             }
 
-            PrototypeSceneConfigurator.Configure(Camera.main);
             PrototypeSortingConfigurator.Configure();
 
             GameObject applicationRoot = new("Application Runtime");
+            UnityEngine.Object.DontDestroyOnLoad(applicationRoot);
+
             var dialogueLog = new DialogueLog();
-            PrototypeGameSessionResult sessionResult = new PrototypeGameSession(
-                    projectAssets,
-                    settings,
-                    dialogueLog,
-                    saveService)
-                .Start(applicationRoot);
+            var gameSession = new PrototypeGameSession(
+                projectAssets,
+                settings,
+                dialogueLog,
+                saveService);
+
+            PrototypeApplicationFieldBinder fieldBinder =
+                applicationRoot.AddComponent<PrototypeApplicationFieldBinder>();
+            fieldBinder.Initialize(projectAssets, settings, dialogueLog);
+
+            PrototypeFieldTransitionService transitionService =
+                applicationRoot.AddComponent<PrototypeFieldTransitionService>();
+            transitionService.Initialize(gameSession, fieldBinder);
+            gameSession.SetTransitionRequester(transitionService);
+
+            PrototypeGameSessionResult sessionResult = gameSession.Start(applicationRoot);
+            fieldBinder.Bind(sessionResult);
+            return applicationRoot;
+        }
+    }
+
+    /// <summary>
+    /// Field再構築後にApplication常駐Controllerを新Playerへ再接続し、Field UIを再生成します。
+    /// Progression / Quest等のSession Stateそのものは所有しません。
+    /// </summary>
+    [DisallowMultipleComponent]
+    internal sealed class PrototypeApplicationFieldBinder : MonoBehaviour
+    {
+        private PrototypeProjectAssets projectAssets;
+        private PrototypeApplicationSettings settings;
+        private DialogueLog dialogueLog;
+        private ModalUiCoordinator modalUiCoordinator;
+        private GamePauseController pauseController;
+        private EvolutionSelectionController evolutionSelectionController;
+        private GameObject uiRoot;
+        private bool initialized;
+
+        public PlayerInputReader CurrentInputReader { get; private set; }
+        public GameObject CurrentUiRoot => uiRoot;
+        public bool HasOpenModal => modalUiCoordinator != null && modalUiCoordinator.HasOpenModal;
+
+        public void Initialize(
+            PrototypeProjectAssets assets,
+            PrototypeApplicationSettings applicationSettings,
+            DialogueLog sharedDialogueLog)
+        {
+            projectAssets = assets != null
+                ? assets
+                : throw new ArgumentNullException(nameof(assets));
+            settings = applicationSettings != null
+                ? applicationSettings
+                : throw new ArgumentNullException(nameof(applicationSettings));
+            dialogueLog = sharedDialogueLog ?? throw new ArgumentNullException(nameof(sharedDialogueLog));
+
+            modalUiCoordinator = GetComponent<ModalUiCoordinator>() ??
+                gameObject.AddComponent<ModalUiCoordinator>();
+            pauseController = GetComponent<GamePauseController>() ??
+                gameObject.AddComponent<GamePauseController>();
+            evolutionSelectionController = GetComponent<EvolutionSelectionController>() ??
+                gameObject.AddComponent<EvolutionSelectionController>();
+            initialized = true;
+        }
+
+        public void Bind(PrototypeGameSessionResult sessionResult)
+        {
+            if (!initialized)
+            {
+                throw new InvalidOperationException("PrototypeApplicationFieldBinderが初期化されていません。");
+            }
+
             PrototypeWorldBuildResult worldResult = sessionResult.WorldResult;
-
-            PlayerInputReader inputReader = worldResult.Player == null
+            GameObject player = worldResult.Player;
+            PlayerInputReader inputReader = player == null
                 ? null
-                : worldResult.Player.GetComponent<PlayerInputReader>();
-
-            ModalUiCoordinator modalUiCoordinator =
-                applicationRoot.AddComponent<ModalUiCoordinator>();
-            GamePauseController pauseController =
-                applicationRoot.AddComponent<GamePauseController>();
-
+                : player.GetComponent<PlayerInputReader>();
             if (inputReader == null)
             {
-                Debug.LogError("PlayerInputReaderが見つからないため、Modal UI入力を初期化できません。");
-            }
-            else
-            {
-                modalUiCoordinator.Initialize(inputReader);
-                pauseController.Initialize(
-                    inputReader,
-                    modalUiCoordinator,
-                    settings.PausedTimeScale);
+                throw new InvalidOperationException(
+                    "Field PlayerにPlayerInputReaderがないためApplication UIを再接続できません。");
             }
 
-            EvolutionSelectionController evolutionSelectionController = null;
+            if (modalUiCoordinator.HasOpenModal)
+            {
+                throw new InvalidOperationException(
+                    "Modal UIが開いている間はField Runtimeを再バインドできません。");
+            }
+
+            CurrentInputReader = inputReader;
+            modalUiCoordinator.Initialize(inputReader);
+            pauseController.Initialize(
+                inputReader,
+                modalUiCoordinator,
+                settings.PausedTimeScale);
+
             EvolutionProgressionController evolutionProgressionController =
-                worldResult.Player == null
-                    ? null
-                    : worldResult.Player.GetComponent<EvolutionProgressionController>();
-            if (inputReader != null && evolutionProgressionController != null)
+                player.GetComponent<EvolutionProgressionController>();
+            if (evolutionProgressionController == null || !evolutionProgressionController.IsInitialized)
             {
-                evolutionSelectionController =
-                    applicationRoot.AddComponent<EvolutionSelectionController>();
-                evolutionSelectionController.Initialize(
-                    inputReader,
-                    modalUiCoordinator,
-                    evolutionProgressionController);
-            }
-            else
-            {
-                Debug.LogError("Evolution選択を初期化するためのPlayerコンポーネントが見つかりません。");
+                throw new InvalidOperationException(
+                    "Field PlayerのEvolutionProgressionControllerが初期化されていません。");
             }
 
-            AbilityLoadoutController loadoutController = worldResult.Player == null
-                ? null
-                : worldResult.Player.GetComponent<AbilityLoadoutController>();
+            evolutionSelectionController.Initialize(
+                inputReader,
+                modalUiCoordinator,
+                evolutionProgressionController);
+
+            AbilityLoadoutController loadoutController =
+                player.GetComponent<AbilityLoadoutController>();
             AbilityLoadoutSelectionController abilityLoadoutSelectionController =
-                worldResult.Player == null
-                    ? null
-                    : worldResult.Player.GetComponent<AbilityLoadoutSelectionController>();
-            if (inputReader == null ||
-                loadoutController == null ||
+                player.GetComponent<AbilityLoadoutSelectionController>();
+            if (loadoutController == null ||
+                !loadoutController.IsInitialized ||
                 abilityLoadoutSelectionController == null)
             {
-                Debug.LogError("Ability Loadout選択を初期化するためのPlayerコンポーネントが見つかりません。");
-            }
-            else
-            {
-                abilityLoadoutSelectionController.Initialize(
-                    inputReader,
-                    modalUiCoordinator,
-                    loadoutController,
-                    projectAssets.PlayerCharacter,
-                    sessionResult.ProgressionState);
+                throw new InvalidOperationException(
+                    "Field PlayerのAbility Loadout Runtimeが初期化されていません。");
             }
 
-            PrototypeUiInstaller.Create(
+            abilityLoadoutSelectionController.Initialize(
+                inputReader,
+                modalUiCoordinator,
+                loadoutController,
+                projectAssets.PlayerCharacter,
+                sessionResult.ProgressionState);
+
+            if (uiRoot != null)
+            {
+                Destroy(uiRoot);
+            }
+
+            uiRoot = PrototypeUiInstaller.Create(
                 projectAssets.UiFont,
                 projectAssets.PauseMenuPrefab,
                 projectAssets.EvolutionMenuPrefab,
@@ -130,7 +192,7 @@ namespace DemonKing.Field.Prototype
                 abilityLoadoutSelectionController,
                 worldResult.QuestProgressionService);
 
-            return applicationRoot;
+            inputReader.EnableGameplayInput();
         }
     }
 }

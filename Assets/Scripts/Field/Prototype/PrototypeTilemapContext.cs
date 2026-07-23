@@ -5,8 +5,8 @@ using UnityEngine.Tilemaps;
 namespace DemonKing.Field.Prototype
 {
     /// <summary>
-    /// プロトタイプシーン内のIsometric Gridと各Tilemapへの参照をまとめます。
-    /// シーンに不足がある場合は最小構成を補完し、Builder側がGameObject名探索を繰り返さないようにします。
+    /// Active Field Scene内のIsometric Gridと各Tilemapへの参照をまとめます。
+    /// シーンに不足がある場合は最小構成を補完し、別Field SceneのGridを誤利用しないようScene境界を守ります。
     /// Collision Tilemapは3D Collider生成用の配置マーカーとして扱います。
     /// </summary>
     internal sealed class PrototypeTilemapContext
@@ -28,7 +28,7 @@ namespace DemonKing.Field.Prototype
 
         public static PrototypeTilemapContext Resolve()
         {
-            Grid grid = Object.FindAnyObjectByType<Grid>();
+            Grid grid = PrototypeFieldSceneRuntime.FindInActiveScene<Grid>();
             if (grid == null)
             {
                 GameObject gridObject = new("Grid");
