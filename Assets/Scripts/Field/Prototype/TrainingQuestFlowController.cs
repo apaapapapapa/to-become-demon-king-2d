@@ -10,10 +10,6 @@ using UnityEngine;
 
 namespace DemonKing.Field.Prototype
 {
-    /// <summary>
-    /// 訓練シナリオのNPC会話、Quest受注・報告完了、Progression Grant、再訓練要求を調停します。
-    /// Dummy撃破イベントの変換やReward付与は担当しません。
-    /// </summary>
     internal sealed class TrainingQuestFlowController : MonoBehaviour
     {
         private PrototypeNpcInteractable npc;
@@ -70,7 +66,7 @@ namespace DemonKing.Field.Prototype
         {
             gameplayEventHub.Publish(new GameplayEvent(
                 GameplayEventIds.InteractionCompleted,
-                npc.ActorId));
+                npc.DialogueId));
             dummyLifecycle.SpawnOrRestore();
         }
 
