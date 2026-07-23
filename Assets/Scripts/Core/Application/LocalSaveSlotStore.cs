@@ -34,6 +34,7 @@ namespace DemonKing.Core.Application
         }
 
         public int Value { get; }
+        public bool IsValid => Value >= MinimumValue && Value <= MaximumValue;
 
         public bool Equals(SaveSlotId other)
         {
@@ -106,8 +107,8 @@ namespace DemonKing.Core.Application
     {
         public const int SlotCount = 3;
 
-        private static readonly IReadOnlyList<SaveSlotId> AvailableSlots =
-            new[] { SaveSlotId.Slot1, SaveSlotId.Slot2, SaveSlotId.Slot3 };
+        private static readonly IReadOnlyList<SaveSlotId> AvailableSlots = Array.AsReadOnly(
+            new[] { SaveSlotId.Slot1, SaveSlotId.Slot2, SaveSlotId.Slot3 });
 
         private readonly string directoryPath;
         private readonly Func<double> realtimeSecondsProvider;
@@ -237,6 +238,14 @@ namespace DemonKing.Core.Application
 
         private static string GetSlotFileStem(SaveSlotId slotId)
         {
+            if (!slotId.IsValid)
+            {
+                throw new ArgumentOutOfRangeException(
+                    nameof(slotId),
+                    slotId.Value,
+                    $"Save Slotは{SaveSlotId.MinimumValue}から{SaveSlotId.MaximumValue}の範囲で指定してください。");
+            }
+
             // Slot 1は既存Prototypeのsave.jsonをそのまま利用し、既存Saveを移動せず互換性を維持します。
             return slotId.Value == SaveSlotId.Slot1.Value
                 ? "save"
