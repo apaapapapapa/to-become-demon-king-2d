@@ -4,6 +4,7 @@ using DemonKing.Domain.Progression;
 using DemonKing.Field.Composition;
 using DemonKing.Gameplay.Content;
 using DemonKing.Gameplay.Dialogue;
+using DemonKing.Gameplay.Quests;
 using UnityEngine;
 
 namespace DemonKing.Field.Prototype
@@ -19,7 +20,9 @@ namespace DemonKing.Field.Prototype
             FieldEntryPoint entryPoint,
             DialogueLog dialogueLog,
             CharacterProgressionState progressionState,
-            ProgressionGrantConsumptionState grantConsumptionState)
+            ProgressionGrantConsumptionState grantConsumptionState,
+            QuestProgressionService sharedQuestProgressionService = null,
+            IPrototypeFieldTransitionRequester transitionRequester = null)
         {
             Definition = definition ?? throw new ArgumentNullException(nameof(definition));
             EntryPoint = entryPoint;
@@ -27,6 +30,8 @@ namespace DemonKing.Field.Prototype
             ProgressionState = progressionState;
             GrantConsumptionState = grantConsumptionState ??
                 ProgressionGrantConsumptionState.CreateInitial();
+            SharedQuestProgressionService = sharedQuestProgressionService;
+            TransitionRequester = transitionRequester;
             WorldRoot = new GameObject(definition.DisplayName).transform;
             AmbientEffects = WorldRoot.gameObject.AddComponent<AmbientEffectController>();
         }
@@ -37,6 +42,8 @@ namespace DemonKing.Field.Prototype
         public DialogueLog DialogueLog { get; }
         public CharacterProgressionState ProgressionState { get; }
         public ProgressionGrantConsumptionState GrantConsumptionState { get; }
+        public QuestProgressionService SharedQuestProgressionService { get; }
+        public IPrototypeFieldTransitionRequester TransitionRequester { get; }
         public Transform WorldRoot { get; }
         public AmbientEffectController AmbientEffects { get; }
 
@@ -82,7 +89,7 @@ namespace DemonKing.Field.Prototype
                 Player,
                 GameplayServices?.RewardService,
                 GameplayServices?.GameContentCatalog,
-                GameplayServices?.QuestProgressionService,
+                GameplayServices?.QuestProgressionService ?? SharedQuestProgressionService,
                 Location);
         }
     }
@@ -113,12 +120,33 @@ namespace DemonKing.Field.Prototype
             CharacterProgressionState progressionState,
             ProgressionGrantConsumptionState grantConsumptionState)
         {
+            return Compose(
+                definition,
+                entryPoint,
+                dialogueLog,
+                progressionState,
+                grantConsumptionState,
+                sharedQuestProgressionService: null,
+                transitionRequester: null);
+        }
+
+        public PrototypeWorldBuildResult Compose(
+            PrototypeFieldDefinition definition,
+            FieldEntryPoint entryPoint,
+            DialogueLog dialogueLog,
+            CharacterProgressionState progressionState,
+            ProgressionGrantConsumptionState grantConsumptionState,
+            QuestProgressionService sharedQuestProgressionService,
+            IPrototypeFieldTransitionRequester transitionRequester)
+        {
             var context = new PrototypeFieldCompositionContext(
                 definition,
                 entryPoint,
                 dialogueLog,
                 progressionState,
-                grantConsumptionState);
+                grantConsumptionState,
+                sharedQuestProgressionService,
+                transitionRequester);
             pipeline.Install(context);
             return context.CreateResult();
         }
@@ -138,6 +166,7 @@ namespace DemonKing.Field.Prototype
                 new PrototypePlayerFieldInstaller(),
                 new PrototypeGameplayScenarioInstaller(),
                 new PrototypeProgressionPickupFieldInstaller(),
+                new PrototypeFieldTransitionInstaller(),
                 new PrototypeTerrainForegroundInstaller(),
                 new PrototypeCameraFieldInstaller()
             };
@@ -261,12 +290,18 @@ namespace DemonKing.Field.Prototype
                     context.Player,
                     context.Definition.ProjectAssets.QuestDefinitions,
                     gameContentCatalog,
+                    context.SharedQuestProgressionService,
                     out PrototypeGameplayServices gameplayServices))
             {
                 return;
             }
 
             context.SetGameplayServices(gameplayServices);
+            if (context.Definition.TrainingScenario == null)
+            {
+                return;
+            }
+
             new PrototypeGameplayFeatureInstaller().Install(
                 context.WorldRoot,
                 context.Player,
@@ -294,6 +329,36 @@ namespace DemonKing.Field.Prototype
         }
     }
 
+    internal sealed class PrototypeFieldTransitionInstaller :
+        IFieldInstaller<PrototypeFieldCompositionContext>
+    {
+        public void Install(PrototypeFieldCompositionContext context)
+        {
+            if (context.TransitionRequester == null || context.Definition.Transitions.Count == 0)
+            {
+                return;
+            }
+
+            foreach (PrototypeFieldTransitionDefinition transition in context.Definition.Transitions)
+            {
+                GameObject exit = context.Shapes.CreateDiamond(
+                    transition.DisplayName,
+                    new Vector2(transition.Position.x, transition.Position.y),
+                    new Vector2(0.85f, 0.85f),
+                    new Color(0.45f, 0.88f, 1f, 0.9f),
+                    PrototypeWorldMath.SortOrder(transition.Position.y),
+                    context.WorldRoot);
+                exit.transform.localPosition = transition.Position;
+                PrototypeFieldTransitionInteractable interactable =
+                    exit.AddComponent<PrototypeFieldTransitionInteractable>();
+                interactable.Initialize(
+                    transition.DisplayName,
+                    transition.Destination,
+                    context.TransitionRequester);
+            }
+        }
+    }
+
     internal sealed class PrototypeTerrainForegroundInstaller :
         IFieldInstaller<PrototypeFieldCompositionContext>
     {
@@ -309,7 +374,7 @@ namespace DemonKing.Field.Prototype
         public void Install(PrototypeFieldCompositionContext context)
         {
             PrototypeCameraInstaller.Configure(
-                Camera.main,
+                PrototypeFieldSceneRuntime.ResolveOrCreateCamera(),
                 context.Player == null ? null : context.Player.transform);
         }
     }

@@ -1,9 +1,3 @@
-## [1.17.0](https://github.com/apaapapapapa/to-become-demon-king-2d/compare/v1.16.0...v1.17.0) (2026-07-23)
-
-### Features
-
-* add title screen and game start flow ([#81](https://github.com/apaapapapapa/to-become-demon-king-2d/issues/81)) ([268a1be](https://github.com/apaapapapapa/to-become-demon-king-2d/commit/268a1be3b7f468b127d5dc259a4c2515ac82a339)), closes [#66](https://github.com/apaapapapapa/to-become-demon-king-2d/issues/66)
-
 ## [1.16.0](https://github.com/apaapapapapa/to-become-demon-king-2d/compare/v1.15.0...v1.16.0) (2026-07-23)
 
 ### Features

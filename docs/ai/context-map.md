@@ -24,7 +24,7 @@ AIエージェントが変更対象に必要な仕様・コード・テストへ
 - **Presentation:** `Assets/Scripts/Presentation/UI/PrototypeTitleScreenView.cs`
 - **Integration:** `Assets/Scripts/FieldBootstrap.cs`, `Assets/Scripts/Field/Prototype/PrototypeApplicationInstaller.cs`, `Assets/Scripts/Core/Application/LocalSaveSlotStore.cs`, `Assets/Scripts/Core/Input/PlayerInputReader.cs`
 - **Tests:** `Assets/Tests/EditMode/GameStartSaveServiceTests.cs`, `Assets/Tests/PlayMode/TitleScreenPlayModeTests.cs`
-- **Related:** Save, Input, Field / World Composition
+- **Related:** Save, Input, Field / World Composition, Field Transition
 
 ## Field / World Composition
 
@@ -35,7 +35,18 @@ AIエージェントが変更対象に必要な仕様・コード・テストへ
 - **Scene Entry:** `Assets/Scripts/FieldBootstrap.cs`, `Assets/Scripts/Field/Prototype/PrototypeApplicationInstaller.cs`
 - **Session / Save:** `Assets/Scripts/Field/Prototype/PrototypeGameSession.cs`, `Assets/Scripts/Field/Prototype/PrototypeSaveSession.cs`, `Assets/Scripts/Domain/Save/SaveData.cs`
 - **Tests:** `Assets/Tests/EditMode/FieldCompositionTests.cs`, `Assets/Tests/EditMode/GameSessionSaveEditModeTests.cs`, `Assets/Tests/EditMode/LocalSaveTests.cs`
-- **Related:** Field Physics / Movement, Save, Title Screen, Content / Encyclopedia, Spawning, Quest
+- **Related:** Field Transition, Field Physics / Movement, Save, Title Screen, Content / Encyclopedia, Spawning, Quest
+
+## Field Transition
+
+- **Spec:** `docs/specifications/field-transition.md`, `docs/specifications/save.md#world状態`
+- **Definition / Routes:** `Assets/Scripts/Field/Prototype/PrototypeFieldDefinition.cs`
+- **Application Boundary:** `Assets/Scripts/Field/Prototype/PrototypeFieldTransitionService.cs`, `Assets/Scripts/Field/Prototype/PrototypeApplicationInstaller.cs`
+- **Interaction:** `Assets/Scripts/Field/Prototype/PrototypeFieldTransition.cs`
+- **Scene Runtime:** `Assets/Scripts/Field/Prototype/PrototypeFieldSceneRuntime.cs`, `Assets/Scripts/Field/Prototype/PrototypeTilemapContext.cs`
+- **Session State / Save:** `Assets/Scripts/Field/Prototype/PrototypeGameSession.cs`, `Assets/Scripts/Field/Prototype/PrototypeLocalSaveCoordinator.cs`
+- **Tests:** `Assets/Tests/EditMode/FieldCompositionTests.cs`, `Assets/Tests/EditMode/FieldTransitionSaveEditModeTests.cs`, `Assets/Tests/PlayMode/FieldTransitionPlayModeTests.cs`
+- **Related:** Field / World Composition, Save, Input, Modal UI / Pause, Quest, Ability, Progression
 
 ## Field Physics / Movement
 
@@ -44,15 +55,15 @@ AIエージェントが変更対象に必要な仕様・コード・テストへ
 - **Code:** `Assets/Scripts/Gameplay/Characters/CharacterPhysicsBody3D.cs`, `Assets/Scripts/Gameplay/Characters/CharacterPlanarMotor.cs`, `Assets/Scripts/Gameplay/Characters/CharacterDodge.cs`, `Assets/Scripts/Core/Math/FieldSpace3D.cs`
 - **Integration:** `Assets/Scripts/Field/Prototype/CollisionMapBuilder.cs`, `Assets/Scripts/Field/Prototype/PrototypePlayerSpawner.cs`, `Assets/Scripts/Field/Prototype/PrototypeTilemapContext.cs`
 - **Tests:** `Assets/Tests/PlayMode/FieldPhysics3DPlayModeTests.cs`
-- **Related:** Input, Dodge, Combat, Interaction, Enemy AI
+- **Related:** Input, Dodge, Combat, Interaction, Enemy AI, Field Transition
 
 ## Interaction
 
 - **Spec:** `docs/specifications/interaction.md`
 - **Code:** `Assets/Scripts/Gameplay/Interaction/`
-- **Integration:** `Assets/Scripts/Field/Prototype/PrototypeNpcInteractable.cs`
-- **Tests:** `Assets/Tests/PlayMode/PrototypeNpcInteractablePlayModeTests.cs`
-- **Related:** Input, Dialogue
+- **Integration:** `Assets/Scripts/Field/Prototype/PrototypeNpcInteractable.cs`, `Assets/Scripts/Field/Prototype/PrototypeFieldTransition.cs`
+- **Tests:** `Assets/Tests/PlayMode/PrototypeNpcInteractablePlayModeTests.cs`, `Assets/Tests/PlayMode/FieldTransitionPlayModeTests.cs`
+- **Related:** Input, Dialogue, Field Transition
 
 ## Dialogue
 
@@ -88,7 +99,7 @@ AIエージェントが変更対象に必要な仕様・コード・テストへ
 - **Code:** `Assets/Scripts/Gameplay/Abilities/`
 - **Integration:** `Assets/Scripts/Gameplay/Combat/`, `Assets/Scripts/Gameplay/Progression/`, `Assets/Scripts/Core/Input/`
 - **Tests:** `Assets/Tests/EditMode/`, `Assets/Tests/PlayMode/`
-- **Related:** Combat, Art, Skill, Evolution, Input
+- **Related:** Combat, Art, Skill, Evolution, Input, Field Transition
 
 ## Art
 
@@ -113,7 +124,7 @@ AIエージェントが変更対象に必要な仕様・コード・テストへ
 - **Presentation:** `Assets/Scripts/Presentation/UI/`
 - **Integration:** `Assets/Scripts/Field/Prototype/`, `Assets/Scripts/Gameplay/Modifiers/`, `Assets/Scripts/Core/Application/ModalUiCoordinator.cs`
 - **Tests:** `Assets/Tests/EditMode/`, `Assets/Tests/PlayMode/`
-- **Related:** Progression, Skill, Art, Input, Save, Modal UI
+- **Related:** Progression, Skill, Art, Input, Save, Modal UI, Field Transition
 
 ## Progression
 
@@ -121,7 +132,7 @@ AIエージェントが変更対象に必要な仕様・コード・テストへ
 - **Code:** `Assets/Scripts/Domain/Progression/`, `Assets/Scripts/Gameplay/Progression/`
 - **Integration:** `Assets/Scripts/Gameplay/Rewards/`, `Assets/Scripts/Field/Prototype/PrototypeGameplayServices.cs`
 - **Tests:** `Assets/Tests/EditMode/`, `Assets/Tests/PlayMode/`
-- **Related:** Art, Skill, Evolution, Reward, Save
+- **Related:** Art, Skill, Evolution, Reward, Save, Field Transition
 
 ## Reward
 
@@ -134,12 +145,12 @@ AIエージェントが変更対象に必要な仕様・コード・テストへ
 
 ## Save
 
-- **Spec:** `docs/specifications/save.md`
+- **Spec:** `docs/specifications/save.md`, `docs/specifications/field-transition.md#save--continue`
 - **Design:** `docs/design/technical-design.md#local-save`
 - **Code:** `Assets/Scripts/Domain/Save/`, `Assets/Scripts/Core/Application/SaveBoundary.cs`, `Assets/Scripts/Core/Application/JsonFileSaveService.cs`, `Assets/Scripts/Core/Application/LocalSaveSlotStore.cs`, `Assets/Scripts/Gameplay/Abilities/AbilityLoadoutSaveMapper.cs`, `Assets/Scripts/Gameplay/Quests/QuestProgressSaveMapper.cs`
-- **Integration:** `Assets/Scripts/Field/Prototype/PrototypeGameSession.cs`, `Assets/Scripts/Field/Prototype/PrototypeSaveSession.cs`, `Assets/Scripts/Field/Prototype/PrototypeLocalSaveCoordinator.cs`, `Assets/Scripts/Field/Prototype/PrototypeApplicationInstaller.cs`, `Assets/Scripts/Field/Prototype/PrototypeTitleScreenController.cs`
-- **Tests:** `Assets/Tests/EditMode/LocalSaveTests.cs`, `Assets/Tests/EditMode/SaveSlotTests.cs`, `Assets/Tests/EditMode/GameStartSaveServiceTests.cs`, `Assets/Tests/EditMode/GameSessionSaveEditModeTests.cs`, `Assets/Tests/EditMode/FieldCompositionTests.cs`, `Assets/Tests/PlayMode/TitleScreenPlayModeTests.cs`
-- **Related:** Title Screen, Field / World Composition, Progression, Art, Skill, Evolution, Quest, Ability, Content / Encyclopedia
+- **Integration:** `Assets/Scripts/Field/Prototype/PrototypeGameSession.cs`, `Assets/Scripts/Field/Prototype/PrototypeSaveSession.cs`, `Assets/Scripts/Field/Prototype/PrototypeLocalSaveCoordinator.cs`, `Assets/Scripts/Field/Prototype/PrototypeApplicationInstaller.cs`, `Assets/Scripts/Field/Prototype/PrototypeTitleScreenController.cs`, `Assets/Scripts/Field/Prototype/PrototypeFieldTransitionService.cs`
+- **Tests:** `Assets/Tests/EditMode/LocalSaveTests.cs`, `Assets/Tests/EditMode/SaveSlotTests.cs`, `Assets/Tests/EditMode/GameStartSaveServiceTests.cs`, `Assets/Tests/EditMode/GameSessionSaveEditModeTests.cs`, `Assets/Tests/EditMode/FieldTransitionSaveEditModeTests.cs`, `Assets/Tests/PlayMode/TitleScreenPlayModeTests.cs`, `Assets/Tests/PlayMode/FieldTransitionPlayModeTests.cs`
+- **Related:** Title Screen, Field / World Composition, Field Transition, Progression, Art, Skill, Evolution, Quest, Ability, Content / Encyclopedia
 
 ## Modal UI / Pause
 
@@ -148,8 +159,8 @@ AIエージェントが変更対象に必要な仕様・コード・テストへ
 - **Code:** `Assets/Scripts/Core/Application/ModalUiCoordinator.cs`, `Assets/Scripts/Core/Application/GamePauseController.cs`, `Assets/Scripts/Gameplay/Progression/EvolutionSelectionController.cs`, `Assets/Scripts/Gameplay/Abilities/AbilityLoadoutSelectionController.cs`
 - **Presentation:** `Assets/Scripts/Presentation/UI/`
 - **Integration:** `Assets/Scripts/Field/Prototype/PrototypeApplicationInstaller.cs`
-- **Tests:** `Assets/Tests/PlayMode/ModalUiCoordinatorPlayModeTests.cs`, `Assets/Tests/PlayMode/DodgeAndPausePlayModeTests.cs`, `Assets/Tests/PlayMode/GameplayAndCameraPlayModeTests.cs`
-- **Related:** Input, Evolution, Ability
+- **Tests:** `Assets/Tests/PlayMode/ModalUiCoordinatorPlayModeTests.cs`, `Assets/Tests/PlayMode/DodgeAndPausePlayModeTests.cs`, `Assets/Tests/PlayMode/GameplayAndCameraPlayModeTests.cs`, `Assets/Tests/PlayMode/FieldTransitionPlayModeTests.cs`
+- **Related:** Input, Evolution, Ability, Field Transition
 
 ## Dodge
 
@@ -165,9 +176,9 @@ AIエージェントが変更対象に必要な仕様・コード・テストへ
 - **Boundary:** `docs/design/feature-boundaries.md`
 - **Code:** `Assets/Scripts/Domain/Quests/`, `Assets/Scripts/Gameplay/Quests/`
 - **Presentation:** `Assets/Scripts/Presentation/UI/QuestTrackerView.cs`
-- **Integration:** `Assets/Scripts/Gameplay/Events/GameplayEventHub.cs`, `Assets/Scripts/Field/Prototype/TrainingQuestFlowController.cs`, `Assets/Scripts/Field/Prototype/PrototypeUiInstaller.cs`
-- **Tests:** `Assets/Tests/EditMode/QuestProgressionServiceTests.cs`, `Assets/Tests/EditMode/QuestTrackerPresentationTests.cs`, `Assets/Tests/PlayMode/QuestTrackerViewPlayModeTests.cs`
-- **Related:** Gameplay Events, Combat, Dialogue, Interaction
+- **Integration:** `Assets/Scripts/Gameplay/Events/GameplayEventHub.cs`, `Assets/Scripts/Field/Prototype/TrainingQuestFlowController.cs`, `Assets/Scripts/Field/Prototype/PrototypeUiInstaller.cs`, `Assets/Scripts/Field/Prototype/PrototypeGameSession.cs`
+- **Tests:** `Assets/Tests/EditMode/QuestProgressionServiceTests.cs`, `Assets/Tests/EditMode/QuestTrackerPresentationTests.cs`, `Assets/Tests/PlayMode/QuestTrackerViewPlayModeTests.cs`, `Assets/Tests/PlayMode/FieldTransitionPlayModeTests.cs`
+- **Related:** Gameplay Events, Combat, Dialogue, Interaction, Field Transition
 
 ## Spawning
 

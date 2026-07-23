@@ -45,6 +45,25 @@ namespace DemonKing.Field.Prototype
             GameContentCatalog gameContentCatalog,
             out PrototypeGameplayServices services)
         {
+            return TryCreate(
+                player,
+                questDefinitions,
+                gameContentCatalog,
+                sharedQuestProgressionService: null,
+                out services);
+        }
+
+        /// <summary>
+        /// Fieldを跨いでQuest進捗を保持する場合はGame Session所有のQuestProgressionServiceを注入します。
+        /// Player依存のAcquisition / Reward / Event HubはFieldごとに再構築します。
+        /// </summary>
+        public static bool TryCreate(
+            GameObject player,
+            IEnumerable<QuestDefinition> questDefinitions,
+            GameContentCatalog gameContentCatalog,
+            QuestProgressionService sharedQuestProgressionService,
+            out PrototypeGameplayServices services)
+        {
             services = null;
             if (player == null)
             {
@@ -77,9 +96,10 @@ namespace DemonKing.Field.Prototype
             var acquisitionService = new ProgressionAcquisitionService(artController, skillController);
             var rewardService = new RewardService(contextHost.Context, acquisitionService);
             var gameplayEventHub = new GameplayEventHub();
-            var questProgressionService = new QuestProgressionService(questDefinitions);
+            QuestProgressionService questProgressionService =
+                sharedQuestProgressionService ?? new QuestProgressionService(questDefinitions);
 
-            // Gameplay Event -> Quest ProgressionはTraining Area固有ではない共通Application配線です。
+            // Event HubはField単位で再生成しますが、Quest Runtime StateはGame Session所有Serviceへ接続できます。
             gameplayEventHub.Published += questProgressionService.Handle;
 
             services = new PrototypeGameplayServices(

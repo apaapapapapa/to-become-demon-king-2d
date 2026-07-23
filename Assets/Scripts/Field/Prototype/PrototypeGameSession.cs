@@ -11,12 +11,13 @@ using DemonKing.Gameplay.Abilities;
 using DemonKing.Gameplay.Dialogue;
 using DemonKing.Gameplay.Quests;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace DemonKing.Field.Prototype
 {
     /// <summary>
-    /// Save読込からField構築、Runtime復元、保存開始までのGame Session起動順序を管理します。
-    /// Field Definition / Entry Pointの解決とField Runtime CompositionはField境界へ委譲します。
+    /// Save読込からField構築、Runtime復元、保存開始までのGame Session寿命を管理します。
+    /// Character Progression / Quest / Grant StateはField Sceneより長く保持し、Field切替時はScene依存Runtimeだけを再構築します。
     /// </summary>
     internal sealed class PrototypeGameSession
     {
@@ -24,6 +25,17 @@ namespace DemonKing.Field.Prototype
         private readonly PrototypeApplicationSettings settings;
         private readonly DialogueLog dialogueLog;
         private readonly ISaveService saveService;
+        private readonly PrototypeFieldCatalog fieldCatalog;
+        private readonly PrototypeGameSaveRestorer saveRestorer;
+
+        private IPrototypeFieldTransitionRequester transitionRequester;
+        private PrototypeSaveSession saveSession;
+        private QuestProgressionService questProgressionService;
+        private PrototypeGameSaveSnapshotProvider snapshotProvider;
+        private PrototypeLocalSaveCoordinator saveCoordinator;
+        private AbilityLoadoutSaveData preservedLoadout;
+        private PrototypeWorldBuildResult currentWorldResult;
+        private bool started;
 
         public PrototypeGameSession(
             PrototypeProjectAssets projectAssets,
@@ -39,6 +51,25 @@ namespace DemonKing.Field.Prototype
                 : throw new ArgumentNullException(nameof(settings));
             this.dialogueLog = dialogueLog ?? throw new ArgumentNullException(nameof(dialogueLog));
             this.saveService = saveService ?? throw new ArgumentNullException(nameof(saveService));
+            fieldCatalog = PrototypeFieldCatalog.CreateInitial(settings, projectAssets);
+            saveRestorer = new PrototypeGameSaveRestorer(projectAssets);
+        }
+
+        public PrototypeFieldCatalog FieldCatalog => fieldCatalog;
+        public bool IsStarted => started;
+        public PrototypeWorldBuildResult CurrentWorldResult => currentWorldResult;
+        public CharacterProgressionState ProgressionState => saveSession?.ProgressionState;
+        public QuestProgressionService QuestProgressionService => questProgressionService;
+        public FieldLocation CurrentFieldLocation => currentWorldResult.FieldLocation;
+
+        public void SetTransitionRequester(IPrototypeFieldTransitionRequester requester)
+        {
+            if (started)
+            {
+                throw new InvalidOperationException("Game Session開始後はField Transition Requesterを差し替えられません。");
+            }
+
+            transitionRequester = requester ?? throw new ArgumentNullException(nameof(requester));
         }
 
         public PrototypeGameSessionResult Start(GameObject applicationRoot)
@@ -48,38 +79,94 @@ namespace DemonKing.Field.Prototype
                 throw new ArgumentNullException(nameof(applicationRoot));
             }
 
-            PrototypeFieldCatalog fieldCatalog =
-                PrototypeFieldCatalog.CreateInitial(settings, projectAssets);
-            PrototypeSaveSession saveSession = PrototypeSaveSession.Load(
+            if (started)
+            {
+                throw new InvalidOperationException("PrototypeGameSessionは既に開始されています。");
+            }
+
+            saveSession = PrototypeSaveSession.Load(
                 saveService,
                 projectAssets.PlayerCharacter.CharacterId,
                 fieldCatalog.InitialField.DefaultLocation);
+            questProgressionService = new QuestProgressionService(projectAssets.QuestDefinitions);
 
             ResolveFieldLocation(
-                fieldCatalog,
                 saveSession.CurrentFieldLocation,
                 out PrototypeFieldDefinition fieldDefinition,
                 out FieldEntryPoint entryPoint);
 
-            PrototypeWorldBuildResult worldResult = new PrototypeWorldBuilder(
+            Scene activeFieldScene = PrototypeFieldSceneRuntime.Activate(
+                fieldDefinition.SceneName,
+                out Scene previousScene);
+            currentWorldResult = BuildField(fieldDefinition, entryPoint);
+            saveRestorer.Restore(saveSession, currentWorldResult);
+            preservedLoadout = CaptureLoadout(currentWorldResult.Player);
+            StartSaving(applicationRoot);
+            PrototypeFieldSceneRuntime.UnloadPrevious(previousScene, activeFieldScene);
+
+            started = true;
+            return CreateResult();
+        }
+
+        /// <summary>
+        /// Scene破棄前にScene依存LoadoutをSave DTOへ退避し、現在Fieldを即時保存します。
+        /// Progression / Quest / Grant StateはGame Session所有のためコピーしません。
+        /// </summary>
+        public void PrepareForFieldTransition()
+        {
+            EnsureStarted();
+            preservedLoadout = snapshotProvider.PrepareForFieldTransition();
+            saveCoordinator?.SaveNow();
+        }
+
+        /// <summary>
+        /// Active Scene切替後に指定Fieldを構築し、Session共有状態を新しいPlayer / Worldへ再接続します。
+        /// </summary>
+        public PrototypeGameSessionResult EnterField(FieldLocation location)
+        {
+            EnsureStarted();
+            ResolveFieldLocation(
+                location,
+                out PrototypeFieldDefinition fieldDefinition,
+                out FieldEntryPoint entryPoint);
+
+            currentWorldResult = BuildField(fieldDefinition, entryPoint);
+            RestorePreservedLoadout(currentWorldResult.Player);
+            snapshotProvider.BindWorld(currentWorldResult.Player, currentWorldResult.FieldLocation);
+            preservedLoadout = CaptureLoadout(currentWorldResult.Player);
+            saveCoordinator?.SaveNow();
+            return CreateResult();
+        }
+
+        public bool TryResolveField(
+            FieldLocation location,
+            out PrototypeFieldDefinition fieldDefinition,
+            out FieldEntryPoint entryPoint)
+        {
+            return fieldCatalog.TryResolve(location, out fieldDefinition, out entryPoint);
+        }
+
+        public bool SaveNow()
+        {
+            return saveCoordinator != null && saveCoordinator.SaveNow();
+        }
+
+        private PrototypeWorldBuildResult BuildField(
+            PrototypeFieldDefinition fieldDefinition,
+            FieldEntryPoint entryPoint)
+        {
+            return new PrototypeWorldBuilder(
                     fieldDefinition,
                     entryPoint,
                     dialogueLog,
                     saveSession.ProgressionState,
-                    saveSession.GrantConsumptionState)
+                    saveSession.GrantConsumptionState,
+                    questProgressionService,
+                    transitionRequester)
                 .Build();
-
-            new PrototypeGameSaveRestorer(projectAssets).Restore(saveSession, worldResult);
-            StartSaving(applicationRoot, saveSession, worldResult);
-
-            return new PrototypeGameSessionResult(
-                worldResult,
-                saveSession.ProgressionState,
-                worldResult.FieldLocation);
         }
 
-        private static void ResolveFieldLocation(
-            PrototypeFieldCatalog fieldCatalog,
+        private void ResolveFieldLocation(
             FieldLocation requestedLocation,
             out PrototypeFieldDefinition fieldDefinition,
             out FieldEntryPoint entryPoint)
@@ -103,35 +190,81 @@ namespace DemonKing.Field.Prototype
             }
         }
 
-        private void StartSaving(
-            GameObject applicationRoot,
-            PrototypeSaveSession saveSession,
-            PrototypeWorldBuildResult worldResult)
+        private void StartSaving(GameObject applicationRoot)
         {
-            AbilityLoadoutController loadoutController = worldResult.Player == null
-                ? null
-                : worldResult.Player.GetComponent<AbilityLoadoutController>();
-            if (loadoutController == null || worldResult.QuestProgressionService == null)
+            AbilityLoadoutController loadoutController = ResolveLoadoutController(currentWorldResult.Player);
+            if (loadoutController == null || questProgressionService == null)
             {
                 Debug.LogError(
                     "Save Snapshotを構築するためのRuntime Stateが揃っていないため、保存を開始できません。");
                 return;
             }
 
-            var snapshotProvider = new PrototypeGameSaveSnapshotProvider(
+            snapshotProvider = new PrototypeGameSaveSnapshotProvider(
                 saveSession.ProgressionState,
                 loadoutController,
-                worldResult.QuestProgressionService,
+                questProgressionService,
                 saveSession.GrantConsumptionState,
-                worldResult.FieldLocation);
+                currentWorldResult.FieldLocation);
 
-            PrototypeLocalSaveCoordinator saveCoordinator =
-                applicationRoot.AddComponent<PrototypeLocalSaveCoordinator>();
+            saveCoordinator = applicationRoot.AddComponent<PrototypeLocalSaveCoordinator>();
             saveCoordinator.Initialize(
                 saveService,
                 snapshotProvider,
                 saveSession.SavingEnabled);
             saveCoordinator.SaveNow();
+        }
+
+        private void RestorePreservedLoadout(GameObject player)
+        {
+            AbilityLoadoutController loadoutController = ResolveLoadoutController(player);
+            if (loadoutController == null)
+            {
+                throw new InvalidOperationException("Field遷移後のPlayerにAbilityLoadoutControllerがありません。");
+            }
+
+            AbilityLoadoutSaveMapper.ApplySavedAssignments(
+                loadoutController,
+                preservedLoadout,
+                projectAssets.PlayerCharacter,
+                saveSession.ProgressionState);
+        }
+
+        private static AbilityLoadoutSaveData CaptureLoadout(GameObject player)
+        {
+            AbilityLoadoutController loadoutController = ResolveLoadoutController(player);
+            return loadoutController == null
+                ? new AbilityLoadoutSaveData()
+                : AbilityLoadoutSaveMapper.ToSaveData(loadoutController.Loadout);
+        }
+
+        private static AbilityLoadoutController ResolveLoadoutController(GameObject player)
+        {
+            if (player == null)
+            {
+                return null;
+            }
+
+            AbilityLoadoutController loadoutController = player.GetComponent<AbilityLoadoutController>();
+            return loadoutController != null && loadoutController.IsInitialized
+                ? loadoutController
+                : null;
+        }
+
+        private PrototypeGameSessionResult CreateResult()
+        {
+            return new PrototypeGameSessionResult(
+                currentWorldResult,
+                saveSession.ProgressionState,
+                currentWorldResult.FieldLocation);
+        }
+
+        private void EnsureStarted()
+        {
+            if (!started)
+            {
+                throw new InvalidOperationException("PrototypeGameSessionが開始されていません。");
+            }
         }
     }
 
@@ -229,15 +362,16 @@ namespace DemonKing.Field.Prototype
 
     /// <summary>
     /// Runtime State一式から現在VersionのGameSaveData Snapshotを生成します。
-    /// 保存タイミングや保存先は知りません。
+    /// Field Scene切替中はLoadoutの最後のSnapshotを保持し、Scene依存Componentを参照し続けません。
     /// </summary>
     internal sealed class PrototypeGameSaveSnapshotProvider : IGameSaveSnapshotProvider
     {
         private readonly CharacterProgressionState progressionState;
-        private readonly AbilityLoadoutController loadoutController;
         private readonly QuestProgressionService questProgressionService;
         private readonly ProgressionGrantConsumptionState grantConsumptionState;
-        private readonly FieldLocation fieldLocation;
+        private AbilityLoadoutController loadoutController;
+        private AbilityLoadoutSaveData cachedLoadout;
+        private FieldLocation fieldLocation;
 
         public PrototypeGameSaveSnapshotProvider(
             CharacterProgressionState progressionState,
@@ -264,28 +398,51 @@ namespace DemonKing.Field.Prototype
         {
             this.progressionState = progressionState ??
                 throw new ArgumentNullException(nameof(progressionState));
-            this.loadoutController = loadoutController != null && loadoutController.IsInitialized
-                ? loadoutController
-                : throw new ArgumentException(
-                    "初期化済みAbilityLoadoutControllerが必要です。",
-                    nameof(loadoutController));
             this.questProgressionService = questProgressionService ??
                 throw new ArgumentNullException(nameof(questProgressionService));
             this.grantConsumptionState = grantConsumptionState ??
                 throw new ArgumentNullException(nameof(grantConsumptionState));
-            this.fieldLocation = fieldLocation.IsValid
-                ? fieldLocation
+            BindWorld(loadoutController, fieldLocation);
+        }
+
+        public AbilityLoadoutSaveData PrepareForFieldTransition()
+        {
+            cachedLoadout = CaptureCurrentLoadout();
+            loadoutController = null;
+            return cachedLoadout;
+        }
+
+        public void BindWorld(GameObject player, FieldLocation newFieldLocation)
+        {
+            AbilityLoadoutController controller = player == null
+                ? null
+                : player.GetComponent<AbilityLoadoutController>();
+            BindWorld(controller, newFieldLocation);
+        }
+
+        public void BindWorld(
+            AbilityLoadoutController controller,
+            FieldLocation newFieldLocation)
+        {
+            loadoutController = controller != null && controller.IsInitialized
+                ? controller
+                : throw new ArgumentException(
+                    "初期化済みAbilityLoadoutControllerが必要です。",
+                    nameof(controller));
+            fieldLocation = newFieldLocation.IsValid
+                ? newFieldLocation
                 : throw new ArgumentException(
                     "Field Locationが不正です。",
-                    nameof(fieldLocation));
+                    nameof(newFieldLocation));
+            cachedLoadout = AbilityLoadoutSaveMapper.ToSaveData(loadoutController.Loadout);
         }
 
         public GameSaveData CreateSnapshot()
         {
             PlayerSaveData playerSaveData = CharacterProgressionSaveMapper.ToSaveData(
                 progressionState);
-            playerSaveData.abilityLoadout =
-                AbilityLoadoutSaveMapper.ToSaveData(loadoutController.Loadout);
+            cachedLoadout = CaptureCurrentLoadout();
+            playerSaveData.abilityLoadout = cachedLoadout;
 
             return new GameSaveData
             {
@@ -301,6 +458,13 @@ namespace DemonKing.Field.Prototype
                         .ToList()
                 }
             };
+        }
+
+        private AbilityLoadoutSaveData CaptureCurrentLoadout()
+        {
+            return loadoutController != null && loadoutController.IsInitialized
+                ? AbilityLoadoutSaveMapper.ToSaveData(loadoutController.Loadout)
+                : cachedLoadout ?? new AbilityLoadoutSaveData();
         }
     }
 }
