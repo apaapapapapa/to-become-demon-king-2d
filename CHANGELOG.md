@@ -1,3 +1,15 @@
+## [1.16.0](https://github.com/apaapapapapa/to-become-demon-king-2d/compare/v1.15.0...v1.16.0) (2026-07-23)
+
+### Features
+
+* add local save slot boundary ([a34a270](https://github.com/apaapapapapa/to-become-demon-king-2d/commit/a34a270cef9cb106f1275baa7b33c44ae87a567d))
+
+### Bug Fixes
+
+* disambiguate System.Math in save slots ([71841de](https://github.com/apaapapapapa/to-become-demon-king-2d/commit/71841dee9d631fc8135f404b843522b5d6df23b6))
+* fully qualify System.Math in save slots ([590eb89](https://github.com/apaapapapapa/to-become-demon-king-2d/commit/590eb894c5b78b4156cf2a98b2060bd08b36f629))
+* reject invalid save slot ids ([a98e27b](https://github.com/apaapapapapa/to-become-demon-king-2d/commit/a98e27bff3b6ee5ffabc51773fa254482c32e385))
+
 ## [1.15.0](https://github.com/apaapapapapa/to-become-demon-king-2d/compare/v1.14.2...v1.15.0) (2026-07-22)
 
 ### Features
