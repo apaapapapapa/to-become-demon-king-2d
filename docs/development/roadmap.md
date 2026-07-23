@@ -1,10 +1,31 @@
 # ロードマップ
 
-この文書を、プロジェクト全体の実装状況と開発優先度のSource of Truthとします。設計書・仕様書・READMEには実装済み一覧や将来タスク一覧を重複記載しません。
+この文書を、プロジェクト全体の実装状況と開発優先度のSource of Truthとします。設計書・仕様書・READMEには将来タスク一覧を重複記載せず、実装済みの正式な境界は [技術設計](../design/technical-design.md) と [AI Context Map](../ai/context-map.md) を参照してください。
 
-## 実装済み
+## 開発方針
 
-### 基礎Runtime
+基盤の先行整備フェーズは完了しました。今後は「将来機能を追加しやすいFrameworkを先に作る」ことより、実際のField / NPC / Enemy / Quest / Storyを追加し、プレイ可能な本編を前へ進めることを優先します。
+
+当面の最重要目標は、次の一連の体験をゲームとして成立させることです。
+
+```text
+New Game
+  -> 弱い魔物として森で誕生
+  -> 育ての親となる魔物との生活
+  -> 人間による死別
+  -> 森から脱出
+  -> 魔物であることを隠して人間の町へ入る
+  -> 冒険者として依頼を受ける
+  -> Dungeonを攻略する
+  -> Bossを倒す
+  -> 町へ帰還して報告する
+```
+
+新しい技術基盤は、この縦切りゲームループを実装するうえで具体的な不足が発生した場合にだけ追加します。
+
+## 実装済み基盤
+
+### Runtime / Movement / Input
 
 - Scene / Build Settings、3D Rigidbody / Collider、Collision Tilemapマーカー、Isometric描画順
 - Input Action / Input Context、uGUI、Camera、Pause、Dodge
@@ -16,304 +37,423 @@
 ### Combat / Ability / AI / Progression
 
 - Ability共通実行基盤と基本近接攻撃
-- 論理 `AbilitySlot` とRuntime `AbilityLoadout` によるPlayer入力割当
+- 論理 `AbilitySlot` とRuntime `AbilityLoadout`
 - `Primary` / `Action1`〜`Action4` の論理入力とRuntime Loadout選択UI
-- 取得済みArt AbilityのAction Slot割当と、取得済み受動SkillのLoadout画面表示
-- Player入力とAbility IDの分離、AIからの `AbilityController` 直接利用
+- Player入力とAbility IDの分離、AIからの `AbilityController` 利用
 - DamageResult / DefeatContext / RewardService
 - 敵AIのIdle / Chase / Attack、索敵・離脱、高度差制御
 - Experience / Level
 - Art習得・熟練・Ability解放
 - 受動Skill取得と汎用Modifier
 - Evolution Node条件評価、排他選択、永続補正、選択UI、形態表示
-- 火炎魔法Art、Projectile Ability、Progression Grant
-- 魔弾術Art / 魔力弾Ability、魔力循環Skill
+- 火炎魔法Art / Projectile Ability / Progression Grant
+- 魔弾術Art / 魔力弾Ability / 魔力循環Skill
 
 ### Interaction / Dialogue / Quest / Spawning
 
 - `IInteractable`、データ駆動Dialogue、最新1件Dialogue UI
 - Gameplay Event Hub
-- Quest / Objective Runtime StateとAvailable / Active / ReadyToTurnIn / Completedライフサイクル
+- Quest / Objective Runtime State
+- Available / Active / ReadyToTurnIn / Completedライフサイクル
 - Quest常設トラッカーと非モーダル通知
-- Quest表示Projection / 初期表示Selector / Notification Viewの責務分離
-- 依頼会話→受注→討伐→報告会話→報酬の縦切りゲームループ
-- 汎用 `SpawnLifecycle<T>` と訓練対象の再生成・復元
-- `TrainingScenarioDefinition` による訓練シナリオ参照の集約
-- `TrainingQuestFlowController` と `TrainingDummyEventBridge` によるComposition責務分離
-- Gameplay Event HubからQuest Progressionへの共通Application配線
-- `ProgressionGrantInteractable` による一度きりのフィールド取得経路
-- 古びた魔導書から魔弾術、魔力結晶から魔力循環を取得するPrototype導線
+- 依頼会話 -> 受注 -> 討伐 -> 報告会話 -> 報酬の縦切りゲームループ
+- 汎用 `SpawnLifecycle<T>`
+- `TrainingScenarioDefinition`
+- `TrainingQuestFlowController` / `TrainingDummyEventBridge`
+- `ProgressionGrantInteractable` による一度きりのField取得経路
 
-### Local Save
+### Save / Game Session
 
-- `JsonFileSaveService` による `Application.persistentDataPath/save.json` へのJSON保存
-- 起動時LoadとRuntime State復元、15秒間隔・Pause・Quit時の自動保存
-- Save Version 1 → 2 → 3 MigrationとCollection正規化
-- Character Progression、Art / Skill / Evolution状態の復元
-- `Action1`〜`Action4` のAbility Loadout保存・復元
-- Quest Status / Objective進捗の保存・復元
-- フィールド上の一度きりProgression Grant消費状態の保存・復元
+- `JsonFileSaveService`
+- 起動時Load / Migration / Restore
+- 15秒間隔・Pause・Quit時の自動保存
+- Character Progression / Art / Skill / Evolution / Ability Loadout / Questの保存・復元
+- Field上の一度きりProgression Grant消費状態の保存・復元
 - 破損・未対応Saveを復元できない場合の既存ファイル保護
-- `PrototypeGameSession` によるLoad → Migration → World構築 → Restore → 保存開始の明示化
-- `PrototypeGameSaveSnapshotProvider` によるRuntime State一式からのSave Snapshot生成
+- `PrototypeGameSession` による起動順序の明示化
+- `PrototypeGameSaveRestorer`
+- `PrototypeGameSaveSnapshotProvider`
 - `PrototypeLocalSaveCoordinator` の保存タイミング責務への限定
+- Save Version 4
+- Stable Field ID / Entry Point IDの保存・Migration
 
-### Content / Composition / Delivery
+### Content / Composition / UI / Delivery
 
 - `IGameContentDefinition`、Stable Content ID相互リンク、Data Loader検証
 - `IGameContentContainer` と再帰CollectorによるGameContent登録経路の一本化
-- 同一Definition共有参照の重複排除とStable Content ID衝突検出
+- Stable Content ID衝突検出
 - `PrototypeProjectAssets` をComposition Manifestとして維持
-- `PrototypeProjectAssetsAutoRepair` のEditor起動時自動書き換え廃止、検証と明示的手動Repairへの分離
-- `ModalUiCoordinator` によるPause / Evolution / Ability LoadoutのModal所有権、Input Context、Time Scaleの共通管理
+- `PrototypeProjectAssetsAutoRepair` の自動書き換え廃止と明示的Repair
+- `ModalUiCoordinator`
+- Player Runtime Installer分割
+- Ability Loadout Policy / EligibilityのSource of Truth集約
+- Pause / Evolution / Ability LoadoutのPrefabベースuGUI
+- `PlayerInputReader` の論理Ability Slot入力への整理
+- Field Definition / Entry Point / `FieldCompositionPipeline`
+- Terrain / Collision / Architecture / Nature / Atmosphere / Player / Gameplay Scenario / Pickup / Foreground / CameraのField Installer分割
 - VitePress Knowledge Base
-- 実行要件に基づくEditMode / PlayModeテスト境界
-- semantic-releaseによるリリース自動化
+- EditMode / PlayModeテスト境界
+- semantic-release
 
-## 第1次優先リファクタリング: 完了
+## 優先リファクタリング: 完了
 
-### P0: 完了
+第1次・第2次優先リファクタリングは完了扱いとします。以後、リファクタリング自体を目的とした大規模変更は行いません。
 
-次の4項目は実装済みです。正式な実装境界は [技術設計](../design/technical-design.md) を参照してください。
+### 第1次
 
-1. GameContent登録経路の一本化
-2. Ability Loadout / Slot Binding
-3. TrainingScenarioDefinitionとProjectAssets / AutoRepair整理
-4. Training Area Composition分割
+- GameContent登録経路の一本化
+- Ability Loadout / Slot Binding
+- TrainingScenarioDefinitionとProjectAssets / AutoRepair整理
+- Training Area Composition分割
+- Quest Tracker Presentation分割
+- EditMode / PlayModeテスト境界整理
 
-### P1: 完了
+### 第2次
 
-次の2項目は実装済みです。正式な実装境界は [技術設計](../design/technical-design.md) を参照してください。
+- Save / Game Session起動フロー再編
+- Modal UI制御共通化
+- Architecture / AI Context Map同期
+- Player Runtime Composition分割
+- Ability Loadout Policy / Eligibility集約
+- uGUI Runtime生成コード整理
+- PlayerInputReader論理入力整理
+- Field / World CompositionのScene単位アーキテクチャ化
+- Stable Field / Entry Point IDとSave Version 4
 
-1. Quest Tracker Presentation分割
-   - Quest状態から表示Modelを作る `QuestTrackerProjection` を抽出
-   - 初期表示対象を副作用なく決める `QuestTrackerSelector` を分離
-   - 一時通知と通知寿命を `QuestNotificationView` へ分離
-   - `QuestTrackerView` は購読と表示ModelのuGUI反映を中心に整理
-   - 手動追跡仕様がないため状態保持型 `QuestTrackingService` は導入しない
-2. EditMode / PlayModeテスト境界の整理
-   - Quest Runtime State / Service、Quest表示Model / Selector、`LinearDialogueSequence`、`SpawnLifecycle<T>` の純粋ロジックをEditModeで検証
-   - PlayModeは `MonoBehaviour` Lifecycle / Event購読、Coroutine / 時間経過、Physics、Runtime uGUI、縦切り統合へ集中
-   - Quest UIのPlayModeテストはuGUI生成、Questイベント購読、通知寿命のRuntime統合を検証
-   - CIではEditMode / PlayModeの両方を継続実行
+Field CompositionはPR #64で基盤実装済みです。次はArchitectureをさらに抽象化するのではなく、実際の2つ目のFieldとScene Transitionで利用します。
 
-## 第2次優先リファクタリング
+# P0: 最初のPlayable Chapter
 
-### P0: 完了
+P0では、New Gameから最初のBoss討伐・帰還までを一続きで遊べる状態にします。
 
-第2次リファクタリングのP0は完了しました。確定した実装境界は [技術設計](../design/technical-design.md) と [AI Context Map](../ai/context-map.md) を参照してください。
+## 実施順序
 
-1. Save / Game Session起動フローの再編
-   - `PrototypeGameSession` がSave読込、Migration、World / Player構築、Runtime復元、保存開始の順序を管理
-   - `PrototypeGameSaveRestorer` が構築済みRuntimeへのFeature復元を担当
-   - `PrototypeGameSaveSnapshotProvider` がProgression / Ability Loadout / Quest / World状態を `GameSaveData` へ集約
-   - `CharacterProgressionSaveMapper` はPlayer状態変換だけを担当
-   - `PrototypeWorldBuilder` からQuest Save復元を除去
-   - `PrototypeLocalSaveCoordinator` は保存タイミングだけを管理
-   - Save Slot / New Game / Continueの保存先解決はApplication / Platform境界へ追加可能
-2. Modal UI制御の共通化
-   - `ModalUiCoordinator` がModal所有権、排他Open、Input Context、Time Scaleの退避・復元を一元管理
-   - Pause / Evolution / Ability Loadoutは同一Coordinatorを利用
-   - 各Feature ControllerからTime Scale / Input Contextの独自保存・復元を除去
-   - Disable / Destroy時の復元をPlayModeテストで検証
-3. Architecture / AI Context Mapの陳腐化修正
-   - 現行のGameplay Composition、Save、Modal、EditMode / PlayModeテスト参照へ更新
-   - ロードマップは実装状況・優先度、Technical Designは実装済み正式アーキテクチャという役割を維持
+| 順序 | Issue | 内容 | 主な依存 |
+| --- | --- | --- | --- |
+| 1 | #65 | Save SlotとSave Metadata | 既存Save / Game Session |
+| 2 | #66 | Title Screen / New Game / Continue / Load Game | #65 |
+| 3 | #67 | 2つ目のFieldとField Transition | Field Composition / Save v4 |
+| 4 | #68 | Story Progression / Story Event Trigger | 既存Dialogue / Quest / Save |
+| 5 | #69 | Playable Prologue Part 1 | #67, #68 |
+| 6 | #70 | Playable Prologue Part 2 | #69 |
+| 7 | #71 | Human Town Vertical Slice | #70 |
+| 8 | #72 | Inventory / Item / Currency | 既存Content / Save |
+| 9 | #73 | Shop / Quest Board | #71, #72 |
+| 10 | #74 | 最初のDungeon / Boss | #67, #73 |
 
-## 第2次優先リファクタリング: P1完了 / P2実施予定
+機能変更と大規模構造変更は原則として同一PRへ混在させず、各Issueを独立PRで完了させます。
 
-P1は完了しました。残作業はP2です。現在のプレイ可能なゲームループを維持し、リファクタリングだけを目的とした新規Frameworkや過剰な抽象化は導入しません。
+## P0-1: Game Start / Save UX
 
-### P1-1: Player Runtime Compositionの分割（完了）
+対象: #65, #66
 
-#### 目的
+### 目標
 
-`PrototypePlayerSpawner` に集中しているPrefab生成、Component補完、各Feature初期化、Player固有UI Controller構築を分割し、キャラクター機能追加時の変更集中とPrefab構成の二重管理を解消します。
+アプリ起動から次を成立させます。
 
-#### 要件
+```text
+Title
+  -> New Game
+  -> Play
+  -> Save
+  -> Quit
+  -> Continue
+```
 
-1. Spawnerは次の責務を中心とする
-   - Character PrefabのInstantiate
-   - 親Transform / Spawn Position設定
-   - Runtime Context作成・注入の開始
-2. Gameplay Component構築・初期化をPlayer Runtime用Installer群へ分離する
-3. 少なくとも次の責務群を分離可能な単位として整理する
-   - Physics / Movement
-   - Combat / Ability
-   - Progression / Evolution
-   - Player Input / Loadout
-   - Presentation / Prototype Effect
-4. Prefabへ恒久的に存在すべきComponentと、Runtimeで注入すべきComponentの基準を定義する
-5. Prefabに必要なComponentが欠落している場合、無条件にRuntime補完して構成ミスを隠す方式を縮退する
-6. `RequireComponent`、Editor Validation、明示的Installer Errorのいずれか適切な方法で構成不備を検出する
-7. Character Definition / Runtime State / Save DTO境界は維持する
-8. PlayerとEnemyで共用できるCharacter Runtime初期化とPlayer専用初期化を混在させない
+最低3 Slotを扱い、各Slotで最終Save日時、プレイ時間、Level、現在地を表示できるようにします。
 
-#### 受入条件
+### 完了条件
 
-- `PrototypePlayerSpawner` が各Gameplay Featureの詳細初期化を直接列挙し続ける構造ではなくなっている
-- Prefab構成不備が起動時の暗黙補完だけで隠れない
-- Player生成の主要なComposition単位を個別テスト可能にできる
-- 既存Movement / Combat / Progression / Loadout / Evolution動作を維持する
-- Unity TestsのEditMode / PlayModeが成功する
+- SlotごとのSave / Loadが独立する
+- New Gameが既存Runtime Stateを引き継がない
+- Continue / Load Gameが正しいSlotを復元する
+- 破損・未対応Saveを破壊しない
+- Keyboard / Gamepadで開始導線を操作できる
 
-### P1-2: Ability LoadoutルールのSource of Truth集約（完了）
+## P0-2: Multi Field Runtime
 
-#### 目的
+対象: #67
 
-編集可能Slot、重複Ability禁止、割当可能Ability判定がController / Menu Projection / Save Mapperへ分散している状態を解消し、Loadoutルールを一つの境界から利用できるようにします。
+### 目標
 
-#### 要件
+PR #64で整備したField Architectureを実際の複数Sceneで利用します。
 
-1. `Action1`〜`Action4` の編集可能Slot定義を1箇所へ集約する
-2. `AbilityLoadoutController`、`AbilityLoadoutSelectionController`、`AbilityLoadoutSaveMapper` が個別に同じSlot配列を保持しない
-3. 同一Abilityを複数編集Slotへ重複配置しないルールをRuntime Loadout側の明示的な操作として表現する
-4. UIだけが重複禁止ルールを知る構造にしない
-5. Save復元時も同じルールを利用する
-6. Character Definition + Character Progression Stateから「現在割当可能なAbility」を判定するロジックをMenu表示専用Projectionから分離する
-7. Menu Projection、Save復元、Selection Controllerは同じEligibility / Policy境界を利用する
-8. `Primary` は予約Slotとしてユーザー編集対象外とする現在仕様を維持する
-9. 未習得・削除済みAbility、不正Slot、重複AbilityをSaveから安全に無視する現在仕様を維持する
+```text
+Field A
+  -> FieldTransitionService
+  -> FieldLocation(fieldId, entryPointId)
+  -> Scene Load
+  -> Field Definition Resolve
+  -> Entry Point Resolve
+  -> Player Spawn
+  -> Field B
+```
 
-#### 受入条件
+### 完了条件
 
-- 編集可能Slotの追加・削除が1箇所の変更で反映される
-- 重複Ability禁止をUI経由以外のRuntime操作でも保証できる
-- Save MapperがMenu Projectionへ依存しない
-- Loadout Policy / EligibilityをEditModeで単体検証できる
-- 既存Loadout Save round-tripが成功する
+- Field A / Bを往復できる
+- Field遷移でProgression / Loadout / Quest等を失わない
+- Field BでSaveしてField BからContinueできる
+- 2つ目のField実装で既存巨大Builderをコピーしない
+- Addressablesなしで成立する
 
-### P1-3: uGUI Runtime生成コードの整理（完了）
+## P0-3: Story Progression
 
-#### 目的
+対象: #68
 
-Pause、Evolution、Ability Loadout等に重複しているRuntime UI Hierarchy生成・RectTransform設定・Text生成・共通Style定義を整理し、本格的な画面追加時の保守コストを下げます。
+### 目標
 
-#### 要件
+Questとは別に、本編の章・一度きりEvent・重要な選択状態を表現する軽量なStory Runtimeを追加します。
 
-1. Canvas/uGUIを本番UI基盤として継続する
-2. UI Toolkitへの全面移行は行わない
-3. Pause / Evolution / Ability LoadoutのRuntime UI生成コードを整理する
-4. 本番利用する画面は原則としてPrefabベースのuGUIへ移行する
-5. ViewはSerializeField等で必要なUI参照を受け取り、表示更新を中心とする
-6. `CreateRect`、`CreateText`、`StretchToParent` 等の画面ごとの重複実装を削減する
-7. 共通色・Typography・Panel Styleは必要な範囲で共通化するが、巨大な独自UI Frameworkは作らない
-8. Runtime生成を残す場合はPrototype専用補助UIなど明確な理由がある箇所に限定する
-9. Viewからゲーム状態を変更しない現在のPresentation境界を維持する
+初期Story Flag例:
 
-#### 受入条件
+- `prologue.awakened`
+- `prologue.met_guardian`
+- `prologue.guardian_killed`
+- `prologue.left_forest`
+- `prologue.entered_human_town`
 
-- Pause / Evolution / Ability Loadoutの主要Hierarchyが画面ごとの大量C#生成に依存しない
-- ViewクラスがHierarchy生成より表示反映を中心とした責務になっている
-- 共通UI生成コードの重複が削減されている
-- 1920x1080基準の既存表示を維持し、Scale With Screen Sizeが継続する
-- UI PlayModeテストが成功する
+Field進入、Interaction、Dialogue完了、Battle / Defeat Event、Quest完了からStoryを進行できるようにします。
 
-### P1-4: PlayerInputReaderの論理入力整理（完了）
+### 制約
 
-#### 目的
+- 巨大なStory Engineを作らない
+- Story固有ロジックをNPC / Quest / Combat Featureへ直接埋め込まない
+- 独自Dialogue DSLやVisual Scriptingを先に導入しない
 
-Ability Loadout導入前の `Attack` / `Art` 命名とObsoleteイベントを整理し、Input Action・論理Ability Slot・Runtime Loadoutの用語を一致させます。
+## P0-4: Playable Prologue
 
-#### 要件
+対象: #69, #70
 
-1. Ability系Input Action名を論理Slotと対応する命名へ統一する
-   - `Primary`
-   - `Action1`
-   - `Action2`
-   - `Action3`
-   - `Action4`
-2. `AttackPressed` / `ArtPressed` のObsolete互換イベントについて利用箇所を除去した上で削除する
-3. `AbilitySlotPressed` をAbility入力の単一イベント境界とする
-4. `PlayerInputReader` はInput System Actionを論理入力へ変換する責務に限定する
-5. Feature固有のAbility IDをInput層へ持ち込まない
-6. Gameplay / UI / DisabledのInput Context境界を維持する
-7. Jump / Flight / Interact / Dodge / Pause等、Ability Slotではない入力は現在の論理イベントを維持する
-8. Input Action AssetのBinding変更時もKeyboard / Gamepadの既存操作を維持する
+### Part 1
 
-#### 受入条件
+- 主人公が弱い魔物として森で生まれる
+- 別の魔物に拾われ、育てられる
+- Dialogue / Interaction / Exploration / Combatで基本操作を自然に学ぶ
+- 育ての親との関係性をGameplayの中で描く
 
-- Ability入力に旧 `Attack` / `Art` という内部互換名が残らない
-- `AbilitySlotPressed` だけでPlayer Ability実行が成立する
-- Input Action Assetとコード上のSlot名が一致する
-- Keyboard / Gamepadの既存Bindingテストが成功する
-- Unity PlayModeテストが成功する
+### Part 2
 
-### P2: Field / World CompositionのScene単位アーキテクチャ化
+- 育ての親が人間または冒険者によって殺される
+- 主人公が人間への不信を抱く
+- 森から脱出する
+- 魔物であることを隠してHuman Townへ入る
 
-#### 目的
+### 完了条件
 
-現在の単一Prototype World Builderから、王国・都市・森・魔族領・遺跡・ダンジョン等の複数フィールドを追加できる構造へ移行します。2つ目以降の本格フィールドで `PrototypeWorldBuilder` 相当の巨大Builderを複製しないことを目的とします。
+New Gameから人間の町への到達まで、途中Save / Continueを含めて一続きでプレイできます。
 
-#### 要件
+## P0-5: Human Town / Adventurer Loop
 
-1. Field単位の静的定義とRuntime Compositionを分離する
-2. Field Definitionは少なくとも次を表現可能にする
-   - Field ID
-   - SceneまたはScene識別情報
-   - Player Spawn Point / Entry Point
-   - Field固有Content / Scenario参照
-   - 必要なWorld Asset参照
-3. Scene側のComposition Rootを最小化し、Field固有FeatureはInstallerへ委譲する
-4. Terrain / Collision / Architecture / Nature / Atmosphere / Gameplay Scenario / Pickup / Camera等を、単一巨大Builderへ固定せずField Composition単位で組み合わせ可能にする
-5. Prototype専用のRuntime Shape / Tile生成を、将来の正式Field Sceneへ必須依存させない
-6. Player Runtime、Game Session、Saveの境界をField切替と独立させる
-7. SaveにはFieldをStable IDで識別できる拡張余地を確保する
-8. Field間移動時にGame Session全体を破棄しなければならない構造を避ける
-9. Addressables / Scene StreamingはこのP2の必須要件にしない
-10. まず通常のUnity Scene分割で成立する境界を作り、非同期ロード・Streamingは性能またはコンテンツ量の要求が出た段階で追加する
-11. 現在のPrototype Sceneを新Field境界へ段階移行し、既存ゲームループを維持する
+対象: #71, #72, #73
 
-#### 受入条件
+### Human Town
 
-- 2つ目のFieldを追加する際、既存 `PrototypeWorldBuilder` 相当を丸ごとコピーする必要がない
-- Field固有設定とGame全体のRuntime Stateが分離されている
-- Scene変更後もPlayer Progression / Loadout / Quest等のGame Session Stateを保持できる設計になっている
-- Prototype Sceneが新しいField Composition境界を利用して動作する
-- AddressablesなしでScene単位の追加・遷移を実装可能である
-- Unity TestsのEditMode / PlayModeが成功する
+最低限、次を配置します。
 
-## 第2次リファクタリングの実施順序
+- 冒険者ギルド
+- 宿屋
+- 道具屋
+- 一般NPC
+- Quest Board
+- Field出口
 
-P1は完了しました。次はP2を実施します。
+### Inventory / Currency
 
-1. P1-2: Ability LoadoutルールのSource of Truth集約（完了）
-2. P1-4: PlayerInputReaderの論理入力整理（完了）
-3. P1-1: Player Runtime Compositionの分割（完了）
-4. P1-3: uGUI Runtime生成コードの整理（完了）
-5. P2: Field / World CompositionのScene単位アーキテクチャ化
+最低限、次を扱います。
 
-各項目は可能な限り独立PRとし、機能変更と大規模構造変更を同一PRへ混在させません。
+- Consumable
+- Material
+- Key Item
+- Stackable Item
+- Currency
 
-## 次の開発フェーズ
+Equipment / Craftingはこの段階では追加しません。
 
-1. 第2次優先リファクタリング P2
-   - Field / World CompositionのScene単位アーキテクチャ化を対応する
-   - 受入条件を満たしてから次へ進む
-2. Save SlotとNew Game / Continue導線
-   - P0-1で整備したGame Session / Save境界を利用する
-   - 現在の単一 `save.json` を前提にした自動保存から、明示的な新規開始・継続開始へ接続する
-   - 複数Slotが必要になった場合も `ISaveService` とSave DTO境界を維持する
+### Shop / Quest Board
 
-## 今回のリファクタリング対象外
+- CurrencyでItemを購入する
+- Quest Boardから最初の冒険者依頼を受ける
+- 既存Quest Runtimeを再利用する
+- Quest報酬としてItem / Currencyを受け取る
 
-- `AbilityController` のRegistry分割
-- 3D Physics / Elevation / Movement再設計
-- Enemy AIのBehavior Tree化
-- Questの手動Tracking Service
-- Addressables / 非同期ロード
+## P0-6: First Dungeon / Boss
+
+対象: #74
+
+### 目標
+
+最初の完成した冒険ループを成立させます。
+
+```text
+Town
+  -> Quest受注
+  -> Field / Dungeon探索
+  -> 通常Enemy
+  -> Boss
+  -> Reward
+  -> Town帰還
+  -> Quest報告
+```
+
+Bossは既存Ability / Combat / Enemy AIを再利用し、最初はHP割合による最低1回のPhase変更だけを追加します。Behavior Treeや巨大なBoss Frameworkは導入しません。
+
+### P0完了条件
+
+- New GameからPrologueを完走できる
+- Human Townで冒険者として依頼を受けられる
+- Inventory / Currency / Shopが利用できる
+- Dungeonへ移動できる
+- Bossを倒せる
+- Townへ戻ってQuestを報告できる
+- Save / Continueを含めて全体が破綻しない
+- Keyboard / Gamepadで完走できる
+
+# P1: 本作固有システムと世界拡張
+
+P0完了後に優先順位を再評価します。現時点の候補は次です。
+
+## Monster Identity / Trust / Choice
+
+主人公が魔物であることを隠して人間社会で生活する、本作固有のゲームプレイを追加します。
+
+- Monster Identity
+- 正体露見につながる行動
+- 重要NPC / Faction単位のTrust
+- 必要な場合だけSuspicion
+- Story Choice
+- 選択結果のStory State保存
+
+全NPCに巨大な好感度パラメータを持たせることは前提にしません。
+
+## Demon Awakening
+
+既存Evolution SystemとStoryを接続し、魔王覚醒を単純なLevel UpではなくStory / Evolution / Choice / Eventの複合結果として扱います。
+
+「魔王になること」と「人間を滅ぼすこと」は同義にせず、覚醒後にも選択肢を残します。
+
+## Equipment / Enemy Variation
+
+P0のInventoryとCombatを実際に遊んだ結果を踏まえて追加します。
+
+候補:
+
+- Weapon / Armor / Accessory
+- Melee Enemy
+- Ranged Enemy
+- Flying Enemy
+- Caster Enemy
+- 追加Art / Skill
+
+## Region Expansion
+
+世界地図のRegionを1つずつPlayableにします。
+
+推奨順序:
+
+```text
+Forest
+  -> Human Frontier Town
+  -> Human Kingdom
+  -> Ancient Ruins
+  -> Former Demon Territory
+  -> Other Nations
+```
+
+各RegionはFieldだけを量産せず、Town / Field / Dungeon / NPC / Enemy / Quest / Story / Progression Contentを一まとまりとして追加します。
+
+# P2: Production / Steam Demo
+
+本編Vertical Sliceが成立してからProduction品質を上げます。
+
+## Presentation
+
+- Hit Stop
+- Camera Shake
+- Damage Number
+- Knockback
+- Damage Flash
+- Enemy Death Animation
+- Ability VFX
+- Boss演出
+- Character Animation
+- BGM / Ambient Sound
+- Weather / Lighting / Particle
+- HUD / Inventory / Equipment / Quest Journal / Map / Settingsの本番UI
+
+## Content Authoring Tools
+
+実際のコンテンツ量産で必要性が確認できたものだけ追加します。
+
+候補:
+
+- Quest Definition Editor
+- Dialogue Editor
+- Enemy Definition Editor
+- Drop Table Editor
+- Field Validation
+- Content ID Validation
+- Story Flag Validation
+- Missing Reference Check
+
+ScriptableObjectで整合性管理が難しくなった時点で、構造化データ形式への移行を再評価します。
+
+## Steam Demo
+
+最初のTown + Dungeon + BossまでをDemoとして切り出せる品質にします。
+
+- Windows Build
+- Steam Input
+- Resolution / Fullscreen
+- Audio Settings
+- Key Config
+- Controller対応
+- Save互換性
+- Crash対策
+- Performance計測
+- Localization基盤
+- Steam Deck確認
+
+# Full GameのStory到達点
+
+章構成はStory文書で詳細化しますが、ロードマップ上の大きな流れは次とします。
+
+1. 森での誕生と育ての親との死別
+2. 人間社会への潜入
+3. 冒険者としての生活と良い人間との出会い
+4. 世界と人間・魔族の歴史を知る
+5. 信頼していた人間からの裏切り
+6. 魔王覚醒
+7. 人間を信じるか、魔族の王になるか、どちらにも属さない道を選ぶかを決断する
+
+最終的な分岐は単発の選択肢だけで決めず、ゲーム中の行動・関係・Story Stateを反映できる形を目標とします。
+
+# 当面やらないもの
+
+具体的な機能要件または性能問題が発生するまで、次は導入しません。
+
+- Behavior Tree
+- ECS
+- 独自DI Framework
+- Addressables
 - Scene Streaming
+- Multiplayer
+- Cloud Save
+- 大規模Dialogue Framework
+- 大規模Quest Framework
+- 大規模UI Framework
+- Procedural Dungeon
+- Switch固有実装
+- ScriptableObjectからの全面的なデータ基盤移行
 
-上記はP2完了後も、具体的な機能要件または性能問題が発生した時点で再評価します。
+# 判断基準
 
-## 将来候補
+新規タスクを追加する際は、次を優先します。
 
-- Steam機能とPlatform層
-- クラウドセーブ
-- 将来のコンソール向けPlatform実装
-- Addressables / 非同期ロード
-- Scene Streaming
-- パフォーマンス予算
-- ScriptableObjectだけでは整合性管理が難しくなった場合の構造化データ化
+1. この変更でゲーム本編が前へ進むか
+2. 既存Runtime / Composition境界を再利用できないか
+3. 実際の要求がないFrameworkを先回りして作っていないか
+4. Save / Stable ID / Input / Test境界を壊していないか
+5. 独立PRとして検証可能な大きさにできているか
 
-技術基盤を先回りして増やすのではなく、必要な境界だけを段階的に整理しながらプレイ可能なゲームループを維持します。
+当面の大きなマイルストーンは、**New Gameから開始して、主人公が人間の町へ入り、冒険者として最初のBossを倒して帰還できる状態**です。
