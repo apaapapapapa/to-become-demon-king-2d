@@ -7,13 +7,18 @@ namespace DemonKing.Field.Prototype
 {
     /// <summary>
     /// P0 Story Runtimeを検証する最小のStable ID / Event Definition群です。
-    /// 本編シナリオ量をここへ集約せず、#69以降でStory content authoring境界へ移します。
+    /// Story固有のGameplay contentは専用Content境界から追加し、訓練Questへ本編進行を混在させません。
     /// </summary>
     internal static class PrototypeStoryDefinitions
     {
         public const string PrologueChapterId = "story.chapter.prologue";
         public const string JourneyChapterId = "story.chapter.first_journey";
 
+        public const string BornFlagId = "prologue.born";
+        public const string MetGuardianFlagId = "prologue.met_guardian";
+        public const string FoundFoodFlagId = "prologue.found_food";
+        public const string FirstHuntFlagId = "prologue.first_hunt";
+        public const string ProloguePart1CompletedFlagId = "prologue.part1_completed";
         public const string MetHumanFlagId = "prologue.met_human";
         public const string LeftForestFlagId = "prologue.left_forest";
         public const string FoundRuinsFlagId = "prologue.found_ruins";
@@ -26,18 +31,23 @@ namespace DemonKing.Field.Prototype
                 throw new ArgumentNullException(nameof(projectAssets));
             }
 
-            var definitions = new List<StoryEventDefinition>
+            var definitions = new List<StoryEventDefinition>();
+            definitions.AddRange(PrototypePrologueContent.CreateStoryEvents());
+
+            if (projectAssets.ApprenticeMageDialogue != null)
             {
-                new(
+                definitions.Add(new StoryEventDefinition(
                     "story.event.met_first_human",
                     GameplayEventIds.InteractionCompleted,
-                    setFlags: new[] { MetHumanFlagId }),
-                new(
-                    "story.event.left_forest",
-                    GameplayEventIds.FieldEntered,
-                    PrototypeFieldDefinition.SecondaryFieldId,
-                    setFlags: new[] { LeftForestFlagId })
-            };
+                    projectAssets.ApprenticeMageDialogue.DialogueId,
+                    setFlags: new[] { MetHumanFlagId }));
+            }
+
+            definitions.Add(new StoryEventDefinition(
+                "story.event.left_forest",
+                GameplayEventIds.FieldEntered,
+                PrototypeFieldDefinition.SecondaryFieldId,
+                setFlags: new[] { LeftForestFlagId }));
 
             if (projectAssets.TrainingQuestDefinition != null)
             {

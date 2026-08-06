@@ -299,6 +299,20 @@ namespace DemonKing.Field.Prototype
             }
 
             context.SetGameplayServices(gameplayServices);
+            if (string.Equals(
+                    context.Definition.FieldId,
+                    PrototypeFieldDefinition.PrologueFieldId,
+                    StringComparison.Ordinal))
+            {
+                new PrototypePrologueScenarioInstaller().Install(
+                    context.WorldRoot,
+                    context.Player,
+                    gameplayServices,
+                    context.Definition.ProjectAssets.TrainingSlimeAi,
+                    context.DialogueLog);
+                return;
+            }
+
             if (context.Definition.TrainingScenario == null)
             {
                 return;
