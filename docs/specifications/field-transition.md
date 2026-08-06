@@ -8,26 +8,35 @@ Field遷移ではScene名やBuild IndexをGameplayへ公開せず、要求・Sav
 
 ## Field構成
 
-P0では次の2 Fieldを持ちます。
+P0では次の3 FieldをCatalogへ登録します。
 
 ```text
-Field A
+Prologue Field（New Game初期Field）
+  fieldId: field.prologue.deep_forest
+  scene: Prototype
+  default entry: entry.prologue.birth
+  display name: 深森のねぐら
+  Part 1時点ではField出口なし
+
+Training Field（既存Save互換Field）
   fieldId: field.prototype.training_ground
   scene: Prototype
   default entry: entry.default
   return entry: entry.from_forest_gate
   exit -> field.prototype.forest_gate:entry.from_training_ground
 
-Field B
+Forest Gate Field
   fieldId: field.prototype.forest_gate
   scene: PrototypeForestGate
   entry: entry.from_training_ground
   exit -> field.prototype.training_ground:entry.from_forest_gate
 ```
 
-Field Bは訓練NPC / 訓練スライム / Progression Pickupを持たず、同じ `PrototypeFieldComposer` / Installer列を利用して構築します。Field追加のためにWorld Builderをコピーしません。
+`PrototypeFieldCatalog` のInitial Fieldは `field.prologue.deep_forest:entry.prologue.birth` です。New GameはこのLocationから開始します。既存Saveが保持する `field.prototype.training_ground` / `field.prototype.forest_gate` は引き続き同じStable IDで解決します。
 
-PrototypeのWorldはRuntime Composition型のため、P0の第2 Field Sceneも `SceneManager.CreateScene` で独立Sceneとして生成します。Scene Asset / Build IndexをSaveやField CatalogのSource of Truthにはしません。
+Prologue Fieldは育ての親、食料探索、森の幼獣、Story進行を持ちます。Training Fieldは訓練NPC / 訓練スライム / Progression Pickupを持ち、Forest Gate Fieldはそれらを持ちません。いずれも同じ `PrototypeFieldComposer` / Installer列を利用し、Field追加のためにWorld Builderをコピーしません。
+
+PrototypeのWorldはRuntime Composition型です。Field Sceneは `SceneManager.CreateScene` で独立Sceneとして生成し、Scene Asset / Build IndexをSaveやField CatalogのSource of Truthにはしません。Prologue FieldとTraining Fieldは同じScene名 `Prototype` を使いますが、Stable Field IDとField Definitionは別に保持します。
 
 ## 遷移要求
 
@@ -59,6 +68,9 @@ Field Sceneを跨いで同一インスタンスまたは同一Runtime Stateを�
   - Skill取得
   - Evolution取得
 - `QuestProgressionService`
+- `StoryProgressState`
+- `StoryProgressionService`
+- `GameplayEventHub`
 - `ProgressionGrantConsumptionState`
 - `DialogueLog`
 - `PrototypeLocalSaveCoordinator`
@@ -71,7 +83,8 @@ Sceneに属するRuntime参照はField切替ごとに破棄・再構築します
 - World Root
 - Player GameObject
 - Player上のUnity Component
-- Field固有Gameplay Event Hub / Reward Service
+- Field固有NPC / Enemy / Pickup / Scenario Controller
+- Field固有Reward Service
 - Camera Follow接続
 - Field UI Root
 
@@ -91,7 +104,7 @@ Field Exit Interaction
   -> PrototypeGameSession.EnterField
      |- Field Definition / Entry Point解決
      |- World / Player再構築
-     |- Session Progression / Quest / Grant Stateを再接続
+     |- Session Progression / Quest / Story / Grant Stateを再接続
      |- Ability Loadout再適用
      `- Save Snapshot Providerを新Player / Field Locationへ再Bind
   -> PrototypeApplicationFieldBinder
@@ -106,7 +119,7 @@ Field Exit Interaction
 
 ## Save / Continue
 
-Save Version 4のWorld状態を使用します。
+World LocationはSave Version 4で導入され、現行Save Version 5でも同じ形式を維持します。
 
 ```text
 world
@@ -116,9 +129,13 @@ world
 
 遷移前に旧Fieldを一度保存し、遷移後のRuntime再Bind完了時に新Field Locationを即時保存します。
 
-Continue / Load Gameでは `PrototypeSaveSession` が保存済み `FieldLocation` を読み、`PrototypeFieldCatalog` でDefinitionとEntry Pointを解決します。Field Bが保存されていれば `PrototypeForestGate` SceneをActive化し、`entry.from_training_ground` からPlayerを生成します。
+Continue / Load Gameでは `PrototypeSaveSession` が保存済み `FieldLocation` を読み、`PrototypeFieldCatalog` でDefinitionとEntry Pointを解決します。
 
-未知のField ID / Entry Point IDは既存仕様どおりInitial FieldのDefault Entry PointへFallbackします。
+- `field.prologue.deep_forest` は `Prototype` Sceneの `entry.prologue.birth` から復元します。
+- `field.prototype.training_ground` は既存Training Fieldとして復元します。
+- `field.prototype.forest_gate` は `PrototypeForestGate` Sceneの `entry.from_training_ground` から復元します。
+
+未知のField ID / Entry Point IDはInitial Fieldである `field.prologue.deep_forest` のDefault Entry Point `entry.prologue.birth` へFallbackします。
 
 ## Scene境界
 
@@ -130,14 +147,17 @@ Application Rootは `DontDestroyOnLoad` とし、Scene切替では破棄しま�
 
 EditModeでは次を検証します。
 
-- 2 FieldをStable Field / Entry Point IDで解決できる
-- Field A / Bの出口が相互のEntry Pointを指す
+- 3 FieldをStable Field / Entry Point IDで解決できる
+- Prologue FieldがInitial Fieldである
+- Training Field / Forest Gate Fieldの出口が相互のEntry Pointを指す
+- 既存Training / Forest GateのStable IDを引き続き解決できる
 - Scene依存Playerを外している間もSave SnapshotがLoadoutを保持する
 - 新PlayerへBind後は新Field LocationをSaveする
 
 PlayModeでは次を検証します。
 
-- Field A -> Field B -> Field Aの往復
-- Level / Art / Skill / Evolution / Loadout / Questが往復後も維持される
+- New GameがPrologue FieldのBirth Entry Pointから開始する
+- Training Field -> Forest Gate Field -> Training Fieldの往復
+- Level / Art / Skill / Evolution / Loadout / Quest / StoryがField遷移後も維持される
 - Field遷移後のSaveが新しいField / Entry Pointを持つ
-- 保存済みField Bから起動した場合にField BのEntry PointへPlayerが復元される
+- 保存済み各Fieldから起動した場合に対応するEntry PointへPlayerが復元される
