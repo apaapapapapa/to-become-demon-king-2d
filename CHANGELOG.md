@@ -1,3 +1,9 @@
+## [1.20.0](https://github.com/apaapapapapa/to-become-demon-king-2d/compare/v1.19.0...v1.20.0) (2026-08-06)
+
+### Features
+
+* implement playable prologue part 1 ([#84](https://github.com/apaapapapapa/to-become-demon-king-2d/issues/84)) ([41c34c1](https://github.com/apaapapapapa/to-become-demon-king-2d/commit/41c34c10c65f3ac99c6e4417dd4e0d5abb43313c)), closes [#69](https://github.com/apaapapapapa/to-become-demon-king-2d/issues/69)
+
 ## [1.19.0](https://github.com/apaapapapapa/to-become-demon-king-2d/compare/v1.18.0...v1.19.0) (2026-07-23)
 
 ### Features
