@@ -1,0 +1,41 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:best-practices"
+  ],
+  "semanticCommits": "enabled",
+  "semanticCommitType": "chore",
+  "dependencyDashboard": true,
+  "prConcurrentLimit": 5,
+  "packageRules": [
+    {
+      "description": "Require explicit approval for breaking major updates",
+      "matchUpdateTypes": [
+        "major"
+      ],
+      "dependencyDashboardApproval": true
+    },
+    {
+      "description": "Keep Unity package updates separate from tooling updates",
+      "matchDatasources": [
+        "unity3d",
+        "unity3d-packages"
+      ],
+      "groupName": "Unity dependencies"
+    }
+  ],
+  "customManagers": [
+    {
+      "customType": "regex",
+      "description": "Update Unity Package Manager dependencies in Packages/manifest.json",
+      "managerFilePatterns": [
+        "/^Packages\\/manifest\\.json$/"
+      ],
+      "matchStrings": [
+        "\\\"(?<depName>com\\.unity\\.[^\\\"]+)\\\"\\s*:\\s*\\\"(?<currentValue>\\d+\\.\\d+\\.\\d+(?:-[^\\\"]+)?)\\\""
+      ],
+      "datasourceTemplate": "unity3d-packages",
+      "versioningTemplate": "unity3d-packages"
+    }
+  ]
+}
