@@ -48,7 +48,7 @@ export default defineConfig({
       ] }],
       '/story/': [{ text: 'ストーリー', items: [
         { text: '概要', link: '/story/' },
-        { text: 'ストーリー骨格', link: '/story/overview' }
+        { text: 'ストーリー再構成版', link: '/story/overview' }
       ] }],
       '/world/': [{ text: '世界設定', items: [
         { text: '概要', link: '/world/' },
