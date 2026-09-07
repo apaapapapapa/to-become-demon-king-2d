@@ -170,3 +170,6 @@ Packages/packages-lock.json linguist-generated
 
 # ライティングの事前ベイクなどで生成される .asset ファイルの例外
 LightingData.asset     binary
+
+# ストーリーの参照画像は、LFSを取得しないVitePressビルドでも表示できるよう通常のGitで管理
+docs/story/images/protagonist-heroine-concept-v1.png -filter -diff -merge -text
